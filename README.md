@@ -6,6 +6,10 @@ At the core of Effect Games is the *Effect Engine*, a JavaScript game engine whi
 
 The Effect Engine was developed by [Joseph Huckaby](http://about.me/jhuckaby) in 2005.  He was dissatisfied with existing web game technologies that relied on 3rd party plugins, and set out to create a pure JavaScript game engine that would run in any browser.  A designer by training, [Min Chang](http://itsmin.com) provided a necessary creative perspective to the development and use of Effect Game's tools.  They are currently working on their next venture over at [GoldCartridge.com](http://www.goldcartridge.com).
 
+# Installation
+
+Please see our [Installation Guide](https://github.com/jhuckaby/Effect-Games/wiki/Installation-Guide).
+
 # Legal
 
 **Effect Games Engine and IDE v1.0**
@@ -59,7 +63,3 @@ Please observe the folllowing additional licenses from software or media that th
 >	http://kde-look.org/content/show.php/Crystal+Clear?content=25668 <br/>
 >	License: LGPL <br/>
 >	Note: This is only used in the IDE, not the engine or your games.
-
-# Installation
-
-Please see our [[Installation Guide]].
