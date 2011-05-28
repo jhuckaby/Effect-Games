@@ -123,7 +123,7 @@ Class.subclass( Effect.Page, "Effect.Page.GameLevelEdit", {
 			this.level = null;
 			this.draw_level_form( merge_objects(merge_objects({
 				
-				Width: 16384,
+				Width: 7200,
 				Height: 7200,
 				BackgroundColor: this.game.BackgroundColor,
 				BackgroundXMode: 'infinite',

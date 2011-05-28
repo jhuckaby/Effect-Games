@@ -72,6 +72,8 @@ foreach my $rec (@{$initial->{Record}}) {
 ##
 # Admin user (default password: admin, CHANGE THIS LATER)
 ##
+my $privs = $config->{DefaultPrivileges};
+$privs->{admin} = 1;
 $storage->create_record( '/users/admin', {
 	%{$config->{DefaultUser}},
 	Username => 'admin',
@@ -80,12 +82,14 @@ $storage->create_record( '/users/admin', {
 	Password => md5_hex( 'admin' ),
 	Author => 'admin',
 	AuthorClientInfo => 'script',
-	Privileges => { admin => 1 },
-	FullName => 'Joseph Huckaby',
-	FirstName => 'Joseph',
-	LastInitial => '',
-	Email => 'admin@effectgames.com'
+	Privileges => $privs,
+	FullName => 'Administrator',
+	FirstName => 'Administrator',
+	LastInitial => 'A',
+	Email => 'admin@yourdomain.com'
 });
+$storage->create_record( '/users/admin/stats', {} );
+$storage->list_create( '/users/admin/log' );
 
 ##
 # Insert all documents from /effect/docs/

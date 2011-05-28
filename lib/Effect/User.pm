@@ -142,7 +142,7 @@ sub api_user_create {
 	if ($self->{storage}->check_record_exists('users/' . $username)) {
 		return $self->api_error( 'user', "User already exists: $username" );
 	}
-	if ($username =~ /^(root|admin|administrator|effect|effectgames|superuser|joe|webmaster|support|javascript|crystalgalaxy)$/) {
+	if ($username =~ /^(root|admin|administrator|effect|effectgames|superuser|webmaster|support|javascript)$/) {
 		return $self->api_error( 'user', "Sorry, that username is reserved.  Please enter another.");
 	}
 	
@@ -767,7 +767,7 @@ sub api_admin_user_get {
 	$response->{Stats} = $self->{storage}->get_metadata( "/users/$username/stats" );
 	
 	# log
-	$items = $self->{storage}->list_get( "/users/$username/log", 0, 100 );
+	my $items = $self->{storage}->list_get( "/users/$username/log", 0, 100 );
 	$items ||= [];
 	$response->{Log} = { Row => $items };
 	

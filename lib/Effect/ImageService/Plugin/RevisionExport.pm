@@ -624,7 +624,7 @@ sub handler {
 	
 	# swap out _homePath with local one
 	# this._homePath = 'http://'+location.hostname+'/effect/';
-	$contant =~ s@\b(this\._homePath\s*\=\s*)[^\;]+\;@ $1 . "'';"; @e;
+	$content =~ s@\b(this\._homePath\s*\=\s*)[^\;]+\;@ $1 . "'';"; @e;
 	
 	# next, create game definition
 	my $game_def = copy_hash_remove_keys($game, 

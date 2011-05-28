@@ -3,12 +3,15 @@
 	<!-- List of files to obfuscate and output -->
 	<SourceDir>src</SourceDir>
 	<SourceFiles>
+		<File>init.js</File>
 		<File>oop.js</File>
 		<File>xml.js</File>
 		<File>utils.js</File>
 		<File>cookie.js</File>
+		<File>md5.js</File>
 		<File>Audio/Native.js</File>
 		<File>Audio/Flash.js</File>
+		<File>Audio/Titanium.js</File>
 		<File>Audio.js</File>
 		<File>ImageLoader.js</File>
 		<File>FontLoader.js</File>
@@ -33,6 +36,16 @@
 		<File>Tile.js</File>
 		<File>Tween.js</File>
 		<File>Toolbar.js</File>
+		<File>Toolbar/Icon.js</File>
+		<File>Toolbar/Divider.js</File>
+		<File>Toolbar/PlayPause.js</File>
+		<File>Toolbar/Home.js</File>
+		<File>Toolbar/Share.js</File>
+		<File>Toolbar/Keyboard.js</File>
+		<File>Toolbar/Music.js</File>
+		<File>Toolbar/Sound.js</File>
+		<File>Toolbar/Zoom.js</File>
+		<File>Toolbar/Debug.js</File>
 		<File>Game.js</File>
 	</SourceFiles>
 	<Output>htdocs/engine/engine.js</Output>

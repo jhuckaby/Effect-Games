@@ -298,7 +298,7 @@ sub api_game_create {
 		Objects => 0,
 		Levels => 0,
 		Publishes => 0,
-		Quota => (1024 * 1024 * 100),
+		Quota => (1024 * 1024 * 1024),
 		AssetMod => time()
 	} );
 	

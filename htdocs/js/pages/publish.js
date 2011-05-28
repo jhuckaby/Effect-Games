@@ -415,7 +415,7 @@ Class.subclass( Effect.Page, "Effect.Page.GameEditRevision", {
 				html += '<table>';
 				html += '<tr><td align=right class="fe_label_left">Password:</td>';
 				html += '<td align=left><input type=password id="fe_er_password" class="fe_medium" size="25" maxlength="32" value="'+escape_text_field_value(rev.Password)+'"></td></tr>';
-				html += '<tr><td></td><td class="caption"> You can optioanlly password protect this revision by entering a password here.  Players must enter the password to access the game page.  This is only available to Alpha, Beta and Release Candidate revision types. </td></tr>';
+				html += '<tr><td></td><td class="caption"> You can optionally password protect this revision by entering a password here.  Players must enter the password to access the game page.  This is only available to Alpha, Beta and Release Candidate revision types. </td></tr>';
 				html += '<tr><td colspan=2>' + spacer(1,15) + '</td></tr>';
 				
 				html += '<tr><td align=right class="fe_label_left">Sharing:</td>';

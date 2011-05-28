@@ -902,7 +902,7 @@ Class.subclass( Effect.Page, "Effect.Page.GameEdit", {
 				Zoom: 'Yes',
 				ZoomFilter: 'Sharp',
 				ZoomDefault: '1',
-				FrameRate: '30',
+				FrameRate: '60',
 				SkipFrames: 1,
 				BackgroundColor: '#000000',
 				BackgroundImage: '',
