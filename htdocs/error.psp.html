@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	if (!$args->{description}) { $args->{description} = 'Unknown Error'; }
+?>
+<html lang="en">
+<head>
+	<base href="<?= $self->get_base_url(); ?>">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Error | EffectGames.com</title>
+	<link rel="stylesheet" type="text/css" href="/effect/style.psp.css" >
+		
+</head>
+<body style="margin-top:20px;">
+	
+	<script type="text/javascript" src="/effect/js/iepngfix_tilebg.js"></script>
+	<script type="text/javascript" src="/effect/js/lib/oop.js"></script>
+	<script type="text/javascript" src="/effect/js/lib/tools.js"></script>
+	<script type="text/javascript" src="/effect/js/lib/xml.js"></script>
+	<script type="text/javascript" src="/effect/js/render.js"></script>
+	<script type="text/javascript" src="/effect/js/Debug.class.js"></script>
+	
+	<table width="100%">
+		<tr>
+			<td width="100%" align="center">					
+					<script> begin_section('shadow_border', 12, 'gif'); </script>
+					
+					<img src="/effect/images/spacer.gif" width="640" height="1"/>
+					
+					<h1>Sorry, an error occurred:</h1>
+					<div style="font-size:12pt; color:#397dbb;"><?= $args->{description}; ?></div>
+					
+					<script> end_section(); </script>
+			</td>
+		</tr>
+	</table>
+	
+	<br/><br/>
+	<center>
+		<table><tr><td>
+		<script> document.write(
+			<?= $args->{close} ? 'large_icon_button(\'x\', \'Close Window\', "window.close();")' : 'large_icon_button(\'arrow_turn_left.png\', \'Back to EffectGames.com\', "location=\'/effect/\';")'; ?>
+		); </script>
+		<div class="clear"></div>
+		</td></tr></table>
+	</center>
+	
+	<div id="d_footer">
+		<p align="center" style="margin-top:40px;">
+			<img src="/effect/images/logo_40.png"><br>
+			<span class="caption" style="padding-bottom:0px;">
+				Copyright &copy; 2005 - 2011 Effect Games
+			</span>
+		</p>
+	</div>
+</body>
+</html>

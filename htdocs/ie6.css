@@ -1,0 +1,91 @@
+/* Crap for IE 6 */
+
+#d_shadow {
+	background: transparent;
+}
+
+.header .logo {
+	background: url(/effect/images/title/logo.gif) no-repeat center left;
+}
+
+.header .title {
+	background: url(/effect/api/image/title/effectgames.png?format=gif&noalphadither=1) no-repeat center left;
+}
+
+.slideshow_nav_container .slideshow_nav.prev {
+	background-image: url(/effect/api/image/title/nav_prev.png?format=gif&noalphadither=1);
+}
+
+.slideshow_nav_container .slideshow_nav.next {
+	background-image: url(/effect/api/image/title/nav_next.png?format=gif&noalphadither=1);
+}
+
+div.nav {
+	background: url(/effect/images/nav/bkgnd2.gif) repeat-x #eee;
+}
+div.nav div.nav_bar div {
+	background: url(/effect/images/nav/separator.gif) no-repeat right;
+}
+div.nav div.left {
+	background: url(/effect/images/nav/left.gif) no-repeat left;
+}
+div.nav div.right {
+	background: url(/effect/images/nav/right.gif) no-repeat right;
+}
+
+.button ul li.left {
+	background-image: url(/effect/api/image/rev_button/left.png?format=gif&noalphadither=1);
+}
+.button ul li.center {
+	background-image: url(/effect/api/image/rev_button/middle.png?format=gif&noalphadither=1);
+}
+.button ul li.icon {
+	background-image: url(/effect/api/image/rev_button/middle.png?format=gif&noalphadither=1);
+}
+.button ul li.right {
+	background-image: url(/effect/api/image/rev_button/right.png?format=gif&noalphadither=1);
+}
+
+div.featured_image_overlay {
+	background: url(/effect/api/image/main_page/featured_game_overlay-175px.png?format=gif&noalphadither=1) no-repeat center center;
+}
+
+div.blurb {
+	background: url(/effect/api/image/info_32.png?format=gif&noalphadither=1) no-repeat 8px center #f4f4ff;
+}
+
+.sidebar .title div.docs {
+	background: url(/effect/api/image/icons/page_white_text.png?format=gif&noalphadither=1) no-repeat center left;
+}
+.sidebar .title div.tuts {
+	background: url(/effect/api/image/icons/lightbulb.png?format=gif&noalphadither=1) no-repeat center left;
+}
+.sidebar .title div.tools {
+	background: url(/effect/api/image/icons/wrench.png?format=gif&noalphadither=1) no-repeat center left;
+}
+.sidebar .title div.plugs {
+	background: url(/effect/api/image/icons/plugin.png?format=gif&noalphadither=1) no-repeat center left;
+}
+.sidebar .title div.games {
+	background: url(/effect/api/image/icons/controller.png?format=gif&noalphadither=1) no-repeat center left;
+}
+.sidebar .title div.feeds {
+	background: url(/effect/api/image/icons/feed.png?format=gif&noalphadither=1) no-repeat center left;
+}
+
+.dx_external_link {
+	padding-right: 0px;
+	background: transparent;
+}
+.dx_mailto_link {
+	padding-right: 0px;
+	background: transparent;
+}
+
+#d_growl_wrapper {
+	position: absolute;
+}
+
+div.growl_message.error div.growl_message_inner { background: url(/effect/api/image/icons/error_24.png?format=gif&noalphadither=1) no-repeat 10px center; }
+div.growl_message.warning div.growl_message_inner { background: url(/effect/api/image/icons/error_24.png?format=gif&noalphadither=1) no-repeat 10px center; }
+div.growl_message.success div.growl_message_inner { background: url(/effect/api/image/icons/check_24.png?format=gif&noalphadither=1) no-repeat 10px center; }

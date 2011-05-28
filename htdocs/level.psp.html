@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+
+<?
+	if (!$self->validate_session('login', 'readonly')) {
+		$buffer .= "ERROR: Not logged in.";
+		return;
+	}
+	if (!$self->require_game_read_access($self->{session}->{query}->{game}, 'readonly')) {
+		$buffer .= "ERROR: Not a game member.";
+		return;
+	}
+	
+	$self->{session}->{_id} = $self->{session}->{id};
+	$self->{session}->{_id} =~ s/^login_//;
+	
+?>
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Level Map Editor IFRAME</title>
+	<meta name="generator" content="TextMate http://macromates.com/">
+	<meta name="author" content="Joseph Huckaby">
+	<!-- Date: 2009-04-04 -->
+	<style type="text/css">
+		html {
+			width: 100%;
+			height: 100%;
+			overflow: hidden; 
+			margin:0; 
+			padding:0; 
+		}
+		
+		body {
+			width: 100%;
+			height: 100%;
+			overflow: hidden; 
+			margin:0; 
+			padding:0; 
+		}
+		
+		span.object_label {
+			font-family:tahoma,sans-serif; 
+			font-size:10px; 
+			font-weight:bold; 
+			color:yellow; 
+			background-color:black;
+			word-break:break-all;
+		}
+		
+		#d_cursor {
+			position: absolute;
+			left: -16px;
+			top: -16px;
+			width: 16px;
+			height: 16px;
+			z-index: 99;
+			cursor: none;
+		}
+		
+		#d_tool_preview {
+			position: absolute;
+			left: -16px;
+			top: -16px;
+			width: 16px;
+			height: 16px;
+			z-index: 99;
+		}
+		
+		#d_grid {
+			position: absolute;
+			left: -16px;
+			top: -16px;
+			width: 1px;
+			height: 1px;
+			z-index: 98;
+		}
+		
+		div.sprite_delete_ctrl {
+			float: right;
+			position: relative;
+			left: 8px;
+			top: -8px;
+			width: 16px;
+			height: 16px;
+			background: url(images/icons/cancel.png) no-repeat 0px 0px;
+			cursor: pointer;
+		}
+	</style>
+</head>
+<body>
+	<div id="effect_container" style="position:relative;">
+		<div id="effect_port" style="position:relative; overflow:hidden;">
+			<!-- <div id="d_cursor"></div> -->
+			<div id="d_tool_preview"></div>
+			<div id="d_grid"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="/effect/api/level_editor.js?game=<?= $self->{session}->{query}->{game}; ?>&level=<?= $self->{session}->{query}->{level}; ?>&zoom=<?= $self->{session}->{query}->{zoom}; ?>&key=<?= $self->{session}->{_id}; ?>"></script>
+	<script language="JavaScript">
+		function $(thingy) {
+			// universal DOM lookup function, extends object with hide/show/addClass/removeClass
+			// can pass in ID or actual DOM object reference
+			var obj = (typeof(thingy) == 'string') ? document.getElementById(thingy) : thingy;
+			if (obj && !obj.hide) {
+				obj.hide = function() { this.style.display = 'none'; };
+				obj.show = function() { this.style.display = ''; };
+				obj.addClass = function(name) { this.removeClass(name); this.className += ' ' + name; };
+				obj.removeClass = function(name) { this.className = this.className.replace( new RegExp("(^|\\s+)" + name + "(\\s+|$)"), "").replace(/^\s+|\s+$/g, ''); };
+			}
+			return obj;
+		}
+	
+		Effect.VideoManager.enabled = false;
+		
+		var game_def = Effect.Game.getGameDef();
+		var env = '<?= $self->{session}->{query}->{env}; ?>';
+		
+		// create all tile classes
+		if (game_def.Tiles && game_def.Tiles.Tile) {
+			var tiles = game_def.Tiles.Tile;
+			for (var idx = 0, len = tiles.length; idx < len; idx++) {
+				var tile = tiles[idx];
+				var tile_id = tile.Name;
+				Namespace.prep(tile_id);
+				eval(tile_id + ' = Tile;');
+			}
+		}
+		
+		// index all sprite classes by name, for quick lookups
+		var sprite_classes = {};
+		if (game_def.Sprites && game_def.Sprites.Sprite) {
+			var sprites = game_def.Sprites.Sprite;
+			for (var idx = 0, len = sprites.length; idx < len; idx++) {
+				var sprite = sprites[idx];
+				sprite_classes[ sprite.Name ] = sprite;
+				
+				// disable persist for level editor
+				sprite.Persist = 0;
+			}
+		}
+		
+		var borderAdjust = !parent.ie ? 2 : 0;
+		var page = parent.$P('GameLevelMapEdit');
+		
+		Sprite.extend( 'LevelEditorSprite', {
+			
+			init: function() {
+				if (!this.id) this.id = get_unique_id();
+
+				// try to find our definition from game
+				this._def = sprite_classes[ this.type ] || null;
+				if (!this._def) return parent.do_error("Cannot locate sprite definition for: " + this.type );
+				
+				this.width = parseInt( this._def.Width, 10 );
+				this.height = parseInt( this._def.Height, 10 );
+
+				this.globalID = this.port.id + '_' + this.id;
+				this.div = document.createElement('DIV');
+				this.style = this.div.style;
+				this.div.setAttribute('id', this.globalID);
+				this.div.id = this.globalID;
+				this.style.position = 'absolute';
+				this.style.width = '' + Math.floor(this.zoom(this.width) - borderAdjust) + 'px';
+				this.style.height = '' + Math.floor(this.zoom(this.height) - borderAdjust) + 'px';
+				
+				this.style.left = '' + this.zoom( ((Math.floor(this.x + this.offsetX) - this.clipX) - this.plane.scrollX) + this.plane.offsetX ) + 'px';
+				this.style.top = '' + this.zoom( ((Math.floor(this.y + this.offsetY) - this.clipY) - this.plane.scrollY) + this.plane.offsetY ) + 'px';
+				
+				this.style.zIndex = this.zIndex;
+				this.style.overflow = 'hidden';
+				this.style.visibility = this.visible ? 'visible' : 'hidden';
+
+				this.style.border = '1px solid ' + (page.bkgnd_visible ? 'white' : 'black');
+				
+				if (this._def.Icon) {
+					this.style.background = 'url('+Effect.Game.getGamePath()+this._def.Icon+'?env='+env+'&zoom='+this.plane.zoom(1)+'&zoom_filter='+game_def.ZoomFilter+'&mod='+Effect.Game.getAssetModDate()+') no-repeat 0px 0px';
+				}
+				// else {
+					this.div.innerHTML = '<span class="object_label">' + this._def.Name + '</span>';
+				// }
+
+				this.port.div.appendChild(this.div);
+			}
+			
+		} );
+		
+		// define all sprite classes, and reference placeholder sprite for level editor
+		for (var sprite_id in sprite_classes) {
+			Namespace.prep(sprite_id);
+			eval(sprite_id + ' = LevelEditorSprite;');
+		}
+		
+		Effect.Game.addEventListener('init', function() {
+			if (env) Effect.Game.setEnv( env );
+		} );
+		
+		Effect.Game.addEventListener('loadGame', function() {
+			Effect.Game.setActiveLevel( '<?= $self->{session}->{query}->{level}; ?>', false );
+			
+			var level_def = Effect.Game.getLevelDef();
+			var level_data = Effect.Game.getLevelData();
+			
+			// index all tile classes by name, for quick lookups in drawTile()
+			var tile_classes = {};
+			if (game_def.Tiles && game_def.Tiles.Tile) {
+				var tiles = game_def.Tiles.Tile;
+				for (var idx = 0, len = tiles.length; idx < len; idx++) {
+					var tile = tiles[idx];
+					tile_classes[ tile.Name ] = tile;
+				}
+			}
+			
+			// create layers
+			if (level_def.Layers && level_def.Layers.Layer) {
+				var layers = parent.always_array( level_def.Layers.Layer );
+
+				for (var idx = 0, len = layers.length; idx < len; idx++) {
+					var layer = layers[idx];
+					var layer_data = level_data.layers[ layer.Name ];
+					var plane = null;
+					
+					if (layer.Type == 'sprite') {
+						plane = new SpritePlane( layer.Name );
+						plane.setZIndex( layer.ZIndex );
+						plane.setScrollSpeed( layer.ScrollRatio );
+						Effect.Port.attach( plane );
+						if (layer_data) {
+							plane.setupAether( layer_data );
+						}
+					}
+					else if (layer.Type == 'tile') {
+						plane = new TilePlane( layer.Name );
+						plane.setZIndex( layer.ZIndex );
+						plane.setScrollSpeed( layer.ScrollRatio );
+						
+						if (layer.Tileset) {
+							var tileset_id = layer.Tileset;
+							var tileset = parent.find_object( game_def.Tilesets.Tileset, { Name: tileset_id } );
+							if (!tileset) return parent.do_error("Could not locate tile set definition: " + tileset_id);
+							plane.tileImagePath = tileset.Path.replace(/\/$/, '');
+							plane.setTileSize( tileset.TileWidth, tileset.TileHeight );
+						}
+						else return parent.do_error("Layer has no tile set specified: " + layer.Name);
+						
+						plane._show_tiles = true;
+						plane._show_data = true;
+												
+						plane.setDrawTile( function(div, tx, ty, tileID, obj, tileURL) {
+							// background is actual tile, innerHTML is object overlay
+							if (tileID && this._show_tiles) {
+								div.style.background = 'url('+tileURL+') no-repeat 0px 0px';
+							}
+							else div.style.background = '';
+							
+							var html = '';
+							
+							if (obj && this._show_data) {
+								var zTileSizeX = this.zoom(this.tileSizeX) - borderAdjust;
+								var zTileSizeY = this.zoom(this.tileSizeY) - borderAdjust;
+								
+								var objType = obj.type ? obj.type : obj;
+								html = '<div style="width:'+zTileSizeX+'px; height:'+zTileSizeY+'px; border:1px solid '+(page.bkgnd_visible ? 'white' : 'black')+'; overflow:hidden;';
+														
+								var tile_def = tile_classes[ objType ];
+							
+								if (tile_def && tile_def.Icon) {
+									html += ' background:url('+Effect.Game.getGamePath()+tile_def.Icon+'?env='+env+'&mod='+Effect.Game.getAssetModDate()+') no-repeat 0px 0px;';
+									html += '">';
+								}
+								else {
+									html += '">';
+									html += '<span class="object_label">' + objType + '</span>';
+								}
+
+								html += '</div>';
+							}
+							div.innerHTML = html;
+						} );
+						
+						if (layer_data) {
+							if (layer_data.data) plane.setData( layer_data.data, 'data' );
+							if (layer_data.map) plane.setMap( layer_data.map );
+							if (layer_data.objectData) plane.objectData = layer_data.objectData; // skip init
+						}
+						
+						Effect.Port.attach( plane );
+					} // tile layer
+				} // foreach layer
+			} // level has layers
+			
+			// setup fake cursor
+			/* cursor.init();
+			Effect.Game.addEventListener( 'mouseMove', [cursor, 'move'] ); */
+			
+			Effect.Game.addEventListener( 'mouseDown', function(pt, buttonNum, e) {
+				parent.$P().handle_mouse_down(e, pt, buttonNum);
+				return false;
+			} );
+			
+			Effect.Game.addEventListener( 'mouseMove', function(pt, e) {
+				parent.$P().handle_mouse_move(e, pt);
+				return true;
+			} );
+			
+			Effect.Game.addEventListener( 'mouseWheel', function(delta, e) {
+				parent.$P().handle_mouse_wheel(e, delta);
+				return true;
+			} );
+			
+			Effect.Game.addEventListener( 'mouseUp', function(pt, buttonNum, e) {
+				parent.$P().handle_mouse_up(e, pt, buttonNum);
+				return false;
+			} );
+			
+			Effect.Game.addEventListener( 'keyDown', function(keyName, code, e) {
+				return parent.$P().handle_key_down(e);
+			} );
+			
+			Effect.Game.addEventListener( 'keyUp', function(keyName, code, e) {
+				return parent.$P().handle_key_up(e);
+			} );
+			
+			parent.$P('GameLevelMapEdit').notify_iframe_load({
+				_iframe: window, 
+				_game: Effect.Game, 
+				_port: Effect.Port,
+				_image_loader: Effect.ImageLoader,
+				_tool_preview: $('d_tool_preview'),
+				_grid: $('d_grid')
+			});
+		});
+	</script>
+</body>
+</html>

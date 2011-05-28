@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<ObfuscateConfig Version="1.0">
+	<!-- List of files to obfuscate and output -->
+	<SourceDir>src</SourceDir>
+	<SourceFiles>
+		<File>oop.js</File>
+		<File>xml.js</File>
+		<File>utils.js</File>
+		<File>cookie.js</File>
+		<File>Audio/Native.js</File>
+		<File>Audio/Flash.js</File>
+		<File>Audio.js</File>
+		<File>ImageLoader.js</File>
+		<File>FontLoader.js</File>
+		<File>XMLLoader.js</File>
+		<File>LevelLoader.js</File>
+		<File>ProgressDialog.js</File>
+		<!-- <File>Video/Native.js</File> -->
+		<!-- <File>Video/QuickTime.js</File> -->
+		<File>Video/Flash.js</File>
+		<File>Video.js</File>
+		<File>Portal.js</File>
+		<File>Plane.js</File>
+		<File>Plane/TilePlane.js</File>
+		<File>Plane/SpritePlane.js</File>
+		<File>Plane/HUD.js</File>
+		<File>Plane/VideoPlane.js</File>
+		<File>Sprite.js</File>
+		<File>Sprite/MultiSprite.js</File>
+		<File>Sprite/TextSprite.js</File>
+		<File>Sprite/CustomSprite.js</File>
+		<File>Sprite/StaticImageSprite.js</File>
+		<File>Tile.js</File>
+		<File>Tween.js</File>
+		<File>Toolbar.js</File>
+		<File>Game.js</File>
+	</SourceFiles>
+	<Output>htdocs/engine/engine.js</Output>
+	
+	<Header></Header>
+	<Footer></Footer> 
+	
+	<BuildConfigurations>
+		<Release>
+			<!-- Strip asserts debug calls-->
+			<Regexp Pattern="\bassert\s*\([^\;]+\;" Replace=";" Flags="sg"/>
+			<Regexp Pattern="\bdebugstr\s*\([^\;]+\;" Replace=";" Flags="sg"/>
+			<Regexp Pattern="\bDebug\.trace\s*\([^\;]+\;" Replace=";" Flags="sg"/>
+			<Regexp Pattern="this\._homePath\s\=\s\'(.+?)\'\;" Replace="this._homePath = 'http://www.yourdomain.com/effect';" Flags=""/>
+		</Release>
+		<Debug>
+			<Regexp Pattern="this\._homePath\s\=\s\'(.+?)\'\;" Replace="this._homePath = 'http://local.yourdomain.com/effect';" Flags=""/>
+			<SourceFiles>
+				<File>Debug.class.js</File>
+			</SourceFiles>
+		</Debug>
+	</BuildConfigurations>
+	
+	<!-- Strip comments -->
+	<Regexp Pattern="\/\*(.*?)\*\/" Replace="" Flags="sg"/>
+	<Regexp Pattern="\n\/\/[^\n]*" Replace="" Flags="g"/>
+	<Regexp Pattern="([^:\\\n\/])\/\/[^\n]*" Replace="$1" Flags="g"/>
+	
+	<!-- Strip line endings and compress whitespace -->
+	<Regexp Pattern="\n\s+" Replace="\n" Flags="g"/>
+	<Regexp Pattern="\n" Replace=" " Flags="g" Partial="39,40"/>
+	<Regexp Pattern="[ \t]+" Replace=" " Flags="g"/>
+	
+	<!-- <Regexp Pattern="\s+(=|==|&amp;&amp;|&lt;|&gt;|&gt;=|&lt;=|\+|\|\||\(|\)|\{|\}|\-|\+\=|\*|\*\=)\s+" Replace="$1" Flags="g"/> -->
+	<!-- <Regexp Pattern="\;\s+" Replace=";" Flags="g"/> -->
+	
+	<!-- Match keywords for obfuscation -->
+	<KeywordMatch Pattern="(_\w+)\.prototype\."/> <!-- Private Classes -->
+	<KeywordMatch Pattern="\.prototype\.(_\w+)\s*\="/> <!-- Private Class Methods or Members -->
+	<KeywordMatch Pattern="(_\w+)\:\s*function\s*\("/> <!-- Private Class Methods -->
+	<!-- <KeywordMatch Pattern="\bfunction\s+([a-z0-9_]{2,})\b"/> --> <!-- Private Functions (lower-case names) -->
+	<KeywordMatch Pattern="\bfunction\s+(_\w+)"/> <!-- Private Functions -->
+	<KeywordMatch Pattern="\bvar\s+(_\w+)"/> <!-- Private Variables -->
+	<KeywordMatch Pattern="this\.(_\w+)\s*\="/> <!-- Private Class Member Variables -->
+	<KeywordMatch Pattern="\bfunction\s*\(([\w\,\s]+)\)" IndividualMatch="^_\w+$"/> <!-- Private Function Arguments -->
+	<KeywordMatch Pattern="\bfunction\s+\w+\s*\(([\w\,\s]+)\)" IndividualMatch="^_\w+$"/> <!-- Private Function Arguments -->
+	
+	<!-- Explicit keyword and exclude lists -->
+	<KeywordList>current, average, frameCount, lastSecond, startTime, totalFrames, gGame, gImageLoader, gSocketManager, gProgress, gAjax, gTween, gPort, gPerf,  _constructor, _indent_string, _xml_header, _re_valid_tag_name, _is_master</KeywordList>
+	
+	<ExcludeList>gAudio, _load, _play, _stop, _rewind, _set_volume, _set_balance, level, onerror, id, xml, div, font, obj, html, query, x, y, xd, yd, tx, ty, left, top, right, bottom, width, height, document, body, type, event, events, elapsed, img, image, category, enabled, size, state, cols, rows, array, name, data, text, url, repeat, port, value, plane, track, px, rect, element, aether, tilePlane, spritePlane, code, min, protocol, style, safari, num_keys, tween, start, end, opacity, mode, error, delay, ua, __name, __parent, __construct, __static</ExcludeList>
+	
+	<!-- Obfuscated keyword generation -->
+	<CharList>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_</CharList>
+	<MinLength>3</MinLength>
+	<MaxLength>3</MaxLength>
+	<ReservedWords>in, if, do, is, as, pt, xd, yd, tx, ty, for</ReservedWords>
+</ObfuscateConfig>

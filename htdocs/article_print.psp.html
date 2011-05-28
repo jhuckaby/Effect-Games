@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	# Article placeholder for external links
+	# Contains content of article for spiders but redirects to actual presentation
+	if (!($self->{path_info} =~ m@^(.+)/([^/]+)$@)) {
+		$buffer .= "Bad Request: " . $self->{path_info}; 
+		return;
+	}
+	my ($article_path, $article_id) = ($1, $2);
+	
+	$self->log_debug(5, "Path: $article_path, Article ID: $article_id");
+	
+	my $article = $self->get_full_article( $article_path, $article_id );
+	if (!$article) { $buffer .= "Article not found: $article_id"; return; }
+	
+	# convert non-article anchor links to full URIs, because this is not the main /effect/ page
+	$article->{HTML} =~ s@(href\=\")(\#[A-Za-z])@ $1 . '/effect/' . $2; @eg; #"
+	
+	my $username = $article->{Username};
+	my $user = $self->get_user( $username );
+	
+	# HTTP Headers
+	$self->set_ttl( 'ViewTTL' );
+	$self->header_out( 'Last-Modified', time2str($article->{_Attribs}->{Modified}) );
+	$self->header_out( 'Vary', 'User-Agent' );
+	
+	# stuff variables into session so we can use them below (PSP design flaw)
+	$self->{session}->{_article_path} = $article_path;
+	$self->{session}->{_article_id} = $article_id;
+	$self->{session}->{_article} = $article;
+	$self->{session}->{_author} = ($user && $user->{Preferences}->{public_profile}) ? $user->{FullName} : $username;
+	$self->{session}->{_article_url} = $self->get_base_url() . '#Article' . $article_path . '/' . $article_id;	
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><?= $self->{session}->{_article}->{Title}; ?> | EffectGames.com</title>
+	<meta name="generator" content="EffectGames.com Blog Engine">
+	<link rel="stylesheet" type="text/css" href="<?= $self->get_base_uri(); ?>main.css" >
+	<link rel="stylesheet" type="text/css" href="<?= $self->get_base_uri(); ?>doxter.css" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+	<style type="text/css">
+		.dx_external_link {
+			padding-right: 0px;
+			background: transparent;
+		}
+		.dx_mailto_link {
+			padding-right: 0px;
+			background: transparent;
+		}
+	</style>
+</head>
+<body style="margin:20px;">
+	<h1>EffectGames.com | <?= $self->{session}->{_article}->{CatTitle}; ?></h1>
+	
+	<div class="blog_title" style="margin-bottom:10px; font-size: 15pt;">
+		<?= $self->{session}->{_article}->{Title}; ?>
+	</div>
+	
+	<div class="info">
+		<p><b>Author:</b> <?= $self->{session}->{_author}; ?></p>
+		<p><b>Published:</b> <?= scalar localtime $self->{session}->{_article}->{_Attribs}->{Modified}; ?></p>
+		<p><b>Tags:</b> <?= $self->{session}->{_article}->{Tags}; ?></p>
+		<p><b>Permalink:</b> <a href="<?= $self->{session}->{_article_url}; ?>"><?= $self->{session}->{_article_url}; ?></a></p>
+	</div>
+	
+	<div class="article_body">
+		<?= $self->{session}->{_article}->{HTML}; ?>
+	</div>
+	
+	<div id="d_footer">
+		<p align="center" style="margin-top:40px;">
+			<img src="/effect/images/logo_40.<?= $ie6 ? 'gif' : 'png'; ?>" width="40" height="34" class="png"/><br/>
+			<span class="caption" style="padding-bottom:0px;">
+				This article was published on the EffectGames.com website.<br/>
+				The author is responsible for its content.
+			</span>
+		</p>
+	</div>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+
+<?
+	$self->header_out('Cache-Control', 'no-cache');
+	
+	if (!$self->validate_session('login', 'readonly')) {
+		$self->html_error("You are not logged in.  This page requires that you have an EffectGames.com Developer Account, and be logged in.", { close => 1 });
+		$psp_abort = 1;
+		return;
+	}
+	
+	my $game_id = $query->{game};
+	if (!$game_id) {
+		$self->html_error("No Game ID specified.", { close => 1 });
+		$psp_abort = 1;
+		return;
+	}
+	
+	if (!$self->require_game_read_access($query->{game}, 'readonly')) {
+		$self->html_error("You are not a member of the game \"".$query->{game}."\".  This page is restricted to game members only.", { close => 1 });
+		$psp_abort = 1;
+		return;
+	}
+	
+	# check if game has code uploaded
+	my $src_folder = $self->{storage}->get_metadata( '/games/' . $query->{game} . '/assets/src' );
+	my $has_code = 0;
+	if ($src_folder && $src_folder->{Files} && $src_folder->{Files}->{File}) {
+		XMLalwaysarray( xml=>$src_folder->{Files}, element=>'File' );
+		foreach my $file (@{$src_folder->{Files}->{File}}) {
+			if ($file->{Name} =~ /\.js$/i) { $has_code = 1; last; }
+		}
+	}
+	if (!$has_code) {
+		$self->html_error("Your game has no source code uploaded to the \"src\" folder.  The Quick Play feature only works if you have uploaded code to run online.", { close => 1 });
+		$psp_abort = 1;
+		return;
+	}
+	
+	my $game = $self->{storage}->get_metadata( "/games/$game_id" );
+	if (!$game) {
+		$self->html_error("Could not load game: $game_id", { close => 1 });
+		$psp_abort = 1;
+		return; 
+	}
+	$self->{session}->{_game} = $game;
+	$self->{session}->{_game_title} = $game->{Title};
+	
+	# default zoomed port width for description box
+	$self->{session}->{_z_port_width} = $self->{session}->{_game}->{PortWidth} * $self->{session}->{_game}->{ZoomDefault};
+	
+	$self->{session}->{_id} = $self->{session}->{id};
+	$self->{session}->{_id} =~ s/^login_//;
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><?= $self->{session}->{_game_title}; ?> | Quick Play | EffectGames.com</title>
+	<link rel="stylesheet" type="text/css" href="/effect/style.psp.css" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+	<style type="text/css">
+		div.tab_page { 
+			margin: 0;
+			padding: 20px;
+			border:1px solid #ddd; 
+			background-color: #fff;
+		}
+		
+		div.feedback {
+			clear: both;
+			margin: 0px;
+		}
+		
+		.dx_paragraph { 
+			margin-left: 0px;
+		}
+		
+		.comment_body .dx_paragraph {
+			margin-left: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		
+		<!-- Spacer -->
+		<div style="height:20px"></div>
+		
+		<!-- Header -->
+		<div id="d_header" class="p100 fl clear rel header" style="cursor:pointer" onClick="window.open('/')">
+			<div id="d_shadow" class="shadow">
+				<div id="d_tagline" class="tagline"></div>
+			</div>
+			<div class="logo"></div>
+			<div id="d_title" class="title"></div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+				
+		<div id="d_h1" class="h1">
+			<div class="fl"><?= $self->{session}->{_game_title} ?> Quick Play</div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+		
+		<center>
+			<!-- Game -->
+			<?
+				# okay, show game
+				# $buffer .= '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #ccc;"><tr><td>';
+				$buffer .= '<script type="text/javascript" src="/effect/api/local_dev.js?game=' . 
+					$self->{session}->{query}->{game} . '&engine=' . $self->{session}->{query}->{engine} . '&key=' . 
+					$self->{session}->{_id} . '"></script>';
+				# $buffer .= '</td></tr></table>';
+			?>
+			
+			<script language="JavaScript">
+				if (window.Effect && Effect.Game) {
+					Effect.Game.addEventListener( 'onZoom', function(level) {
+						el('d_desc_wrapper').style.width = '' + Math.floor( Effect.Port.portWidth * level ) + 'px';
+					} );
+				}
+			</script>
+			
+			<!-- Tabs-->
+			<div id="d_desc_wrapper" style="margin-top:15px; width:<?= $self->{session}->{_z_port_width}; ?>px;">
+				<div class="tab_bar">
+					<div id="d_tab_desc" class="tab active">
+						<div class="content icon" style="background-image:url(/effect/images/icons/controller.<?= $ie6 ? 'gif' : 'png'; ?>);">Quick Play</div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div id="d_content_desc" class="tab_page" style="position:relative; display:block; text-align:left; font-weight:normal;">
+					This page allows you to quickly play the "latest" version of your game, using code uploaded to the "src" folder.  This is not intended for distribution, and requires an account and game access to play.  This is for your own internal use only.<br/><br/>
+					
+					If you want to allow others to play your game, please go to the "Publish" tab and publish a game release.
+				</div>
+			</div>
+		</center>
+				
+		<div id="d_footer">
+			<p align="center" style="margin-top:40px;">
+				<img src="/effect/images/logo_40.<?= $ie6 ? 'gif' : 'png'; ?>" width="40" height="34" class="png"/><br/>
+				<span class="caption" style="padding-bottom:0px;">
+					Effect Engine Copyright &copy; 2005 - 2011 Effect Games
+				</span>
+				<br/>
+				<span class="caption" style="padding-bottom:20px;">
+					<a href="/effect/#Article/About_Effect_Games">About Effect Games</a>
+				</span>
+			</p>
+		</div>
+
+	</div>
+	
+</body>
+</html>

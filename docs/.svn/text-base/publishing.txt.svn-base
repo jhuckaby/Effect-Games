@@ -1,0 +1,420 @@
+=article_title Publishing Guide
+=article_path /docs
+=article_tags docs, publishing
+=article_stags sidebar_docs
+=article_comments 1
+=section_numbers 1
+=toc 1
+
+=section #. Overview
+
+Publishing your game means that we take a "snapshot" of all your latest assets, objects (sprites, tiles, tilesets, fonts), keyboard settings, levels, and environments, and copy them into their own "revision" which is ready for playing online.  You must upload your game code at this time, to accompany the revision.  You can publish private revisions for you or your development team only, alpha and beta releases for select audiences, and of course public releases for the whole world to play.
+
+Everything is stored on the Effect Games servers, and is optimized for high availability.  Each revision has its own unique URL for playing the game on EffectGames.com, which you are free to distribute anywhere you like.  You can also embed the game on your own website or blog (see [Embedding] below), just like you would a [http://www.youtube.com YouTube] movie clip.
+
+You can create as many revisions as you like, as long as the total size doesn't exceed your game storage quota (games are allowed 100 MB total, but please [#Contact Contact Us] if you need more).
+
+=section #.#. Publish Tab
+
+When you are ready to publish a revision, click on the "Publish" tab:
+
+=image /effect/images/docs/getting_started/publish_tab.png style="border:0"
+
+Here you can view all your current game revisions, make changes, play or delete them.  When you click "Play", a new window opens, pointed directly at the official revision URL, which you can distribute if you like (depending on the [Release Type]).  Click the "Publish New Revision" link to start a new revision (see next section).
+
+=section #.#. Revision Editor
+
+When you edit an existing game revision, or click the "Publish New Revision" link, you are taken to the Revision Editor screen:
+
+=image /effect/images/docs/publish/rev_editor.png
+
+=section #. Details
+
+Here are all the details for the Revision Editor.
+
+=section #.#. Revision Number
+
+Each revision needs its own unique "Revision Number", which can contain alphanumeric characters, periods and dashes.  These typically contain a version number (e.g. "1.0") and possibly a letter denoting the release type, like "a" for alpha or "b" or beta.  However it is entirely up to you how to format your revision numbers.  A few examples:
+
+=syntax text
+	0.1i
+	0.2a
+	0.9b
+	1.0rc1
+	1.0
+	1.1b
+
+This identifier becomes part of the URL for the game release.
+
+=section #.#. Release Type
+
+You can choose between any of the following release types.  Each have slightly different rules as to who can access the game, and what features are enabled.
+
+=section #.#.#. Internal
+
+An internal release is designed |for you or your development team only|.  These are typically the first releases you create, for team testing and debugging.  Accessing an internal release requires that you have an EffectGames.com account, and be a member of the game.
+
+Sharing, comments and feedback are all disabled for internal releases.
+
+=section #.#.#. Alpha
+
+Alpha releases are generally made sometime during early development, with partial features only.  These are often for select audiences, like friends and family or a quality assurance team.  You can choose to enable a number of [Revision Options] for this release type, including password protection, sharing, comments and user feedback.
+
+=section #.#.#. Beta
+
+Beta releases are generally made during late development, with all features complete but not all bugs fixed.  These are often for wider audiences, but still not completely open to the general public.  You can choose to enable a number of [Revision Options] for this release type, including password protection, sharing, comments and user feedback.
+
+=section #.#.#. Release Candidate
+
+A release candidate is typically the final release before your game goes public.  This is esssentially a final validation test pass, to ensure everything works smoothly before publishing the official public release.  You can choose to enable a number of [Revision Options] for this release type, including password protection, sharing, comments and user feedback.
+
+=section #.#.#. Public
+
+Public releases are designed for widespread distribution.  These are typically "stable" releases, code complete, and all bugs fixed and verified.  Sharing and comments are always enabled for public releases.
+
+=section #.#.#.#. EffectArcade.com
+
+=image /effect/images/docs/publish/effect_arcade.png style="border:0"
+
+If you like, you can submit your published game revision to be considered for our upcoming *EffectArcade.com* website.  Still under construction, this will be a haven for gamers to play, share and discuss games made with the Effect Engine.  Please note that we reserve the right to reject your game for any reason, such as copyright or unappropriate content.
+
+=section #.#. Revision Options
+
+The [Alpha], [Beta] and [Release Candidate] release types all come with additional features you can choose to enable for your revision:
+
+=image /effect/images/docs/publish/rev_options.png style="border:0"
+
+=section #.#.#. Password
+
+You can choose to protect your release with a password.  This is so you can control who plays your game (perhaps a closed beta where you send out invitations), because people can "guess" the URL syntax to try to gain access to unpublished works in progress.  This'll protect your release a bit better.
+
+=section #.#.#. Allow Sharing
+
+This checkbox allows you to enable or disable the "Sharing" icon in the game toolbar.  If enabled, users can share the game on their [http://www.facebook.com Facebook] profile, tweet about it on [http://www.twitter.com Twitter], and grab the embed code to share the game on their own websites or blogs.
+
+=section #.#.#. Allow Comments
+
+This checkbox allows you to enable or disable user comments on your game revision page.  These are part of the page hosted on EffectGames.com, and don't "follow" your game if embedded on a 3rd party site (well, not yet anyway).
+
+User comments are somewhat self-moderating, with a link to "Report Abuse".  If enough reports come in about a single comment from unique IP addresses, it will be automatically removed from the page.
+
+=section #.#.#. Allow Feedback
+
+This checkbox allows you to enable or disable user feedback on your game revision page.  This system allows users to anonymously send comments directly to the game's owner via e-mail (your e-mail address is hidden of course).  User feedback is not posted for display on the page.
+
+=section #.#. Release Notes
+
+You can optionally include "release notes" with your game revision, perhaps describing known bugs or issues.  These notes may include [#Article/docs/Formatting_Guide rich formatting], and are displayed just under the main game display in a "Release Notes" tab:
+
+=image /effect/images/docs/publish/rel_notes.png style="border:0"
+
+=section #.#. Engine Version
+
+You can select a specific Effect Engine version to use for your game release.  By default this is pre-populated with the engine version you chose when developing locally (see the [article:docs/Local Development Guide]), but you are free to change it here.  For example, if you chose a "Debug" version of the engine to develop with, you could choose the actual release version here.  Non-debug engine versions typically run faster, because they have no assert or debug logging calls.
+
+=section #.#. Plugins
+
+You can optionally select one or more [#ArticleCategory/plugins Engine Plugins] to include with your release.  By default this list is pre-populated with any Plugins you enabled in the main Game Settings page, but you may want to make changes here.  For example, you may have included a debugging plugin that is only applicable to internal releases.
+
+=section #.#. Upload Code
+
+While you may develop your game locally on your Mac or PC, you must actually upload your game code for a game release.  This is so we can provide a single URL to play your game, that doesn't have to pull code from an external source.  Your code is and always will be solely owned by you.  You are not "giving" it to Effect by uploading it -- we are merely hosting it on our servers for you.  See our [article:main/End_User_License_Agreement] for details.
+
+Please note that if you have been developing your game online, and have already uploaded your code into the "{src/}" asset folder, you do not need to upload it again.  Uploading code here *overrides* any code you have in your "{src/}" asset folder, and is used instead of it.
+
+You may upload multiple files, and move them up or own so they are in the correct order.  For example, you may split up your classes into separate files, but some classes rely on other parent classes to exist, so the parent classes must be loaded first.
+
+=image /effect/images/docs/publish/upload_code.png style="border:0"
+
+Click the green arrows to re-sort your code files, so they load in the correct order.
+
+=section #.#. Code Compression and Optimization
+
+It is highly recommended you compress and/or optimize your code for your game release (especially public releases).  There are a number of reasons for this.  First, this reduces the size of your code, which results in faster load times.  Second, if your game is closed source, this can protect your code by obfuscating your functions and variables.
+
+You are free to use any [wikipedia:Minify, code minification] service you want, but we recommend [http://code.google.com/closure/compiler/ Google Closure].  In fact, we have built in support for automatically sending your code through the Closure compiler when it is uploaded:
+
+=image /effect/images/docs/publish/upload_button.png
+
+Google has three levels of optimization you can choose from, which are described briefly below.  Also see [http://code.google.com/closure/compiler/docs/compilation_levels.html Google's own documentation on the optimization levels].
+
+=section #.#.#. Whitespace Only
+
+As the name implies, this mode only strips unnecessary whitespace from your code, resulting in everything being stuffed on a single line.  This is the safest mode of optimization, and usually does not cause any issues.
+
+=section #.#.#. Simple Optimizations
+
+This mode performs the same optimization as [Whitespace Only], but also reduces the length of your local variables and function names.  So if you had a local variable named "{highScore}", it will be replaced with a randomly generated short name, usually a single character.  This is still a pretty safe optimization, but you should test your code to make sure this doesn't introduce any new bugs.
+
+=section #.#.#. Advanced Optimizations
+
+This is a highly aggressive mode of optimization, that dramatically transforms your code in an effort to be more compact and efficient.  It rewrites both local *and global* variables and functions, performs dead code removal, and inlines functions and constants.  Effect Engine API calls are automatically excluded from the optimization.
+
+Please note that it is entirely possible your code will not function correctly with this mode of optimization.  For example, most of the Effect Games demos and tutorials use a technique where we call a function by a property value (part of a simple [wikipedia:Finite state machine]), but this currently does not work with Advanced Optimizations:
+
+=syntax js
+	MySprite.add({
+		state: 'running',
+		
+		logic: function(clock) {
+			this[ this.state ](clock);
+		},
+		
+		running: function(clock) {
+			// handle the 'running' state here
+		}
+	});
+
+Notice that we are calling a function by the value of a property.  This \[rather evil\] trick confuses Google Closure when using Advanced Optimizations, and causes a JavaScript runtime error.  This is because the class function names are compressed, but the value of the "{state}" property is not changed.  So the code ends up calling a function that does not exist.
+
+=note Google Disclaimer: Unlike the other two compilation levels, Advanced Optimizations makes strong assumptions about the compiled code. If your code does not conform to those assumptions, Advanced Optimizations may have unintended effects.  Also see [http://code.google.com/closure/compiler/docs/compilation_levels.html Google's documentation on its optimization levels].
+
+=section #.#.#. Copyright Notice
+
+If you want to include a copyright notice in your code, please wrap it in a JavaScript comment block (either style is fine), and place it at the top of your first code file in the uploaded file list.  This will be automatically detected and preserved, even if you optimize your code with Google Closure.  Example:
+
+=syntax js
+	/**
+	 * My Game
+	 * Copyright (c) 2009 Me
+	 * All rights reserved.
+	 **/
+
+=section #.#. Google Analytics
+
+Want to know who is playing your game, how often it is played, and where it has been distibuted to?  No problem!  Just signup for a free [http://www.google.com/analytics/ Google Analytics] account, and you can have it monitor every game play.
+
+First, login to your Google Analytics account, and create a new profile for the domain "*www.effectgames.com*".  Even if your game is distributed to 3rd party sites via embed code, the player app itself runs in an IFRAME which points back at EffectGames.com, so analytics will still track external plays.
+
+Once you are given a *Web Property ID* for the profile (example: "{UA-1234567-1}", simply enter it into the Game Revision Editor, and analytics will be tracked for your game revision.
+
+=section #. Sharing
+
+Effect Games offers you (and your users) a number of sharing options for getting your game distributed far and wide.  This section discusses how our sharing system works.
+
+=section #.#. Game URL
+
+Each of your game revisions has its own unique URL, for playing the game right on EffectGames.com.  You are free to distribute this URL wherever you like for linking to the page.  This page is accessible by clicking the "Play" button next to the revision on the "Publish" tab.  The URL is constructed using this syntax:
+
+	http://www.effectgames.com/effect/games/GAMEID/REVISIONNUM
+
+Replace "{GAMEID}" with your Game ID, and "{REVISIONNUM}" with your revision number.  Example:
+
+	http://www.effectgames.com/effect/games/crystalgalaxy/1.0b
+
+Also, you can omit the {REVISIONNUM} and just specify the {GAMEID}.  This will load the latest public, release candidate, beta or alpha release (in that order).  Example:
+
+	http://www.effectgames.com/effect/games/crystalgalaxy/
+
+=section #.#. Embedding
+
+If you are allowing sharing options for your game revision (see [Allow Sharing] above), or if your release is public, a special "Sharing" icon will appear in the game toolbar:
+
+=image /effect/images/docs/publish/toolbar_sharing.png style="border:0"
+
+Clicking this icon brings up a dialog where the user can copy "embed code" to run your game on their own website or blog.  This method of sharing is similar to how [http://www.youtube.com YouTube] works.  The embed code is formatted like this:
+
+=syntax html
+	<iframe 
+		src="http://www.effectgames.com/effect/api/gf/crystalgalaxy/1.0b" 
+		style="width:800px; height:600px; margin:0; padding:0;" frameborder="0"
+		scrolling="no">
+	</iframe>
+
+Please be very careful trying to construct this embed code by hand, because the IFRAME "width" and "height" are calculated with several things in mind.  First, if your default game zoom level is greater than 1X, the width and height must take this into account.  Second, the game toolbar adds 24px of height to the overall IFRAME.  It is recommended you grab embed code from the in-game toolbar's "Sharing" icon, so it is guaranteed to work properly.
+
+=section #.#. Facebook and Twitter
+
+If users have [http://www.facebook.com Facebook] or [http://www.twitter.com Twitter] accounts, they can share the game by clicking on the appropriate icon in the "Sharing" dialog.  They are also accessible in the page header, if you are playing the game at its home URL on EffectGames.com.  These social networking options are only available if you allow sharing (see [Allow Sharing] above), or if your release is public.
+
+=section #. Standalone Publish
+
+This feature allows you to download a complete "standalone" version of your game revision, which can be hosted on your own web server, and will run entirely without contacting the Effect Games servers.
+
+Please note that using this feature means you agree to the terms and conditions in the [article:main/Standalone Publish Agreement].
+
+=section #.#. Features
+
+=list
+	*Standalone game packaged and delivered as ZIP file.*
+		The ZIP file contains a complete copy of your game, which is ready to play when uploaded to any web server.
+		No software is required on your web server (no PHP, Perl, Java, or Ruby).
+	*Complete Effect Engine included with game.*
+		A complete standalone version of the JavaScript Effect Engine is included in the ZIP file.
+		Nothing is ever loaded from the Effect Games servers.
+	*Images pre-zoomed to the desired size.*
+		All your game images are pre-zoomed to the default zoom level chosen for your game.
+	*Sprite images pre-transformed using any selected filters.*
+		Any sprite image transforms, such as rotation, scaling, mirror flip, or environment filters, are pre-applied.
+	*Environments fully supported.*
+		Level environments are fully supported, by pre-transforming all images and including multiple copies in the ZIP file, one for each environment.
+	*Levels and XML files pre-converted to JSON for loading without any server-side code.*
+		All your game levels and XML files are pre-converted to JSON, so the engine can load them from your web server without any server-side software.
+
+=section #.#. Usage
+
+To download a standalone version of your game, simply click the "Export" link next to the revision.  You must first publish a revision in order to export it.
+
+=image /effect/images/docs/publish/export_link.png style="border:0"
+
+The game is packaged as a [wikipedia:ZIP_(file_format), ZIP file], which is constructed in the background, and then a link is e-mailed to you when it is complete.  This process usually only takes a few seconds, but can be longer depending on the complexity of your game.
+
+Once you receive the e-mail and download the ZIP file, you can decompress it and upload it to your own web server.
+
+=section #.#. Package Contents
+
+The ZIP file decompresses to a directory that contains all your game files, and the engine files necessary to run the game.  The directory is named the same as your Game ID and Revision Number, separated by a dash.  Inside the directory is an "{index.html}" file, which is the file you want to point your browser at to play the game.
+
+Example package layout:
+
+=filesystem
+	mygame-1.0/
+		index.html
+		iframe.html
+		mygame.js
+		assets/
+		engine/
+		environments/
+		fonts/
+		images/
+		levels/
+		sprites/
+		xml/
+
+Here are descriptions of all the top-level files and folders.  Note that depending on the features currently being used by your game, some of these directories may not be included.
+
+=deflist
+	{index.html} | This is the main game presentation page that you should point your browser to.  With most web server software, you can omit this filename and just direct your browser at the outer directory (in this case "{mygame-1.0/}"), and the {index.html} file will be pulled up by default.
+	{iframe.html} | The main game presentation uses an IFRAME, so you can easily share and embed the game on other websites.  This file contains the contents of the IFRAME, and is not intended to be pointed at directly.
+	{mygame.js} | This is the source code of your game, as uploaded to the Game Revision Editor.  If you uploaded multiple files, they are all concatenated together here into one single file.  Also, if you used Google Closure, the code will be optimized and/or compressed.
+	{assets/} | This is a copy of all your game assets, arranged just as you have them in Asset Manager.  However, all your images have been pre-zoomed to the desired default zoom level for the game.
+	{engine/} | This folder contains the Effect Engine and supporting files.
+	{environments/} | If you are using Environments for your levels (see the [article:docs/Level Editor Guide]), all your images are duplicated here, and pre-transformed for each environment. 
+	{fonts/} | If you are using any Bitmap Fonts in your game (see the [article:docs/Font Guide]), then they are pre-rendered into single images here, ready for use in your game.
+	{images/} | This folder contains internal images used by the Effect Engine.
+	{levels/} | If you have any levels in your game (see the [article:docs/Level Editor Guide]), they are each transformed to JSON format and shipped in this directory.
+	{sprites/} | If you are using any sprite image transforms, such as scaling, rotation or environmental filters, the images are all pre-transformed and placed into this directory.
+	{xml/} | If you are using any XML files in your game, they are pre-transformed to JSON format and placed into this directory.
+
+=section #.#. Standalone Sharing
+
+If you look at the source of the "{index.html}" file, you'll see that your game is embedded in the page using an IFRAME.  Here is an example:
+
+=syntax html
+	<!-- Begin Game Embed Code -->
+	<iframe src="iframe.html" style="width:512px; height:504px; margin:0; padding:0;" frameborder="0" scrolling="no"></iframe>
+	<!-- End Game Embed Code -->
+
+This is so you can copy this embed code (you'll have to convert the "{iframe.html}" attribute to a fully-qualified URL, e.g. "{http://www.myserver.com/mygame-1.0/iframe.html}"), and paste it into other websites or blogs, effectively sharing the game like you can do with games hosted on EffectGames.com.
+
+You are free to extract the source of the IFRAME and use it directly on your site, but beware: The Effect Engine requires a special DOCTYPE declaration at the top of the page, and may not display properly if you have competing CSS classes or libraries on your page.  The IFRAME effectively "protects" the engine from these things, allowing it to render on a clean DOM.  It is therefore highly recommended you use the provided embed code.
+
+=section #.#. Server Optimization
+
+For optimum engine performance, it is recommended that you configure your web server to deliver your game assets with "cache-friendly" headers and a future expiration date.  This way the files will remain in browser caches for an extended period of time, and not have to be re-downloaded from your server (potentially during game play).
+
+The instructions for setting this up can differ depending on the web server software you use, but here is how to do it using the popular [http://httpd.apache.org/ Apache] web server:
+
+First, make sure you have the [http://httpd.apache.org/docs/2.0/mod/mod_expires.html mod_expires] module enabled, then add a [http://httpd.apache.org/docs/2.0/mod/core.html#locationmatch LocationMatch] directive to your {httpd.conf} configuration file that enables the appropriate headers for your game files.  Here is an example, assuming the game is hosted in a directory named "{/mygame/}".
+
+=syntax xml
+	<LocationMatch ^/mygame/.+>
+		ExpiresActive on
+		ExpiresDefault A86400
+	</LocationMatch>
+
+This will set all files under the "/mygame/" directory to be served up with special HTTP headers that contain rules for browser caches.  Specifcially, they instruct browsers to cache the files for at least 24 hours (86400 seconds).
+
+You'll need to restart Apache for the changes to take effect.
+
+=section #.#. Caveats
+
+=list
+	*No in-game zoom switching*
+		While you may select which zoom level to export your game at (just set the default zoom level in the game settings page), you cannot change zoom levels in-game.
+	*No in-game sharing or embedding tools*
+		The built-in sharing and embeddeding tools are designed to work on the Effect Games servers, so are disabled for standalone games.  However, you can easily provide your own tools for sharing (see [Questions] below).
+	*No built-in Google Analytics*
+		The built-in Google Analytics feature is disabled for standalone games, but you can easily add your own analytics tracker (see [Questions] below).
+
+=section #.#. Questions
+
+=section #.#.#. What are the licensing restrictions for my standalone games?
+
+Please read the [article:main/Standalone Publish Agreement].
+
+=section #.#.#. Can I embed my standalone game on other sites?
+
+Absolutely!  Please see the [Standalone Sharing] section above.
+
+=section #.#.#. How do I get rid of the "Click To Play" and have the game auto-load?
+
+The "Click To Play" link is there because the game is hosted inside an IFRAME, so the user must click once to give "focus" so the keyboard can be captured properly in all browsers.  If you want to get rid of the "Click to Play" and have your game automatically load, you have two options:
+
+=section #.#.#.#. Force Auto-Play
+
+You can force the engine into "autoplay" mode by passing "{?autoplay=1}" on the end of the IFRAME URL.  Example:
+
+=syntax html
+	<!-- Begin Game Embed Code -->
+	<iframe src="iframe.html?autoplay=1" style="width:512px; height:504px; margin:0; padding:0;" frameborder="0" scrolling="no"></iframe>
+	<!-- End Game Embed Code -->
+
+But please note, this has serious side effects in most browsers.  Since the user is no longer clicking in the IFRAME, it does not get "focus", so the keyboard cannot be captured (read: keyboard controls will not work).  If your game is entirely mouse based, you should be fine.  Otherwise, beware.
+
+=section #.#.#.#. Remove the IFRAME
+
+Your other option is to completely remove the IFRAME, and simply host the inner contents of the "{iframe.html}" file on your main page.  The contents contsist of two SCRIPT tags, one for the engine, and one for your game code.  Example:
+
+=syntax html
+	<script type="text/javascript" src="engine/EffectEngine.js"></script>
+	<script type="text/javascript" src="mygame.js"></script>
+
+If you remove the IFRAME and replace it with these two SCRIPT tags, the engine will detect this and automatically load without the "Click to Play".  However, please beware: The Effect Engine is expecting to run on a "clean" DOM and a special HTML DOCTYPE.  Meaning, you could have CSS classes on your page that interfere with the engine, and you could have an incompatible DOCTYPE declaration.  Currently, the engine is only tested for the HTML 4 Transitional DOCTYPE:
+
+=syntax html
+	<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+Hosting the game in an IFRAME gets around all these issues, because the IFRAME has a clean DOM without any CSS classes, and has the correct DOCTYPE declaration.  Please be very careful trying to unravel this.
+
+=section #.#.#. Can I play my game offline?
+
+While you *might* be able to get this to work, we do not support it.  For one thing, our Flash audio system does not work offline, unless you enable special permissions in your Flash Player settings.  Sorry, but you're on your own here.
+
+=section #.#.#. Can I use this for offline development?
+
+Please don't do this.  For one thing, the Effect Engine that is shipped with your standalone game is specifically generated for your exact published game revision.  Meaning, it needs to know beforehand all your assets, tiles, images, transforms, levels, and XML files.  These are "hard-coded" inside the compressed JavaScript for the engine.  If you make any changes to any of these assets, you will have to generate and download a whole new standalone game revision all over again.  Also, see the above question about offline Flash audio.
+
+=section #.#.#. How do I provide controls for people to share my standalone game on Facebook or Twitter?
+
+Quite easily.  Remember, the game is running on your own web server, and you have complete control over the HTML presentation in the "{index.html}" file.  Simply follow the [http://www.facebook.com/facebook-widgets/share.php Facebook Sharing Instructions] for sharing via Facebook, and Twitter is even easier.  Just construct a link and include your message encoded on the URL, like this:
+
+=syntax html
+	<a href="http://twitter.com/home?status=Playing GAME TITLE on http://www.myserver.com/mygame-1.0/"
+		title=”Click to share this game on Twitter”>Share on Twitter</a>
+
+Replace {GAME TITLE} with the title of your game, and change the URL to match your server.
+
+=section #.#.#. How do I add Google Analytics to my standalone game?
+
+Quite easily.  Just follow the [http://www.google.com/support/analytics/bin/answer.py?hl=en&answer=55488 Google Analytics Instructions], and place the JavaScript code into the "{iframe.html}" page, just before the final closing {</body>} tag.
+
+=section #.#.#. Why are all my PNG tiles duplicated as GIF files?
+
+This is to support IE 6.  Currently tile planes are rendered using GIFs in IE 6, for performance reasons (yes, we know all about AlphaImageLoader and VML, but both are very slow).  Tile planes have too many images to render smoothly with PNGs in IE 6.
+
+=section #.#.#. What is this "_blank.gif" file in my Tilset directories?
+
+This image is displayed for "empty" tiles in your levels.  This image is generated automatically based on the size of your tiles, and used interally by the engine.
+
+=section #.#.#. You've messed up a bunch of my tile images.  All the filenames are melded together.
+
+Nope, this is as designed.  Those are "tile overlays", and generated automatically by the Level Editor.  When you overlay tiles on top of other tiles, the engine automatically generates temporary tiles that include both images superimposed on top of each other.  In a standalone game, these have to be pre-rendered, and are representated by both filenames separated by a dash.  Nothing to worry about.
+
+=section #.#.#. Why are all my images duplicated multiple times in different places?
+
+This is to support things like sprite image transforms (scaling, rotation and/or environment filters).  You may have these transforms selected on one sprite, but not on other, or use the image in some other place in your game.  Also, each image must be duplicated for every environment you have defined.
+
+=section #.#.#. I uploaded my game to my server, but it doesn't work!
+
+Sorry, we cannot provide support for troubleshooting your web server.  Please contact your server administrator for assistance, and make sure you read the [Server Optimization] section above.

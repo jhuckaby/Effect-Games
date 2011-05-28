@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Loading...</title>
+	<meta name="generator" content="EffectGames.com Blog Engine">
+	<link rel="stylesheet" type="text/css" href="main.css" >
+	<link rel="stylesheet" type="text/css" href="doxter.css" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+	<style type="text/css">
+		.article_preview_warnings {
+			border:1px solid red;
+			padding: 20px;
+			margin: 20px;
+			background-color: #fdd;
+			background-image:url(images/white-grad.png);
+			background-repeat: repeat-x;
+			behavior: url(iepngfix.htc);
+			font-weight: bold;
+		}
+		
+		body {
+			margin: 10px;
+		}
+	</style>
+	<script language="JavaScript">
+		function init() {
+			if (window.opener && window.opener.effect_init) {
+				window.opener.setTimeout( "$P('ArticleEdit').preview_request()", 1 );
+			}
+		}
+		
+		function select_line(num) {
+			if (window.opener && window.opener.effect_init) {
+				window.opener.setTimeout( "$P('ArticleEdit').preview_select_line("+num+")", 1 );
+			}
+		}
+	</script>
+</head>
+<body onLoad="init()">
+	<h1>Article Preview</h1>
+	
+	<div class="article_preview_warnings" id="d_warnings" style="display:none"></div>
+	
+	<div class="blog_title" id="d_title">
+		Generatng Preview...
+	</div>
+	
+	<div class="article_body" id="d_body">
+		
+	</div>
+</body>
+</html>

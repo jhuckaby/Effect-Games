@@ -1,0 +1,542 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	my $game_id = $query->{game};
+	if (!$game_id) { $buffer .= "ERROR: No Game ID specified."; return; }
+	
+	my $rev_id = $query->{rev};
+	if (!$rev_id) { $buffer .= "ERROR: No Revision ID specified."; return; }
+	
+	# locate rev metadata
+	my $rev = $self->{storage}->list_find( "/games/$game_id/revs", { Name => $rev_id } );
+	if (!$rev) { $buffer .= "ERROR: Could not locate game revision: $rev_id."; return; }
+	$self->{session}->{_rev} = $rev;
+	
+	# load game too, need title, but load from REV namespace
+	my $game = $self->{storage}->get_metadata( "/games/$game_id/revisions/$rev_id" );
+	if (!$game) { $buffer .= "ERROR: Could not load revision: $rev_id."; return; }
+	$self->{session}->{_game} = $game;
+	
+	$self->{session}->{_game_title} = $game->{Title};
+	$self->{session}->{_rev_num} = $rev->{Name};
+	$self->{session}->{_title} = '';
+	if ($rev->{RevType} ne 'Public') { $self->{session}->{_title} = '(' . $rev->{RevType} . ')'; }
+	
+	# if rev type is internal, must be logged in and game member
+	$self->{session}->{_play_query_add} = '';
+	if ($rev->{RevType} eq 'Internal') {
+		if (!$self->validate_session('login', 'readonly')) {
+			$buffer .= "ERROR: Not logged in.";
+			return;
+		}
+		if (!$self->require_game_member($query->{game}, 'readonly')) {
+			$buffer .= "ERROR: Not a game member.";
+			return;
+		}
+		
+		my $id = $self->{session}->{id};
+		$id =~ s/^login_//;
+		$self->{session}->{_play_query_add} = '&key=' . $id;
+	}
+	
+	# check for password protect
+	$self->{session}->{_show_password} = 0;
+	$self->{session}->{_password_error} = 0;
+	if ($rev->{Password} && ($rev->{RevType} =~ /^(Alpha|Beta|Release\sCandidate)$/)) {
+		my $pass_md5 = $self->{session}->{cookie}->{play_auth};
+		if (!$pass_md5 && $self->{session}->{cookie}->{CookieTree} 
+			&& ($self->{session}->{cookie}->{CookieTree} =~ /play_auth\W+(\w+)/)) {
+			$pass_md5 = $1;
+		}
+		if (!$pass_md5) {
+			$self->{session}->{_show_password} = 1;
+		}
+		elsif ($pass_md5 ne md5_hex($rev->{Password})) {
+			$self->{session}->{_show_password} = 1;
+			$self->{session}->{_password_error} = 1;
+		}
+	}
+	
+	# comments and feedback
+	$self->{session}->{_show_comments} = 0;
+	$self->{session}->{_show_feedback} = 0;
+	if ($rev->{RevType} =~ /^(Alpha|Beta|Release\sCandidate)$/) {
+		if ($rev->{Comments}) { $self->{session}->{_show_comments} = 1; }
+		if ($rev->{Feedback}) { $self->{session}->{_show_feedback} = 1; }
+	}
+	elsif ($rev->{RevType} eq 'Public') {
+		$self->{session}->{_show_comments} = 1;
+	}
+	
+	# google analytics
+	$self->{session}->{_goog_anal} = '';
+	if ($self->{config}->{GoogAnalID}) {
+		$self->{session}->{_goog_anal} .= "<script type=\"text/javascript\">var _gaq = _gaq || [];_gaq.push(['t1._setAccount', '".$self->{config}->{GoogAnalID}."']);_gaq.push(['t1._trackPageview']);</script>\n";
+	}
+	if ($rev->{GoogAnalID}) {
+		$self->{session}->{_goog_anal} .= "<script type=\"text/javascript\">var _gaq = _gaq || [];_gaq.push(['t2._setAccount', '".$rev->{GoogAnalID}."']);_gaq.push(['t2._trackPageview']);</script>\n";
+	}
+	if ($self->{config}->{GoogAnalID} || $rev->{GoogAnalID}) {
+		$self->{session}->{_goog_anal} .= "<script type=\"text/javascript\">(function() {var ga = document.createElement('script');ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';ga.setAttribute('async', 'true');document.documentElement.firstChild.appendChild(ga);})();</script>\n";
+	}
+	
+	# rev desc
+	$self->{session}->{_rev_desc} = $game->{ReleaseNotesHTML} || $rev->{DescriptionHTML} || '';
+	
+	# game logo thumbnail image (for facebook sharing)
+	$self->{session}->{_logo_url} = '';
+	if ($game->{Logo} && ($game->{Logo} =~ /^(\w+)\/(.+)$/)) {
+		my ($username, $filename) = ($1, $2);
+		$filename =~ s/\.(\w+)$/_thumb.jpg/;
+		$self->{session}->{_logo_url} = $self->get_base_url() . 'api/view/users/' . $username . '/images/' . $filename;
+	}
+	else {
+		# default effect logo
+		$self->{session}->{_logo_url} = $self->get_base_url() . 'images/logo_80.png';
+	}
+	
+	# main game desc
+	$self->{session}->{_game_desc} = '';
+	if ($self->{session}->{_logo_url} && !$ie6) {
+		$self->{session}->{_game_desc} .= '<div class="inline_logo_thumb"><img src="'.$self->{session}->{_logo_url}.'" /></div>';
+	}
+	$self->{session}->{_game_desc} .= '<div class="game_title">' . $game->{Title} . '</div>';
+	if ($game->{DescriptionHTML}) {
+		$self->{session}->{_game_desc} .= '<div class="game_desc">' . $game->{DescriptionHTML} . '</div>';
+	}
+	$self->{session}->{_game_desc} .= '<div class="clear"></div>';
+	
+	$self->set_ttl( 'ViewTTL' );
+	$self->header_out( 'Vary', 'User-Agent' );
+	
+	# sharing options affect links in header too
+	$self->{session}->{_sharing} = '';
+	if ($rev->{DisableSharing} ne 1) {
+		$self->{session}->{_sharing} .= '<a class="icon facebook" href="javascript:void(window.open(\'http://www.facebook.com/sharer.php?u=' . uri_escape(get_request_url()) . '&t=' . uri_escape($self->{session}->{_game_title}) . '\',\'sharer\',\'toolbar=0,status=0,width=626,height=436\'))" title="Share on Facebook">Facebook</a>';
+		$self->{session}->{_sharing} .= '<a class="icon twitter" href="http://twitter.com/home?status=Playing%20' . uri_escape($self->{session}->{_game_title}) . '%3A%20' . uri_escape(get_request_url()) . '" target="_blank" title="Share on Twitter">Twitter</a>';
+	}
+	
+	# default zoomed port width for description box
+	$self->{session}->{_z_port_width} = $self->{session}->{_game}->{PortWidth} * $self->{session}->{_game}->{ZoomDefault};
+	
+	# clean desc for meta tag (first para only)
+	$self->{session}->{_preview_text} = strip_html( $game->{DescriptionHTML} || $rev->{DescriptionHTML} || '' );
+	$self->{session}->{_preview_text} =~ s@\n.+$@@s;
+	$self->{session}->{_preview_text} =~ s@\"@@; #"
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><?= $self->{session}->{_game_title}; ?> <?= $self->{session}->{_rev_num}; ?> | EffectGames.com</title>
+	<link rel="stylesheet" type="text/css" href="/effect/style.psp.css" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+	<meta name="title" content="<?= $self->{session}->{_game_title}; ?> <?= $self->{session}->{_rev_num}; ?>">
+	<meta name="description" content="<?= $self->{session}->{_preview_text}; ?>">
+	<link rel="image_src" href="<?= $self->{session}->{_logo_url}; ?>" />
+	<style type="text/css">
+		div.tab_page { 
+			margin: 0;
+			padding: 20px;
+			border:1px solid #ddd; 
+			background-color: #fff;
+		}
+		
+		div.feedback {
+			clear: both;
+			margin: 0px;
+		}
+		
+		.dx_paragraph { 
+			margin-left: 0px;
+		}
+		
+		.comment_body .dx_paragraph {
+			margin-left: 20px;
+		}
+	</style>
+</head>
+<body>
+	<script language="JavaScript"> window.no_hooky = true; </script>
+	<script type="text/javascript" src="/effect/code.psp.js"></script>
+	
+	<script language="JavaScript">
+		var config = <?= xml_to_javascript(
+			copy_hash_remove_keys($self->{config}, 
+				'Strings', 'DebugLevel', 'ContactReasons', 'Growl', 'Pages', 'StockAvatars', 
+				'FileMagic', 'RSSConfig', 'PrivateUserData', 'DefaultPrivileges', 'Emails', 'Session',
+				'StorageConfig', 'DatabaseTables', 'Handlers', 'Paths', 'ImageServiceURL', 
+				'FreeAccounts', 'LogTemplate', 'GameProjectStates', 'ClientInfo', 
+				'BitmapFontGlyphs', 'DefaultUser', 'ContactEmail', 'ImageManager', 'PreferenceConfig',
+				'MailProxy'
+			), 
+		1, compress => 1); ?>;
+		
+		session._show_password = '<?= $self->{session}->{_show_password}; ?>';
+		session._password_error = '<?= $self->{session}->{_password_error}; ?>';
+		
+		session._show_comments = '<?= $self->{session}->{_show_comments}; ?>';
+		session._show_feedback = '<?= $self->{session}->{_show_feedback}; ?>';
+		
+		function play_init() {
+			if (session.inited) return;
+			session.inited = true;
+
+			assert( window.config, "Config not loaded" );
+			session.config = window.config;
+
+			Debug.trace("Starting up");
+			
+			if (location.href.match(/\/games\/([\w\-]+)\/([\w\.\-]+)/)) {
+				session.query.game = RegExp.$1;
+				session.query.rev = RegExp.$2;
+			}
+			else {
+				session.query.game = '<?= $query->{game}; ?>';
+				session.query.rev = '<?= $query->{rev}; ?>';
+			}
+
+			rendering_page = false;
+			
+			if (session._show_password == 1) {
+				do_show_password_dialog();
+				return;
+			}
+
+			preload();
+
+			// precalculate some common reg exps
+			window.$R = {};
+			for (var key in config.RegExpShortcuts) {
+				$R[key] = new RegExp( config.RegExpShortcuts[key] );
+			}
+
+			// setup word wrap
+			ww_precalc_font("body", "effect_precalc_font_finish");
+
+			// setup page manager
+			// page_manager = new Effect.PageManager( config.Pages.Page );
+			
+			// check for cookie
+			var session_id = session.cookie.get('effect_session_id');
+			if (session_id && session_id.match(/^login/)) {
+				// login from cookie
+				session.hooks.after_error = 'do_continue_loading';
+				effect_api_send('session_recover', {}, 'do_play_login', { _from_recover: 1, _on_error: do_continue_loading, _silent: 1 } );
+			}
+			else do_continue_loading();
+			
+			if (session._show_feedback == 1) {
+				el('d_feedback_a').innerHTML = el('d_feedback_b').innerHTML = '<div class="little_button_stack">' + 
+					large_icon_button('email_edit.png', 'Send Feedback...', "do_show_feedback_dialog()") + '<div class="clear"></div>' + 
+					'</div>' + '<div class="clear"></div>';
+			}
+		}
+		
+		function do_play_login(response, tx) {
+			session.user = response.User;
+			session.username = session.user.Username;
+
+			hide_popup_dialog();
+			delete session.hooks.after_error;
+			
+			do_continue_loading();
+		}
+		
+		function do_logout_2() {
+			// override this and just continue loading
+			do_continue_loading();
+		}
+		
+		function do_continue_loading() {
+			if (session._show_comments == 1) {
+				el('d_comments').innerHTML = Comments.get('Game/' + session.query.game + '/' + session.query.rev);
+			}
+		}
+				
+		function do_show_feedback_dialog() {
+			hide_popup_dialog();
+			delete session.progress;
+			
+			var email = '';
+			if (session.user && session.user.Email) email = session.user.Email;
+
+			var html = '';
+
+			html += '<div class="dialog_bkgnd" style="background-image:url('+png('/effect/images/big_icons/email.png')+')">';
+
+			html += '<table cellspacing=0 cellpadding=0><tr><td width=600 height=420 valign=center align=center>';
+			html += '<div class="dialog_title" style="margin-bottom:10px;">Send Game Feedback</div>';
+
+			html += '<form method=get action="javascript:void(0)"><table cellspacing="0" cellpadding="0"><tr><td align="left">';
+			
+			html += '<div class="fe_label">Your Email Address:</div>';
+			html += '<div><input type="text" class="fe_medium" id="fe_play_from" size="30" maxlength="256" value="'+email+'"/></div>';
+			html += '<div class="caption">Enter your e-mail address.</div>';
+
+			html += '<div class="fe_label">Subject:</div>';
+			html += '<div><input type="text" class="fe_medium" id="fe_play_subject" size="30" maxlength="256"/></div>';
+			html += '<div class="caption">Enter a subject for your feedback.</div>';
+
+			html += '<div class="fe_label">Message:</div>';
+			html += '<textarea maxlength="2048" class="fe_edit" id="fe_play_body" style="width:400px; height:150px;" wrap="virtual" onkeydown="return catchTab(this,event)">';
+			html += '</textarea>';
+			html += '<div class="caption">Enter the body of your message here.  Plain text only please.</div>';
+
+			html += '</td></tr></table></form>';
+
+			html += '<br><br><table><tr>';
+				html += '<td>' + large_icon_button('x', 'Cancel', "hide_popup_dialog()") + '</td>';
+				html += '<td width=50>&nbsp;</td>';
+				// html += '<td>' + large_icon_button('user', 'Create Account...', "Nav.go('CreateAccount')") + '</td>';
+				// html += '<td width=15>&nbsp;</td>';
+				html += '<td>' + large_icon_button('check', '<b>Send Feedback</b>', "do_send_feedback()") + '</td>';
+			html += '</tr></table>';
+
+			html += '</form>';
+
+			html += '</div>';
+
+			// session.hooks.keys[ENTER_KEY] = [Comments, 'post', page_id]; // enter key
+			session.hooks.keys[ESC_KEY] = 'hide_popup_dialog'; // escape key
+
+			safe_focus( email ? 'fe_play_subject' : 'fe_play_from' );
+
+			show_popup_dialog(600, 420, html);
+		}
+		
+		function do_send_feedback() {
+			var from = trim( el('fe_play_from').value );
+			if (!from || !from.match($R.EmailAddress)) {
+				el('fe_play_from').addClass('control_bad');
+				el('fe_play_from').focus();
+				return;
+			}
+			
+			var subject = trim( el('fe_play_subject').value );
+			if (!subject) {
+				el('fe_play_subject').addClass('control_bad');
+				el('fe_play_subject').focus();
+				return;
+			}
+
+			var msg = el('fe_play_body').value;
+			if (!msg) return;
+
+			effect_api_send('game_send_feedback', {
+				GameID: session.query.game,
+				RevID: session.query.rev,
+				From: from,
+				Subject: subject,
+				Message: msg
+			}, 'send_feedback_finish', { } );
+		}
+		
+		function send_feedback_finish(response, tx) {
+			hide_popup_dialog();
+		}
+		
+		function do_show_password_dialog() {
+			hide_popup_dialog();
+			delete session.progress;
+
+			var html = '';
+
+			html += '<div class="dialog_bkgnd" style="background-image:url('+png('/effect/images/big_icons/key.png')+')">';
+
+			html += '<table cellspacing=0 cellpadding=0><tr><td width=450 height=225 valign=center align=center>';
+			html += '<div class="dialog_title">Enter Password</div>';
+
+			html += '<form method=get action="javascript:void(0)"><table cellspacing="0" cellpadding="0"><tr><td align="left">';
+			html += '<div class="fe_label">Password:</div><input type=password class="fe_big" id="fe_play_password" size=20 value="">';
+
+			html += '</td></tr></table>';
+
+			html += '<br><br><table><tr>';
+				// html += '<td>' + large_icon_button('x', 'Cancel', "clear_login()") + '</td>';
+				// html += '<td width=30>&nbsp;</td>';
+				// html += '<td>' + large_icon_button('user', 'Create Account...', "Nav.go('CreateAccount')") + '</td>';
+				// html += '<td width=15>&nbsp;</td>';
+				html += '<td>' + large_icon_button('check', '<b>Play</b>', 'do_check_password()') + '</td>';
+			html += '</tr></table>';
+
+			html += '</form>';
+
+			html += '</div>';
+
+			session.hooks.keys[ENTER_KEY] = 'do_check_password'; // enter key
+			// session.hooks.keys[ESC_KEY] = 'clear_login'; // escape key
+
+			safe_focus( 'fe_play_password' );
+
+			show_popup_dialog(450, 225, html);
+		}
+		
+		function do_check_password() {
+			var password = el('fe_play_password').value;
+			if (!password) return;
+			
+			hide_popup_dialog();
+			show_progress_dialog(1, "One moment please...");
+			
+			session.cookie.set( 'play_auth', hex_md5(password) );
+			session.cookie.save();
+			
+			setTimeout( function() {
+				var url = '' + location.href.replace(/\&r\=\d+(\.\d+)?/, '') + '&r=' + Math.random();
+				window.location = url;
+			}, 1 );
+		}
+		
+		function play_click_tab(name) {
+			el('d_tab_desc').removeClass('active');
+			el('d_tab_rel').removeClass('active');
+			el('d_tab_desc').addClass('inactive');
+			el('d_tab_rel').addClass('inactive');
+			el('d_content_desc').hide();
+			el('d_content_rel').hide();
+			
+			el('d_tab_'+name).removeClass('inactive');
+			el('d_tab_'+name).addClass('active');
+			el('d_content_'+name).show();
+		}
+		
+		if (!window.el) window.el = function(id) { return document.getElementById(id); };
+		
+		// allow query to disable native audio
+		if (session.query.flashaudio) {
+			window.DisableNativeAudio = true;
+		}
+	</script>
+	
+	<div class="container">
+		
+		<!-- Spacer -->
+		<div style="height:20px"></div>
+		
+		<!-- Header -->
+		<div id="d_header" class="p100 fl clear rel header" style="cursor:pointer" onClick="window.open('/')">
+			<div id="d_shadow" class="shadow">
+				<div id="d_tagline" class="tagline"></div>
+			</div>
+			<div class="logo"></div>
+			<div id="d_title" class="title"></div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+				
+		<div id="d_h1" class="h1">
+			<div class="fl"><?= $self->{session}->{_game_title} ?> <?= $self->{session}->{_rev_num} ?> <?= $self->{session}->{_title}; ?></div>
+			<div class="fr">
+				<?= $self->{session}->{_sharing}; ?>
+			</div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+		
+		<center>
+			<!-- Game -->
+			<?
+				if (!$self->{session}->{_show_password}) {
+					# okay, show game
+					$buffer .= '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #ccc;"><tr><td>';
+					$buffer .= '<script type="text/javascript" src="/effect/api/play.js?game=' . 
+						$self->{session}->{query}->{game} . '&rev=' . $self->{session}->{query}->{rev} . '&mode=standard' . 
+						$self->{session}->{_play_query_add} . '"></script>';
+					$buffer .= '</td></tr></table>';
+				}
+			?>
+			
+			<script language="JavaScript">
+				if (window.Effect && Effect.Game) {
+					Effect.Game.addEventListener( 'onZoom', function(level) {
+						el('d_desc_wrapper').style.width = '' + Math.floor( Effect.Port.portWidth * level ) + 'px';
+					} );
+				}
+			</script>
+			
+			<!-- Tabs-->
+			<div id="d_desc_wrapper" style="margin-top:15px; width:<?= $self->{session}->{_z_port_width}; ?>px;">
+				<div class="tab_bar">
+					<div id="d_tab_desc" class="tab active" onClick="play_click_tab('desc')">
+						<div class="content icon" style="background-image:url(/effect/images/icons/controller.<?= $ie6 ? 'gif' : 'png'; ?>);">About Game</div>
+					</div>
+					<div id="d_tab_rel" class="tab inactive" onClick="play_click_tab('rel')" style="display:<?= $self->{session}->{_rev_desc} ? 'block' : 'none'; ?>;">
+						<div class="content icon" style="background-image:url(/effect/images/icons/cd.<?= $ie6 ? 'gif' : 'png'; ?>);">Release Notes</div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div id="d_content_desc" class="tab_page" style="position:relative; display:block; text-align:left; font-weight:normal;">
+					<?= $self->{session}->{_game_desc}; ?>
+					
+					<!-- Feedback -->
+					<div id="d_feedback_a" class="feedback"></div>
+				</div>
+				<div id="d_content_rel" class="tab_page" style="position:relative; display:none;">
+					<table cellspacing="0" cellpadding="0" width="100%"><tr><td align="left">
+						<div style="position:relative; padding:0px 15px 0px 0px;">
+							<?= $self->{session}->{_rev_desc}; ?>
+						</div>
+					</td></tr></table>
+				
+					<!-- Feedback -->
+					<div id="d_feedback_b" class="feedback"></div>
+				</div>
+			</div>
+		</center>
+		
+		<!-- Comments -->
+		<div id="d_comments"></div>
+				
+		<div id="d_footer">
+			<p align="center" style="margin-top:40px;">
+				<img src="/effect/images/logo_40.<?= $ie6 ? 'gif' : 'png'; ?>" width="40" height="34" class="png"/><br/>
+				<span class="caption" style="padding-bottom:0px;">
+					Effect Engine Copyright &copy; 2005 - 2011 Effect Games
+				</span>
+				<br/>
+				<span class="caption" style="padding-bottom:20px;">
+					<a href="/effect/#Article/About_Effect_Games">About Effect Games</a>
+				</span>
+			</p>
+		</div>
+
+	</div>
+	
+	<div id="d_dialog_outer" style="position:absolute; left:-2000px; top:0px; z-index:1100; display:block;">
+		<script> begin_section('dialog1', [38, 38, 46, 52], 'png'); </script>
+		<div id="d_dialog_inner" style="background-color:#fff;"></div>
+		<script> end_section(); </script>
+	</div>
+	
+	<div id="d_growl_wrapper">
+		<div id="d_growl_top"></div>
+	</div>
+		
+	<?= $self->{session}->{_goog_anal}; ?>
+	
+	<script> 
+		// Init when ready
+		if (document.addEventListener) {
+			// Good browsers
+			document.addEventListener( "DOMContentLoaded", function() {
+				document.removeEventListener( "DOMContentLoaded", arguments.callee, false );
+				play_init();
+			}, false );
+
+			// Just in case
+			window.addEventListener( "load", function() {
+				window.removeEventListener( "load", arguments.callee, false );
+				play_init();
+			}, false );
+		}
+		else if (window.attachEvent) {
+			// Bad browsers have to wait
+			window.attachEvent("onload", function() {
+				play_init();
+			});
+		} 
+	</script>
+	
+</body>
+</html>

@@ -1,0 +1,152 @@
+=title Effect Engine Internal API
+=version 1.0
+=author Joseph Huckaby
+=date auto
+=copyright 2006 - 2008 Joseph Huckaby
+=code javascript
+=markup xml
+=validate_urls false
+
+=section #. Overview
+
+This document describes the internal and external APIs used by the Effect Engine.  This is top secret information, for the eyes of Effect partners only.  These APIs are not made public -- the "external" API only refers to the fact that the web browser makes the calls -- they are still "internal" in that the end user never sees them.
+
+=section #. External API
+
+This section describes the "external" API.  That is, the private secret APIs used by the client-side web app.  The methods are either GET or POST, and are described in the following subsections.
+
+=section #.#. Quick Look
+
+All APIs use the following URI endpoint syntax:
+
+	/effect/api/APINAMEHERE
+
+The APINAMEHERE is the server-side function to be called, and can contain further information on the URI (separated by a slash), and/or the query string.  Example:
+
+	/effect/api/feed/category/news?tags=foo
+
+In this case the API function name is just "feed", and the remainder of the URL is passed to the function for further use.
+
+The XML POST APIs use the same URI pattern, and the following XML syntax.  The HTTP POST can be either "pure" (i.e. {text/xml}) or "traditional" (i.e. {multipart/form-data} or {x-www-form-urlencoded}).  If the latter, the XML document should be stuffed into a POST parameter named "xml", "input" or "custom".
+
+=syntax xml
+	<?xml version="1.0"?>
+	<EffectRequest Version="1.0">
+		<Email>jhuckaby@gmail.com</Email>
+		<FullName>Joseph Huckaby</FullName>
+		<Password>dfdfdf</Password>
+		<Username>jhuckaby</Username>
+	</EffectRequest>
+
+The "Version" attribute is optional.  The XML is parsed into a hash tree and passed to the API function on the server.  Here is a typical XML response (although, responses can be in other formats such as JSON):
+
+=syntax xml
+	<?xml version="1.0"?>
+	<Response>
+		<Code>0</Code>
+		<Description>Successfully created user: jhuckaby</Description>
+	</Response>
+
+A {<Code>} of 0 denotes success, and any other value an error.  In the event of a non-zero code, an alert dialog will be displayed on the client-side, including the text from the {<Description>} element.
+
+=section #.#. API Calls
+
+The following subsections describe each Effect API call.
+
+=section #.#.#. api_user_login
+
+This logs a user into the system, and returns a session ID.  This is an XML API post.  Example request:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<EffectRequest>
+		<Infinite>0</Infinite>
+		<Password>14159</Password>
+		<Username>jhuckaby</Username>
+	</EffectRequest>
+
+The response contains the entire user record from the storage system, plus a Session ID.  Example response:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<Response>
+	    <Code>0</Code>
+	    <Description>Login successful</Description>
+	    <FirstLogin>1</FirstLogin>
+	    <SessionID>061980d681d949086af61914002acdb2</SessionID>
+	    <User Created="1223242924.55178" Modified="1223242924.55178" Version="1.0">
+	        <AccountType>Standard</AccountType>
+	        <Author>(self)</Author>
+	        <AuthorClientInfo>127.0.0.1, Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_5; en-us) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.2 Safari/525.20.1</AuthorClientInfo>
+	        <Created>1223242924.5512</Created>
+	        <Data/>
+	        <Email>jhuckaby@gmail.com</Email>
+	        <FirstName>Joseph</FirstName>
+	        <FullName>Joseph Huckaby</FullName>
+	        <LastClientInfo>127.0.0.1, Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_5; en-us) AppleWebKit/525.18 (KHTML, like Gecko) Version/3.1.2 Safari/525.20.1</LastClientInfo>
+	        <LastInitial>H</LastInitial>
+	        <LastLogin>1223243028</LastLogin>
+	        <Password>c92b32fbc94e2dff3e5516401d9bb463</Password>
+	        <Preferences>
+	            <dummy>1</dummy>
+	        </Preferences>
+	        <Privileges>
+	            <admin>0</admin>
+	            <create_users>0</create_users>
+	            <delete_users>0</delete_users>
+	            <update_users>0</update_users>
+	        </Privileges>
+	        <Status>Active</Status>
+	        <StockAvatar>default.png</StockAvatar>
+	        <Updated>1223242924.5512</Updated>
+	        <Username>jhuckaby</Username>
+	    </User>
+	</Response>
+
+=section #.#.#. api_session_recover
+
+This API call is used to login from a Session ID, rather than a login/password.  Example request:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<EffectRequest/>
+
+The request is empty because the Session ID is passed in as cookie ("effect_session_id").  The response is the same as [api_user_login] above.
+
+=section #.#.#. api_user_logout
+
+This logs a user out of the system, and discards their session.  The request body is empty (as with [api_session_recover] above), as the Session ID is passed in via cookie.  The response is stanadard.
+
+=section #.#.#. api_user_get
+
+This call fetches all public information about a user.  Example request:
+
+=syntax xml
+	<?xml 
+
+=section #.#.#. api_user_create
+
+=section #.#.#. api_user_update
+
+=section #.#.#. api_user_delete
+
+=section #.#.#. api_get_buddy_icon
+
+=section #.#.#. api_upload_avatar
+
+=section #.#.#. api_view
+
+=section #.#.#. api_table_search
+
+=section #.#.#. api_image
+
+=section #.#.#. api_psp
+
+=section #.#.#. api_get_config
+
+
+=section #. Internal API
+
+=section #. Storage Layout
+
+=section #. Database Tables

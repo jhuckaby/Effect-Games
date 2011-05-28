@@ -1,0 +1,33 @@
+=article_title About Us
+=article_path /main
+
+[/effect/images/big_icons/effect.png]
+
+*Effect Games* provides a suite of developer tools for creating and publishing web-based video games.  The service is free for all developers, and includes an asset manager, level editor, sprite manager, environment editor, and publishing tools.
+
+At the core of Effect Games is the *Effect Engine*, a JavaScript game engine which uses built-in browser technologies to render graphics.  Currently the engine uses pure [wikipedia:DHTML], but plans are in the works to support [wikipedia:Canvas_(HTML_element), Canvas], as well as the almighty [wikipedia:WebGL] in the future.  For audio and video we use [wikipedia:HTML 5] whenever we can, but fall back to existing browser extensions as necessary.  The Effect Engine supports all major browsers including Internet Explorer 6, 7 and 8, Firefox 3+, Safari 3+, Chrome 2+, Opera 9+, and all major platforms including Windows, Mac and Linux.
+
+=section #.#. Background
+
+The Effect Engine was developed by Joseph Huckaby in 2005.  He was dissatisfied with existing web game technologies that relied on 3rd party plugins, and set out to create a pure JavaScript game engine that would run in any browser.
+
+A designer by training, Min Chang provides a necessary creative perspective to the development and use of Effect Game's tools.
+
+=section #.#. Misc
+
+This website is 100% pure [wikipedia:AJAX], the back end is written entirely in [wikipedia:Perl], and it does not use a database of any kind.  It was all made on a Mac.
+
+Special thanks go to:
+
+=list
+	[http://www.macminicolo.net/ Mac Mini Colo]
+	[http://www.famfamfam.com/lab/icons/silk/ FamFamFam Silk Icon Set]
+	[http://lostgarden.com/labels/free%20game%20graphics.html LostGarden.com Game Graphics]
+	[http://www.shockwave-sound.com Shockwave-Sound.com Game Audio]
+	[http://www.colorjack.com/software/dhtml+color+picker.html ColorJack Color Picker]
+	[http://www.imagemagick.org/ ImageMagick Library]
+	[http://www.apple.com/ Apple Inc.]
+
+Effect Games LLC is based in [http://en.wikipedia.org/wiki/San_Mateo%2C_California San Mateo], CA, USA.
+
+[button:mail.gif /effect/#Contact Contact Us &rarr;]

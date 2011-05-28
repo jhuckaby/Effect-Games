@@ -1,0 +1,256 @@
+=article_title Local Development Guide
+=article_path /docs
+=article_tags docs, development, local, debugging
+=article_stags sidebar_docs
+=article_comments 1
+=section_numbers 1
+=toc 1
+=toc_max 3
+
+=section #. Overview
+
+This document describes how to develop Effect games locally on your Mac or PC.  With the Effect engine, you don't have to upload any code until you are ready to publish a game release.  During development you can keep all your code locally on your machine, so you can make changes frequently by editing your local files.
+
+This is accomplished by providing you with a {<SCRIPT>} tag to place into your own local HTML page.  The script tag will instantiate the Effect engine in local development mode, and load the latest versions of all your game assets.  Then, you can simply include your own game code in the HTML page (referencing your local files).  Finally, load the HTML page in your browser (preferably through a local web server), and you're good to go!
+
+=section #.#. Embed Code
+
+Once you create a game project, go to the "Game" tab and click on the "Develop Locally..." button.
+
+=image /effect/images/docs/localdev/localdev_page.png style="border:0"
+
+Here you can copy the provided "Embed Code", and paste it into your local HTML page.  This code is provided |for you only|, and is linked to your EffectGames.com login, so it cannot be distributed to "release" a game.  The reason for this is, when running in local development mode, the engine bypasses normal caching rules and loads the latest revisions of all your assets.  This is so you can make quick changes to anything in your game (levels, sprites, tiles, audio, assets, etc.) and simply refresh your browser to immediately see the updated content on your local development page.  When you finally "publish" a game revision, we make a snapshot of your assets and distribute them to our caching architecture for widespread distribution and high availability.
+
+All that being said, you are free to run the local development code on multiple browsers and/or machines in your local area network, even if they do not all have active EffectGames.com logins.  The only requirement is that the public IP address of any local development instance needs to be the same as the one on record for your login cookie.  So if you move to another location, you simply have to refresh your EffectGames.com browser so your session is updated with your new public IP.
+
+=section #.#. HTML Page Setup
+
+To setup your local HTML page, simply insert the Embed Code into your {<BODY>} tag, and include your own code just below it.  Example:
+
+=syntax html
+	<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>My Game - Local Development Page</title>
+	</head>
+	<body>
+		<!-- Embed Code from EffectGames.com -->
+		<script type="text/javascript" src="http://www.effectgames.com/effect/api/local_dev.js?game=crystalgalaxy&engine=1.0b&key=abcdef1234567890"></script>
+		
+		<!-- My Game Code -->
+		<script type="text/javascript" src="my_game_code.js"></script>
+	</body>
+	</html>
+
+The Embed Code takes care of loading the engine, inserting the main game display port and toolbar, and finally loading all your game assets.  You are of course free to setup the page however you like, and include debugging rigs (see [Debugging] below).  The only requirement is that the "Embed Code" be placed into the {<BODY>} tag, and your game code placed |below| it.  Your game code can be placed in an external file as shown above, or placed directly into the page via inline {<SCRIPT>} tags.
+
+Currently, you must have internet access to develop your Effect game.  This is because your game assets all live on the Effect servers, and are dynamically transformed in real-time (for example, image scaling, rotation, tile overlays, and environment effects), so these cannot be hosted locally.  The engine itself must also live on our servers so it knows which assets to load.  For these reasons we currently cannot offer an "offline" development environment, but we are working on this.
+
+=section #. Running a Local Web Server
+
+It is recommended you run a local web server on your development machine, and access your HTML file through a "{http://localhost/}" URL, instead of directly from disk.  While the engine does "work" when launched from disk, certain aspects (i.e. audio / video in some browsers) may not load, without jumping through a few hoops first.  This is because many browsers do not yet support native audio and video, so we fall back to using Adobe Flash, and Flash does not typically allow local files launched from disk to access resources over the internet.  You could edit your Flash permissions and allow this, or develop without audio, but running a web server locally avoids all these issues, is very easy, and we'll tell you exactly how to set it up:
+
+=section #.#. Mac Web Server Setup
+
+Every version of Max OS X already comes with the free [http://httpd.apache.org/ Apache Web Server], which is pre-installed, configured and ready to be started.  All you have to do is visit "System Preferences" in your dock, click the "Sharing" icon, and then check the "Web Sharing" checkbox:
+
+=image /effect/images/docs/localdev/mac_system_prefs_sharing.png style="border:0"
+
+That's it!  You can use the URLs provided in the dialog box to access your local server from your browser (actually, "{http://localhost/~YOURUSERNAME/}" also works no matter what your local IP is).  Place your HTML files into the "{/Users/YOURUSERNAME/Sites/}" directory to make them "visible" to the web server, and accessible via HTTP.  For example, this file:
+
+	/Users/YOURUSERNAME/Sites/my_game_html
+
+...would be accessed via:
+
+	http://localhost/~YOURUSERNAME/my_game.html
+
+=section #.#. PC Web Server Setup
+
+Alas, Windows doesn't come with Apache preinstalled, but luckily the thing is totally free and comes with a [http://httpd.apache.org/download.cgi precompiled Windows installer package], so go download it and install!
+
+You can enter "localhost" for the Domain and Server Name fields:
+
+=image /effect/images/docs/localdev/win32_apache_setup1.png style="border:0"
+
+Once installed, the web server is automatically started (you can start / stop / restart via its icon in the taskbar).  The directory for placing HTML files may vary depending on the location of your "Program Files" directory, but is probably something like this:
+
+	C:\Program Files\Apache Software Foundation\Apache2.2\htdocs\
+
+Once you move your HTML files into the Apache "htdocs" directory, you should be able to access them via your local web browser by entering: "{http://localhost/YOURFILE.html}" or "{http://127.0.0.1/YOURFILE.html}".
+
+=section #.#. Linux Web Server Setup
+
+If you are really running Linux on your desktop machine, then you obviously don't need me to tell you how to type "{sudo yum install httpd}" and "{sudo /sbin/service httpd start}", haha.
+
+=section #. Debugging
+
+For debugging your game, you are of course free to use any 3rd party tools you want ([http://getfirebug.com/ Firebug] or the like).  However, we do provide some of our own debugging tools that may help, and are available in all supported browsers.  These include a debug console window, a debug logging system, a command prompt for executing JavaScript commands, the ability to step through your game one frame at a time, and finally tools to dump information about sprites to the console.
+
+First, you have to select a "Debug" version of the engine on the "Local Development" page.  Each release of the Effect engine comes with a production-ready optimized build, and a "Debug" build which has our debug tools built-in.  The debug build may run a bit slower, as it has lots of logging calls and asserts.  Remember that selecting a new engine version creates new "Embed Code" (the engine version is specified on the URL), so be sure to copy & paste this back into your HTML page.
+
+The Debug engine differs from the production version in a few key ways.  First, the engine itself logs a number of debug messages to the console, for things like loading assets, pressing keys and playing audio tracks.  Second, when you pause the game, the typical "Paused" overlay does not appear.  This leaves the display port free for you to examine using a DOM Inspector (assuming of course we are still using the DOM -- see the [article:docs/Frequently_Asked_Questions]).  Also, clicking in the display port does not resume the game -- you must actually click the "Play" icon in the toolbar (or hit a resume key, if you have one defined).
+
+When your game loads in your local development page, and you are using a "Debug" version of the engine, you should see a new icon appear in the game toolbar:
+
+=image /effect/images/docs/localdev/toolbar_bug.png style="border:0"
+
+Clicking this icon opens up the debug console, which is where you can view your logs, and enter commands.
+
+=section #.#. Debug Console
+
+=image /effect/images/docs/localdev/debug_console.png style="border:0"
+
+This is the debug console window, which displays any debug messages logged (see [Logging] below), either by the engine or your game code.  Each log entry has a timestamp, and a category.  At the bottom of the window is a [Command Prompt] for entering JavaScript commands for immediate execution.
+
+Debug messages logged while the window is closed are buffered in memory, and all displayed once the window is open again.  This way you don't have to keep the window open at all times to catch debugging calls.  However, note that closing the window (or clicking the "Clear" button) clears the debug message history.
+
+=section #.#. Logging
+
+You can log messages to the debug console from anywhere in your game code, by calling [api:Debug.trace()].  Example:
+
+=syntax js
+	Debug.trace( "My debug message here!" );
+
+The message string may contain multiple lines.
+
+=section #.#.#. Log Categories
+
+You can also specify a "category" for your debug message, and control which categories are displayed.  To log to a specific category, pass two arguments to the [api:Debug.trace()] function:
+
+=syntax js
+	Debug.trace( "MyCat", "My debug message!" );
+
+By default all categories are displayed (including all the internal Effect engine debug messages).  To control this, set properties in the [api:Debug.categories] object.  This object should contain a key set to {true} for every category you want shown.  By default, the "{all}" key is set, which means everything is logged regardless of category.  To only log certain categories, set the "{all}" property to {false}, then specify your own:
+
+=syntax js
+	// We only want our special category logged
+	Debug.categories.all = false;
+	Debug.categories.MyCat = true;
+	
+	Debug.trace( "MyCat", "This will be shown!" );
+	Debug.trace( "Other", "This will not." );
+	Debug.trace( "Nor will this." );
+
+When you omit a category and just specify a string, it is logged to the "{debug}" category (which can also be enabled/disabled in the [api:Debug.categories] object).
+
+The Effect engine does generate quite a bit of noise in the debug log across various categories, including tons of startup debugging messages so you can see exactly which assets are loaded, and some messages while the game is running, including which sounds are played and which keys are pressed.  To silence all these, simply set the "{all}" category to false, then use your own custom categories to log messages.
+
+One final note, is that the debug console only allocates about 8 characters of space for the category name.  So try to keep your category names short.
+
+=section #.#. Command Prompt
+
+The command prompt at the bottom of the debug console window allows you to enter raw JavaScript commands, which are immediately executed in the context of the parent window, and the results echoed to the debug log.  For example, this is a great way to step through your game frame by frame, and dump information about sprites to the console.
+
+The examples below are shown using [api:Shortcuts].
+
+=section #.#.#. Step Frame by Frame
+
+To execute a single logic and draw frame iteration, call [api:Effect.Game.step()].  The obviously must be paused for this to have an effect.  Example:
+
+=syntax js
+	$G.step();
+
+=section #.#.#. Highlight and Dump Sprites
+
+If you want to highlight a sprite onscreen, you can call [api:Sprite.highlight()].  This sets the sprite's background color to red (which only works on non-opaque sprites).  Example:
+
+=syntax js
+	$P.getPlane('sprites').getSprite('mysprite').highlight();
+
+You can also dump all the sprite properties to the debug console by callng [api:Sprite.dump()], which includes its global position, ID, internal properties, and any custom properties you have defined.  Example:
+
+=syntax js
+	$P.getPlane('sprites').getSprite('mysprite').dump();
+
+=section #.#.#. Dump All Sprites
+
+To dump information about all the active sprites in a plane, call [api:SpritePlane.dump()].  Example:
+
+=syntax js
+	$P.getPlane('sprites').dump();
+
+This only covers active sprites (i.e. those currently onscreen).  If you want to dump the offscreen sprites, see the next section.
+
+=section #.#.#. Advanced
+
+Both the sprite and sprite plane {dump()} calls use the static utility function [api:dumper()].  This function can actually be passed any object, and can traverse it any number of levels deep (defaults to 0 levels).
+
+For example, here is how to dump information about *all* the offscreen sprites, currently residing in the [article:docs/Sprites_and_Tiles_Guide|Aether_Sprite_System]:
+
+=syntax js
+	dumper( $P.getPlane('sprites').getAllAetherSprites(), 1 );
+
+This uses the [api:SpritePlane.getAllAetherSprites()] call to extract all the sprite data from the Aether database, and then passes that to [api:dumper()].  Notice the second argument, "1", which tells {dumper()} to traverse one nested level deep, so each sprite object is traversed inside the outer array.
+
+Example console output:
+
+=syntax js
+	{
+		id: "E69",
+		zIndex: 3,
+		type: "Tree2",
+		width: 300,
+		height: 320,
+		x: 4486,
+		y: 1253,
+	},
+	{
+		id: "E70",
+		zIndex: 3,
+		type: "Crystal",
+		width: 24,
+		height: 48,
+		x: 5088,
+		y: 1488,
+	},
+	{
+		id: "E73",
+		zIndex: 3,
+		type: "Checkpoint",
+		width: 30,
+		height: 70,
+		x: 3680,
+		y: 314,
+		activated: 0,
+	}
+
+=section #.#.#.#. Sprite Position vs. Scroll Position
+
+Often times you'll be trying to locate a sprite that |should| be visible, but isn't.  Here are some pointers:
+
+First, check your [api:Sprite.x] and [api:Sprite.y] properties, vs. the [api:Plane.scrollX] and [api:Plane.scrollY] values.  Remember, your plane may have a different scroll speed, so be sure to look at the |plane| scroll position, not the |port| position.
+
+Next, make sure your [api:Sprite.frameX] and [api:Sprite.frameY] properties are set correctly.  If these are set beyond the dimensions of the source image, or below zero, the sprite will be invisible.   A useful technique to diagnose this is to highlight the sprite (see [api:Sprite.highlight()]).
+
+=section #.#.#.#. Collision Undetection
+
+Having trouble with collision detection?  A useful technique is to "test" movement of your sprite, and dump the results to the console.  Here is an example which moves a sprite by one pixel downward, and dumps the result (if any):
+
+=syntax js
+	dumper( $P.getPlane('sprites').getSprite('mysprite').move(0, 1) );
+
+Example console output:
+
+=syntax js
+	{
+		type: "collision",
+		targetType: "tile",
+		target: {...},
+		correctedX: 280,
+		correctedY: 1503,
+		_newRect: {...},
+	}
+
+=section #.#.#.#. Frame Rate Curious
+
+If you are curious about the running frame rate, you can query the engine for the current and average frame rates, by calling [api:Effect.Game.getCurrentFPS()] and [api:Effect.Game.getAverageFPS()] respectively.  Here is an example which dumps the values to the debug console every 100 frames:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLogic', function(clock) {
+		if (clock % 100 == 0) Debug.trace( 'perf',
+			"FPS Current: " + Effect.Game.getCurrentFPS() + 
+			" (Average: " +  Effect.Game.getAverageFPS() + ")"
+		);
+	} );
+
+You can reset the average frame rate by calling [api:Effect.Game.resetAverageFPS()].

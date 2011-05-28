@@ -1,0 +1,279 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	$query->{game} ||= 'example';
+	my $game_id = $query->{game};
+	# if (!$game_id) { $buffer .= "ERROR: No Game ID specified."; return; }
+	
+	my $rev_id = $query->{rev};
+	if (!$rev_id) { $buffer .= "ERROR: No Revision ID specified."; return; }
+	
+	# locate rev metadata
+	my $rev = $self->{storage}->list_find( "/games/$game_id/revs", { Name => $rev_id } );
+	if (!$rev) { $buffer .= "ERROR: Could not locate game revision: $rev_id."; return; }
+	$self->{session}->{_rev} = $rev;
+	
+	# load game too, need title, but load from REV namespace
+	my $game = $self->{storage}->get_metadata( "/games/$game_id/revisions/$rev_id" );
+	if (!$game) { $buffer .= "ERROR: Could not load revision: $rev_id."; return; }
+	$self->{session}->{_game} = $game;
+	
+	# example title
+	$self->{session}->{_rev_title} = $game->{ReleaseTitle} || '';
+	
+	# rev desc
+	$self->{session}->{_rev_desc} = $game->{ReleaseNotesHTML} || '';
+	
+	# main game desc
+	$self->{session}->{_code} = $game->{UserCodeHTML};
+	
+	# default zoomed port width for description box
+	$self->{session}->{_z_port_width} = $self->{session}->{_game}->{PortWidth} * $self->{session}->{_game}->{ZoomDefault};
+	
+	$self->set_ttl( 'ViewTTL' );
+	$self->header_out( 'Vary', 'User-Agent' );
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Example: <?= $self->{session}->{_rev_title}; ?> | EffectGames.com</title>
+	<link rel="stylesheet" type="text/css" href="/effect/style.psp.css" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+	<style type="text/css">
+		div.tab_page { 
+			margin: 0;
+			padding: 20px;
+			border:1px solid #ddd; 
+			background-color: #fff;
+		}
+		
+		div.feedback {
+			clear: both;
+			margin: 0px;
+		}
+		
+		.dx_paragraph { 
+			margin-left: 0px;
+			margin-top: 0px;
+		}
+		
+		.dx_code_block {
+			text-align: left;
+			margin-left: 0px;
+			border: 0;
+			background-color: white;
+		}
+		
+		.dx_markup_block {
+			margin-bottom: 15px;
+		}
+	</style>
+</head>
+<body>
+	<script language="JavaScript"> window.no_hooky = true; </script>
+	<script type="text/javascript" src="/effect/code.psp.js"></script>
+	
+	<script language="JavaScript">
+		var config = <?= xml_to_javascript(
+			copy_hash_remove_keys($self->{config}, 
+				'Strings', 'DebugLevel', 'ContactReasons', 'Growl', 'Pages', 'StockAvatars', 
+				'FileMagic', 'RSSConfig', 'PrivateUserData', 'DefaultPrivileges', 'Emails', 'Session',
+				'StorageConfig', 'DatabaseTables', 'Handlers', 'Paths', 'ImageServiceURL', 
+				'FreeAccounts', 'LogTemplate', 'GameProjectStates', 'ClientInfo', 
+				'BitmapFontGlyphs', 'DefaultUser', 'ContactEmail', 'ImageManager', 'PreferenceConfig',
+				'MailProxy'
+			), 
+		1, compress => 1); ?>;
+				
+		function play_init() {
+			if (session.inited) return;
+			session.inited = true;
+
+			assert( window.config, "Config not loaded" );
+			session.config = window.config;
+
+			Debug.trace("Starting up");
+			
+			if (!session.query.game) session.query.game = 'example';
+			if (location.href.match(/\/example\/([\w\.\-]+)/)) {
+				session.query.rev = RegExp.$1;
+			}
+
+			rendering_page = false;
+
+			preload();
+
+			// precalculate some common reg exps
+			window.$R = {};
+			for (var key in config.RegExpShortcuts) {
+				$R[key] = new RegExp( config.RegExpShortcuts[key] );
+			}
+
+			// setup word wrap
+			ww_precalc_font("body", "effect_precalc_font_finish");
+
+			// setup page manager
+			// page_manager = new Effect.PageManager( config.Pages.Page );
+			
+			// check for cookie
+			var session_id = session.cookie.get('effect_session_id');
+			if (session_id && session_id.match(/^login/)) {
+				// login from cookie
+				session.hooks.after_error = 'do_continue_loading';
+				effect_api_send('session_recover', {}, 'do_play_login', { _from_recover: 1, _on_error: do_continue_loading, _silent: 1 } );
+			}
+			else do_continue_loading();
+		}
+		
+		function do_play_login(response, tx) {
+			session.user = response.User;
+			session.username = session.user.Username;
+
+			hide_popup_dialog();
+			delete session.hooks.after_error;
+			
+			do_continue_loading();
+		}
+		
+		function do_logout_2() {
+			// override this and just continue loading
+			do_continue_loading();
+		}
+		
+		function do_continue_loading() {
+			$('d_comments').innerHTML = Comments.get('Game/' + session.query.game + '/' + session.query.rev);
+		}
+		
+		function play_click_tab(name) {
+			$('d_tab_desc').removeClass('active');
+			$('d_tab_code').removeClass('active');
+			$('d_tab_desc').addClass('inactive');
+			$('d_tab_code').addClass('inactive');
+			$('d_content_desc').hide();
+			$('d_content_code').hide();
+			
+			$('d_tab_'+name).removeClass('inactive');
+			$('d_tab_'+name).addClass('active');
+			$('d_content_'+name).show();
+		}
+	</script>
+	
+	<div class="container">
+		
+		<!-- Spacer -->
+		<div style="height:20px"></div>
+		
+		<!-- Header -->
+		<div id="d_header" class="p100 fl clear rel header" style="cursor:pointer" onClick="window.open('/')">
+			<div id="d_shadow" class="shadow">
+				<div id="d_tagline" class="tagline"></div>
+			</div>
+			<div class="logo"></div>
+			<div id="d_title" class="title"></div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+				
+		<div class="h1">
+			<div class="fl">Example: <?= $self->{session}->{_rev_title}; ?></div>
+			<div class="fr">
+				<a class="icon facebook" 
+				href="javascript:void(window.open('http://www.facebook.com/sharer.php?u=<?= uri_escape(get_request_url()); ?>&t=Example%3A%20<?= uri_escape($self->{session}->{_rev_title}); ?>','sharer','toolbar=0,status=0,width=626,height=436'))" title="Share on Facebook">Facebook</a>
+				<a class="icon twitter" href="http://twitter.com/home?status=Playing%20Example%3A%20<?= uri_escape($self->{session}->{_rev_title}); ?>%3A%20<?= uri_escape(get_request_url()); ?>" target="_blank" title="Share on Twitter">Twitter</a>
+			</div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+		
+		<center>
+			<!-- Game -->
+			<?
+				$buffer .= '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #ccc;"><tr><td>';
+				$buffer .= '<script type="text/javascript" src="/effect/api/play.js?game=' . 
+					$self->{session}->{query}->{game} . '&rev=' . $self->{session}->{query}->{rev} . '&mode=standard"></script>';
+				$buffer .= '</td></tr></table>';
+			?>
+			
+			<script language="JavaScript">
+				Effect.Game.setHandler( 'onZoom', function(level) {
+					$('d_desc_wrapper').style.width = '' + Math.floor( Effect.Port.portWidth * level ) + 'px';
+				} );
+			</script>
+			
+			<!-- Tabs-->
+			<div id="d_desc_wrapper" style="margin-top:15px; width:<?= $self->{session}->{_z_port_width}; ?>px;">
+				<div class="tab_bar">
+					<div id="d_tab_desc" class="tab active" onClick="play_click_tab('desc')">
+						<div class="content icon" style="background-image:url(/effect/images/icons/controller.<?= $ie6 ? 'gif' : 'png'; ?>);">About Example</div>
+					</div>
+					<div id="d_tab_code" class="tab inactive" style="" onClick="play_click_tab('code')">
+						<div class="content icon" style="background-image:url(/effect/images/icons/script.<?= $ie6 ? 'gif' : 'png'; ?>);">Source Code</div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div id="d_content_desc" class="tab_page" style="position:relative; display:block; text-align:left; font-weight:normal;">
+					<?= $self->{session}->{_rev_desc}; ?>
+				</div>
+				<div id="d_content_code" class="tab_page" style="position:relative; display:none; text-align:left; font-weight:normal;">
+					<?= $self->{session}->{_code}; ?>
+				</div>
+			</div>
+		</center>
+		
+		<!-- Comments -->
+		<div id="d_comments"></div>
+				
+		<div id="d_footer">
+			<p align="center" style="margin-top:40px;">
+				<img src="/effect/images/logo_40.<?= $ie6 ? 'gif' : 'png'; ?>" width="40" height="34" class="png"/><br/>
+				<span class="caption" style="padding-bottom:0px;">
+					Effect Engine Copyright &copy; 2005 - 2011 Effect Games
+				</span>
+				<br/>
+				<span class="caption" style="padding-bottom:20px;">
+					<a href="/effect/#Article/About_Effect_Games">About Effect Games</a>
+				</span>
+			</p>
+		</div>
+
+	</div>
+	
+	<div id="d_dialog_outer" style="position:absolute; left:-2000px; top:0px; z-index:1100; display:block;">
+		<script> begin_section('dialog1', [38, 38, 46, 52], 'png'); </script>
+		<div id="d_dialog_inner" style="background-color:#fff;"></div>
+		<script> end_section(); </script>
+	</div>
+	
+	<div id="d_growl_wrapper">
+		<div id="d_growl_top"></div>
+	</div>
+			
+	<script> 
+		// Init when ready
+		if (document.addEventListener) {
+			// Good browsers
+			document.addEventListener( "DOMContentLoaded", function() {
+				document.removeEventListener( "DOMContentLoaded", arguments.callee, false );
+				play_init();
+			}, false );
+
+			// Just in case
+			window.addEventListener( "load", function() {
+				window.removeEventListener( "load", arguments.callee, false );
+				play_init();
+			}, false );
+		}
+		else if (window.attachEvent) {
+			// Bad browsers have to wait
+			window.attachEvent("onload", function() {
+				play_init();
+			});
+		} 
+	</script>
+	
+	<?= $self->{config}->{GoogAnalID} ? ("<script type=\"text/javascript\"> var _gaq = _gaq || [];_gaq.push(['_setAccount', '".$self->{config}->{GoogAnalID}."']);_gaq.push(['_trackPageview']); (function() {var ga = document.createElement('script');ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';ga.setAttribute('async', 'true');document.documentElement.firstChild.appendChild(ga);})(); </script>\n") : ''; ?>
+	
+</body>
+</html>

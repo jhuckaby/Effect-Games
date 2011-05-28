@@ -1,0 +1,24 @@
+=article_title API Reference Guide
+=article_path /docs
+=article_tags docs, api, reference, javascript
+=article_stags sidebar_docs
+=article_comments 1
+=section_numbers 1
+=toc 1
+=toc_max 2
+
+=include /effect/docs/z_ref_game.inc
+
+=include /effect/docs/z_ref_portal.inc
+
+=include /effect/docs/z_ref_sprites.inc
+
+=include /effect/docs/z_ref_tiles.inc
+
+=include /effect/docs/z_ref_plane_other.inc
+
+=include /effect/docs/z_ref_audio.inc
+
+=include /effect/docs/z_ref_geometry.inc
+
+=include /effect/docs/z_ref_util.inc

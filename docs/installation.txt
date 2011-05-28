@@ -1,0 +1,514 @@
+=article_title Installation Guide
+=article_path /docs
+=article_tags docs, installation
+=article_comments 1
+=section_numbers 1
+=toc 1
+=toc_max 2
+
+=section #. Overview
+
+Effect Server is designed to run on any UNIX variant, utilizing common open source software such as [http://httpd.apache.org/ Apache], [http://perl.apache.org/ mod_perl] and [http://www.imagemagick.org/script/index.php ImageMagick].  It has been fully tested on 32-bit [http://fedoraproject.org/ Fedora Core] version 8.
+
+=section #. Hardware Requirements
+
+The application server should have at least 2 GB of RAM (4 GB recommended), and 100 GB of HD space.  For live data storage, a RAID disk array is recommended, or equivalent (example: [http://aws.amazon.com/ebs/ Amazon Elastic Block Store] on an [http://aws.amazon.com/ec2/ EC2] instance).
+
+=section #. Prerequisite Packages
+
+Please install the following prerequisite packages, which should be available in your standard OS distribution or package manager:
+
+=list
+	zlib-devel
+	libxml2-devel
+	libgpg-error-devel
+	libgcrypt-devel
+	libxslt-devel
+	expat-devel
+	db4-devel
+	e2fsprogs-devel
+	krb5-devel
+	openssl-devel
+	aspell-devel
+	rpm-build
+	gcc
+	screen
+	sendmail
+	gcc-c++
+	bzip2-devel
+	freetype-devel
+	libpng-devel
+	libtiff-devel
+	libjpeg
+	libjpeg-devel
+	libstdc++-devel
+	curl
+	curl-devel
+	libidn-devel
+	krb5-devel
+	e2fsprogs-devel
+	libgcrypt-devel
+	libgpg-error-devel
+
+Example installation commands using Fedora's "yum" package installer:
+
+=syntax bash
+	yum install zlib-devel
+	yum install libxml2-devel
+	yum install libgpg-error-devel
+	yum install libgcrypt-devel
+	yum install libxslt-devel
+	yum install expat-devel
+	yum install db4-devel
+	yum install e2fsprogs-devel
+	yum install krb5-devel
+	yum install openssl-devel
+	yum install aspell-devel
+	yum install rpm-build
+	yum install gcc
+	yum install screen
+	yum install sendmail
+	yum install "gcc-c++"
+	yum install bzip2-devel
+	yum install freetype-devel
+	yum install libpng-devel
+	yum install libtiff-devel
+	yum install libjpeg
+	yum install libjpeg-devel
+	yum install libstdc++-devel
+	yum install curl
+	yum install curl-devel
+	yum install libidn-devel
+	yum install krb5-devel
+	yum install e2fsprogs-devel
+	yum install libgcrypt-devel
+	yum install libgpg-error-devel
+
+=section #. Mount Setup
+
+You can setup your drive mounts however you like, but Effect Games Server is designed to run with all the code, configuration and web files, in a root directory named {/effect}.  While this can be changed, it would take a lot of manual code editing.  This directory requires about 300 MB, so make sure you partition your drive accordingly, or allocate enough space on the root mount.  A symbolic link should also work fine.
+
+Data and logs can live anywhere you like, and are easily configurable (see [Configuration] below).
+
+=section #. Software Installation
+
+=section #.#. Perl
+
+While you can use the built-in OS Perl, I prefer to compile my own, so I have complete control over the compile options.  Effect Server has been tested with Perl 5.8.9, but any recent version should work fine.  Here are my installation commands:
+
+=syntax bash
+	wget "http://www.effectgames.com/install/perl-5.8.9.tar.gz"
+	tar zxf perl-5.8.9.tar.gz
+	cd perl-5.8.9
+	rm -f config.sh Policy.sh
+	sh Configure
+	make
+	make test
+	make install
+
+During the configuration, Perl asks you where it should be installed.  I have all my 3rd party software installed under an {/effect} root mount.  So the final path to the Perl binary would be {/effect/perl/bin/perl}.
+
+Perl asks a lot of questions during the installation, and I did not write down all my answers (sorry).  However, the main things to remember are:
+
+=list
+	Use POSIX
+	Use Perl's malloc wrapper
+	Use fast stdio
+	Use PerlIO
+	Include LARGEFILE support
+	No threading
+	No 64-bit math
+	No multiplicity
+	Build a shared libperl.so (for dynamic linking to mod_perl)
+
+All the other "recommended" answers should be correct.  However, if you want to use my config.sh and Policy.sh files, here they are:
+
+[http://www.effectgames.com/install/Policy.sh]
+[http://www.effectgames.com/install/config.sh]
+
+After compilation and installation completes, I like to "replace" the built-in OS Perl with my version, using these commands:
+
+=syntax bash
+	mv /usr/bin/perl /usr/bin/perl.old
+	ln -s /effect/perl/bin/perl /usr/bin/perl
+
+A "safer" way to do this would be to manipulate your {PATH} environment variable, so {/effect/perl/bin} is included, but listed before {/usr/bin/}.
+
+=section #.#.#. Perl Modules
+
+Using CPAN, please install the following 3rd party Perl modules:
+
+=list
+	LWP::UserAgent
+	Archive::Zip
+	Archive::Tar
+	Class::Loader
+	Digest::SHA
+	Digest::SHA1
+	Math::Pari
+	Devel::Symdump
+	Module::Build
+	MIME::Lite
+	Test::Simple
+	Text::Wrap
+	CGI
+	Devel::CoreStack
+	Cwd
+	IO::Socket::INET
+	Test::Harness
+	Time::HiRes
+	Unicode::String
+	Date::Parse
+	MIME::Parser
+	Crypt::SSLeay
+	ExtUtils::XSBuilder
+	IO::Socket::SSL
+	File::lockf
+	IPC::ShareLite
+	Syntax::Highlight::Engine::Kate
+	Text::Aspell
+	Net::Twitter::Lite
+	HTTP::Daemon
+	File::Flock
+
+You can install these using the CPAN command-line installer like this:
+
+=syntax bash
+	/effect/perl/bin/cpan LWP::UserAgent
+	/effect/perl/bin/cpan Archive::Zip
+	/effect/perl/bin/cpan Archive::Tar
+	# ... and so on
+
+The first time you use CPAN it will ask you which mirrors to use.  It is HIGHLY recommended you select only "http://" based mirrors (listed towards the end), as the FTP based ones are notoriously unreliable.  The "gossamer-threads" mirror is a favorite of mine, and always seems to work.
+
+You might have some trouble with the [http://search.cpan.org/perldoc?Math::Pari Math::Pari] module (I always do).  If so, here are manual compilation steps (not using CPAN) which always seem to work for me:
+
+=syntax bash
+	wget "http://www.effectgames.com/install/pari.tgz"
+	wget "http://www.effectgames.com/install/Math-Pari-2.010709.tar.gz"
+	tar zxf pari.tgz
+	tar zxf Math-Pari-2.*.tar.gz
+	cd Math-Pari-2.*
+	MATH_PARI_DIR=`ls -1d ../pari-*`
+	perl Makefile.PL paridir=../$MATH_PARI_DIR
+	make
+	make install
+
+=section #.#. ImageMagick
+
+[http://www.imagemagick.org/script/index.php ImageMagick] is an excellent image manipulation library, but sometimes can be very difficult to install and get working, and the precompiled package install never seems to work correctly for me.  These instructions are for ImageMagick 6.5.6-8, but you are welcome to try a newer version if you have issues getting this one to work (for example, with a newer Fedora than v8).  Anyway, here are my compilation steps:
+
+=syntax bash
+	wget "http://www.effectgames.com/install/ImageMagick-6.5.6-8.tar.gz"
+	tar zxf ImageMagick-6.5.6-8.tar.gz 
+	cd ImageMagick-6.5.6-8
+	ln -s /usr/include/freetype2/freetype /usr/include/freetype
+	export CPPFLAGS="-I/usr/include/freetype2 -I/usr/local/include"
+	export LDFLAGS="-L/usr/local/lib"
+	mkdir -p /effect/fonts
+	
+	./configure --prefix=/effect/magick --enable-lzw --without-threads --without-magick-plus-plus --with-perl=/effect/perl/bin/perl --with-fontpath=/effect/fonts --without-x --with-quantum-depth=8 --enable-shared=yes --enable-static=no
+	
+	make
+	make install
+
+Please take a close look at the output of the "./configure" command, and make sure ImageMagick detects support for JPEGs and PNGs.
+
+Finally, you have to add the ImageMagick shared library directory into your ld.so.conf.d (for dynamic linking at runtime):
+
+=syntax bash
+	echo "/effect/magick/lib" > /etc/ld.so.conf.d/imagemagick.conf
+
+And reload the configuration so we can use it immediately without rebooting the server:
+
+=syntax bash
+	/sbin/ldconfig -v
+
+Here is a test to see if the [http://www.imagemagick.org/script/perl-magick.php PerlMagick] module compiled and is working:
+
+=syntax bash
+	/effect/perl/bin/perl -MImage::Magick -e ';'
+
+Finally, please create this symlink.  There is some old legacy code in Effect Server that expects ImageMagick's "convert" binary to live here (specifically, the code that handles uploading user avatars):
+
+=syntax bash
+	mkdir -p /opt/local/bin
+	ln -s /effect/magick/bin/convert /opt/local/bin/convert
+
+=section #.#. Apache
+
+Here are the instructions for installing [http://httpd.apache.org/ Apache 2], which includes [http://www.openssl.org/ OpenSSL] and [http://perl.apache.org/ mod_perl].  Effect has only ever been used on the Apache prefork model (not the threaded model).
+
+These instructions are specifically for Apache 2.2.14, mod_perl 2.0.4 and OpenSSL 0.9.8g.  However, you should be able to swap out the archives with newer versions without issue.
+
+=syntax bash
+	wget "http://www.effectgames.com/install/openssl-0.9.8g.tar.gz"
+	tar zxf openssl-0.9.8g.tar.gz
+	cd openssl-0.9.8g
+	./config --openssldir=/effect/openssl
+	make
+	make test
+	make install
+	cd ..
+	
+	wget "http://www.effectgames.com/install/httpd-2.2.14.tar.bz2"
+	tar jxf httpd-2.2.14.tar.bz2
+	cd httpd-2.2.14
+	
+	./configure --prefix=/effect/apache --with-mpm=prefork --with-ssl=/effect/openssl --with-perl=/effect/perl/bin/perl --enable-so --enable-expires --enable-headers --enable-mime-magic --enable-rewrite --enable-ssl --enable-mods-shared="all authn_file authn_default authz_host authz_groupfile authz_user authz_default auth_basic include filter log_config env setenvif mime status autoindex asis cgi negotiation dir actions userdir alias expires headers ssl rewrite"
+	
+	make
+	make install
+	cd ..
+	
+	wget "http://www.effectgames.com/install/mod_perl-2.0.4.tar.gz"
+	tar zxf mod_perl-2.0.4.tar.gz
+	cd mod_perl-2.0.4
+	perl Makefile.PL MP_AP_PREFIX=/effect/apache
+	make
+	make install
+	cd ..
+
+Should you opt to install your own Apache, make sure it is compiled with shared library support, and the following modules are included:
+
+=list
+	mod_rewrite
+	mod_expires
+	mod_headers
+	mod_include
+	mod_env
+	mod_cgi
+	mod_perl
+
+Apache's main configuration file is called "{httpd.conf}" and lives here: {/effect/apache/conf/httpd.conf}.  The default file that ships with Apache is not what you want.  Instead, consider starting from my version:
+
+[http://www.effectgames.com/install/httpd.conf]
+
+Then, you probably only have to reconfigure a few key directives, such as:
+
+=syntax text
+	ServerAdmin admin@effectgames.com
+	ServerName www.effectgames.com
+	
+	<IfModule mpm_prefork_module>
+	    StartServers          16
+	    MinSpareServers       16
+	    MaxSpareServers       16
+	    MaxClients            16
+	    MaxRequestsPerChild   500
+	</IfModule>
+
+The {StartServers}, {MinSpareServers}, {MaxSpareServers} and {MaxClients} should be configured based on the total available RAM in your machine.  Apache child processes may take up to 50 MB each, depending on the modules you install.  So choose carefully, and remember that you'll also have to run an Image Service Daemon (see below).  You DO NOT want any of the Apache processes to get swapped out to disk, believe me -- this invariably kills the server.  So leave plenty of breathing room.
+
+Unfortunately mod_perl always leaks memory, so please leave {MaxRequestsPerChild} somewhat low, around 500.
+
+Also, the Effect Server software is setup to use user "{www}" for its Apache configuration.  Let's create that user, and an associated group, now:
+
+=syntax bash
+	/usr/sbin/groupadd www
+	/usr/sbin/useradd -m -g www www
+
+To start and stop Apache use these commands:
+
+=syntax bash
+	/effect/apache/bin/apachectl start
+	/effect/apache/bin/apachectl stop
+
+Note that you will not actually be able to start Apache yet, as the Effect Server software is not installed (my httpd.conf file tries to include the Effect config file at the bottom).
+
+=section #.#. MPG123 and OGG Encoder
+
+Effect Server transcodes MP3s to OGG Vorbis format for compatibility with HTML5 Audio in Firefox 3.6.  We use MPG123 to convert the MP3s to WAV files first, then "oggenc" to perform the OGG Vorbis encoding.
+
+Here are the MPG123 installation instructions:
+
+=syntax bash
+	wget "http://www.effectgames.com/install/mpg123-1.10.0.tar.bz2"
+	tar jxf mpg123-1.10.0.tar.bz2
+	cd mpg123-1.10.0
+	./configure
+	make
+	make install
+	cd ..
+
+The OGG tools are even easier (if you have yum):
+
+=syntax bash
+	yum install libvorbis libvorbis-devel vorbis-tools
+
+This should provide the following binary executables at these specific locations on your server:
+
+=syntax text
+	/usr/local/bin/mpg123
+	/usr/bin/oggenc
+
+If not, please locate the binaries, and symlink them to these locations.
+
+=section #. Effect Server
+
+You should now be ready to install the main Effect Server package, which contains all the code, configuration files and web content.  Here are the instructions:
+
+=syntax bash
+	wget "https://github.com/jhuckaby/Effect-Games/tarball/master"
+	tar zxf jhuckaby-Effect-Games-*.tar.gz
+	rm jhuckaby-Effect-Games-*.tar.gz
+	mv jhuckaby-Effect-Games-* /effect
+	ln -s /effect/htdocs /effect/apache/htdocs/effect
+
+This should install all the files into the {/effect} root directory, and symlink the htdocs directory into the web server document root, so the proper files are accessible over HTTP.
+
+=section #.#. Configuration
+
+The main Effect configuration file is in XML format, and is located here:
+
+=syntax text
+	/effect/conf/Effect.xml
+
+Here are some key elements and their meanings.  Please note this is not a complete list.
+
+=table
+	XML Element | Default Value | Description
+	{<DebugLevel>} | 5 | The level of debug logging in the /logs/effect/debug.log file.  Higher numbers are more verbose, 5 being the highest.
+	{<BaseDir>} | /effect | The base directory for the Effect Server installation.  Please note that changing this would require lots of other changes in various scripts and config files.
+	{<BaseURI>} | /effect/ | The base URI for Effect URLs.  Please note that changing this would require lots of other changes in various scripts and config files.
+	{<ImageServiceURL>} | http://127.0.0.1:6201/api | This URL is used for communicating with the Image Service Daemon, and should not be changed.
+	{<ContactEmail>} | admin@yourdomain.com | This e-mail address is used to send monitoring alerts and reports.
+	{<GoogAnalID>} | - | If you want to use Google Analytics on your site, paste your unique ID here.  It will automatically be included on all Effect Games pages.
+	{<Paths>} | (complex) | Various filesystem paths.  Ideally these should not be changed.
+	{<Handlers>} | (complex) | These match incoming URLs and invoke special handlers in the Effect codebase.  These should not be changed.
+	{<StorageConfig>} | (complex) | This element contains various settings for the data storage system.
+	{<Mount>} | /data/effect/storage | This is the primary data directory.  This should exist, and be writable by the web user "www".
+	{<CleanupBaseDir>} | /data/effect/cleanup | This is the data cleanup directory, which is essentially a schedule for future deletes of expired data.
+	{<Pages>} | (complex) | This element contains various settings for the client-side web application and JavaScript dependencies.
+	{<GameProjectStates>} | (complex) | This element contains a simple list of menu items for the game project states (New, Alpha, etc.)
+	{<ContactReasons>} | (complex) | This element contains a list of menu items for the contact form.
+	{<ClientInfo>} | (complex) | This element contains a list of supported operating systems and browsers, for the help desk system.
+	{<Emails>} | (complex) | This contains e-mail templates for the various e-mails that are sent out by the server (new accout, forgot password, etc.).
+	{<DefaultPrivileges>} | (complex) | This contains a set of default privileges for new users.
+	{<PrivateUserData>} | (complex) | This contains a set of XML element names that should never be sent to the client when requesting a user record.
+	{<PreferenceConfig>} | (complex) | This contains a list of preferences for users to select in the UI.
+	{<DefaultUser>} | (complex) | This contains the detault user XML template for creating new accounts.
+	{<RSSConfig>} | (complex) | This contains various settings for the RSS feed system.
+	{<StockAvatars>} | (complex) | This contains a list of all the stock avatar images.
+	{<FileMagic>} | (complex) | This contains various regular expressions for identifying file types based on their content.
+	{<Strings>} | (complex) | This contains nearly all the text strings used in the client-side web application.
+	{<EngineVersion>} | 1.0b | This is the Effect Engine version that should be used by the Level Editor.
+	{<EnvTransformShortcuts>} | (complex) | This contains a list of shortcuts for environment transforms, used to shorten URLs.
+	{<EnvTransformDefs>} | (complex) | This contains all the environment transforms and their UI settings.
+
+=section #.#. Data Storage Setup
+
+For the data storage system (i.e. built-in XML-based database), please create the following directories, and set their owner and group accordingly:
+
+=syntax bash
+	mkdir -p /data/effect/storage
+	chown www:www /data/effect/storage
+	
+	mkdir -p /data/effect/cleanup
+	chown www:www /data/effect/cleanup
+
+Note that the {/data} directory will store all user accounts, game data, assets, blog articles, help desk tickets, and more.  This needs lots of available space, and should be hosted on a fast RAID disk array or other redundant storage system.  If you have this mounted at another location, feel free to use symlinks to point /data to the correct spot.
+
+=section #.#. Logs
+
+Effect Server logs to {/logs/effect}, and Apache logs to {/logs/apache}, so these directories should be created and be writable by anyone.  Some files may be written by root, so I just chmod this directory to 777.  As with the data instructions above, if you do not have a {/logs} filesystem mount and would prefer them to go elsewhere, please use a symlink.
+
+=syntax bash
+	mkdir -p /logs/effect
+	chmod 777 /logs/effect
+	
+	mkdir -p /logs/apache
+	chmod 777 /logs/apache
+
+All Effect logs (anything in {/logs/effect/}) are automatically rotated and archived hourly (see Log Archival below).  Apache logs are not, but the default setup only includes Apache error logging at the "debug" level, and no access logging.  This doesn't produce a very large log -- I clean it every few months or so on my servers.  Feel free to further tune this in the httpd.conf file (LogLevel directive).
+
+=section #.#. Initial Data Setup
+
+Effect Server ships with a script that performs some initial data setup, generates all the documentation, and creates a default "admin" account (password: "admin").  Before running the script, take a look at its configuration file, which contains the setup for the Help Desk and Bug Tracker systems, including a primary administrator e-mail address to receive new help desk tickets and bug reports.
+
+Initial Data Setup configuration file (XML format):
+
+=syntax text
+	/effect/conf/initial_data_setup.xml
+
+When you are ready, here is the command to run (as root):
+
+=syntax bash
+	/effect/bin/setup_db.pl
+
+=section #.#. Image Service Daemon
+
+The Effect Games Server software not only runs under Apache, but also has an Image Service Daemon which runs as a separate process (and child processes).  This not only serves real-time requests for image transformations, but also executes an asynchronous job queue for tasks such as converting MP3s to OGG Vorbis (for HTML5 Audio in Firefox 3.6), and generating level preview images.
+
+Before starting the daemon, take a quick look at its configuration file:
+
+=syntax text
+	/effect/conf/image_service.xml
+
+The only element you should need to look at is <MaxChildren>.  This is the number of child processes that will be forked to serve requests (similar to how Apache does it).  The default is "4".  Each child takes about 20 MB of RAM, but these can spike to a huge amount (100+ MB) temporarily for certain types of requests (like generating level map thumbnails).  So please take into consideration the total RAM you have in your server, and the Apache children, before tuning this value.  Always leave plenty of breathing room.
+
+=note The Image Service Daemon opens a TCP socket listener on port 6201, but this does not need public access.  It is only for Apache children to make localhost connections.  So for security, you can block incoming requests for port 6201 in your firewall, if desired.
+
+Next, let's create the queue directory used by the daemon:
+
+=syntax bash
+	mkdir -p /data/effect/queue
+	chmod 777 /data/effect/queue
+
+Finally, use these commands to start and stop the Image Service daemon:
+
+=syntax bash
+	/effect/bin/imageservicectl.sh start
+	/effect/bin/imageservicectl.sh stop
+
+Feel free to add this to an init.d script for auto-starting on server reboots.
+
+=section #.#. Crontab
+
+Effect Server performs hourly and daily maintenance on its log files and data storage system.  These tasks are activated by the Unix cron system.  Please place these two entries into root's crontab (you can just type "crontab -e" as root).
+
+=syntax text
+	00 * * * * /effect/bin/maint.pl hourly
+	30 00 * * * /effect/bin/maint.pl daily
+
+The maintenance script logs to {/logs/effect/maint.log}.
+
+=section #.#. Log Archival
+
+All Effect logs are archived hourly, and stored using this layout:
+
+=syntax text
+	/backup/effect/logs/CATEGORY/YYYY/MM/DD/HH.gz
+
+The base directory can be customized in the {/effect/conf/Effect.xml} file, if desired.  The {CATEGORY} is the log filename sans extension (i.e. "{debug}", "{imageservice}"), and the {YYYY}, {MM}, {DD} and {HH} are the year, month, day and hour of the log.  The logs are all compressed using gzip.
+
+Make sure you create the base directory, and make it writable by everyone:
+
+=syntax bash
+	mkdir -p /backup/effect
+	chmod 777 /backup/effect
+
+=section #.#. Email Alerts
+
+Effect Server scans its logs every hour for "catastrophic" errors (serious crashes that need attention), and those will be e-mailed to the {<ContactEmail>} address in the {/effect/conf/Effect.xml} file.  This includes Apache child crashes, and Image Service daemon crashes.  Both are extremely rare.
+
+=section #. Startup
+
+At this point you should be able to start all services (Apache and the Image Service Daemon):
+
+=syntax bash
+	/effect/bin/imageservicectl.sh start
+	/effect/apache/bin/apachectl start
+
+Then, direct your browser to your server hostname, with a "/effect/" URI.  Example:
+
+http://www.yourdomain.com/effect/
+
+If you want the webserver's root directory to activate Effect, use a RedirectMatch directive in your Apache httpd.conf file, like this:
+
+=syntax text
+	RedirectMatch ^/$ http://www.yourdomain.com/effect/
+
+Remember, a default administrator user was created with username "admin", password "admin".
+
+Have fun!

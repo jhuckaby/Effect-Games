@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/effect/!svn/ver/1/trunk/src/Sprite
+END
+TextSprite.js
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/effect/!svn/ver/1/trunk/src/Sprite/TextSprite.js
+END
+CustomSprite.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/effect/!svn/ver/1/trunk/src/Sprite/CustomSprite.js
+END
+MultiSprite.js
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/effect/!svn/ver/1/trunk/src/Sprite/MultiSprite.js
+END
+StaticImageSprite.js
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/effect/!svn/ver/1/trunk/src/Sprite/StaticImageSprite.js
+END

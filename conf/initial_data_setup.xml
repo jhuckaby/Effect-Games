@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<Setup>
+	<Record Path="/admin/ticket_systems">
+		<Data>
+			<System Title="Bug Tracker" Path="/bugs">
+				<Notify>you@yourdomain.com</Notify>
+				<Icon>bug</Icon>
+				<RecordTypeName>Bug</RecordTypeName>
+				<Field ID="summary" Title="Summary" Type="Text" Default="" Size="50" MaxLength="128" Required="1"/>
+				<Field ID="description" Title="Description" Type="TextArea" Default="" Cols="80" Rows="10" MaxLength="8192"/>
+				<Field ID="assigned" Title="Assigned To" Type="Text" Default="" Special="Assigned" Size="20" MaxLength="32" Index="1"/>
+				<Field ID="engine" Title="Engine" Type="Menu" Default="" Special="EngineVersions" Index="1"/>
+				<Field ID="category" Title="Category" Type="Menu" Default="Bug" Items="Bug, Change Request, Feature Request" Index="1"/>
+				<Field ID="status" Title="Status" Type="Menu" Default="New" Items="New, Active, Replied, Postponed, Cancelled, Closed" Index="1"/>
+				<Field ID="priority" Title="Priority" Type="Menu" Default="None" Items="None, Low, Medium, High" Index="1"/>
+				<Field ID="software" Title="Software" Type="Text" Default="" Size="20" Special="UserSoftware" Index="1"/>
+				<Field ID="cc" Title="Cc" Type="Text" Default="" Size="30" MaxLength="1024" Special="Cc"/>
+			</System>
+			<System Title="Help Desk" Path="/helpdesk">
+				<Notify>you@yourdomain.com</Notify>
+				<Icon>telephone</Icon>
+				<RecordTypeName>Ticket</RecordTypeName>
+				<Field ID="summary" Title="Summary" Type="Text" Default="" Size="50" MaxLength="128" Required="1"/>
+				<Field ID="description" Title="Description" Type="TextArea" Default="" Cols="80" Rows="10" MaxLength="8192"/>
+				<Field ID="assigned" Title="Assigned To" Type="Text" Default="" Special="Assigned" Size="20" MaxLength="32" Index="1"/>
+				<Field ID="category" Title="Category" Type="Menu" Default="General" Items="General, Question, Suggestion, JavaScript Error, Performance Issue, Other" Index="1"/>
+				<Field ID="status" Title="Status" Type="Menu" Default="New" Items="New, Active, Replied, Postponed, Cancelled, Closed" Index="1"/>
+				<Field ID="priority" Title="Priority" Type="Menu" Default="None" Items="None, Low, Medium, High" Index="1"/>
+				<Field ID="game" Title="Game ID" Type="Text" Default="" Size="20" MaxLength="32" Index="1"/>
+				<Field ID="cc" Title="Cc" Type="Text" Default="" Size="30" MaxLength="1024" Special="Cc"/>
+			</System>
+		</Data>
+	</Record>
+	<Record Path="/admin/game_genres">
+		<Data>
+			<Genres>
+				<Genre>Action</Genre>
+				<Genre>Adventure</Genre>
+				<Genre>Anti-shooter</Genre>
+				<Genre>Art</Genre>
+				<Genre>Board</Genre>
+				<Genre>Children</Genre>
+				<Genre>Comedy</Genre>
+				<Genre>Construction</Genre>
+				<Genre>Defense</Genre>
+				<Genre>Educational</Genre>
+				<Genre>Fighting</Genre>
+				<Genre>Flight</Genre>
+				<Genre>God</Genre>
+				<Genre>Horror</Genre>
+				<Genre>Music</Genre>
+				<Genre>Pinball</Genre>
+				<Genre>Programming</Genre>
+				<Genre>Puzzle</Genre>
+				<Genre>RPG</Genre>
+				<Genre>Racing</Genre>
+				<Genre>Rhythm</Genre>
+				<Genre>Shooter</Genre>
+				<Genre>Simulation</Genre>
+				<Genre>Space</Genre>
+				<Genre>Sports</Genre>
+				<Genre>Stealth</Genre>
+				<Genre>Strategy</Genre>
+				<Genre>Text</Genre>
+			</Genres>
+		</Data>
+	</Record>
+	<Record Path="/admin/article_categories">
+		<Data>
+			<Category Path="/main" Title="Misc Articles"/>
+			<Category Path="/news" Title="Effect News"/>
+			<Category Path="/community" Title="Community Blog"/>
+			<Category Path="/docs" Title="Documentation"/>
+			<Category Path="/tutorials" Title="Tutorials"/>
+			<Category Path="/plugins" Title="Plugins"/>
+			<Category Path="/engine" Title="Dev Blog"/>
+			<Category Path="/special" Title="Special"/>
+			<STag Name="sidebar_docs" Title="Documentation Sidebar"/>
+			<STag Name="sidebar_tutorials" Title="Tutorials Sidebar"/>
+			<STag Name="sidebar_plugins" Title="Plugins Sidebar"/>
+			<STag Name="featured_game" Title="Featured Game"/>
+		</Data>
+	</Record>
+	<Record Path="/admin/engine_versions">
+		<Data>
+			<Version Name="0.1i" Title="0.1 Internal" File="src"/>
+		</Data>
+	</Record>
+	<Record Path="/admin/engine_plugins">
+		<Data>
+			<Plugin Author="jhuckaby" File="TrueFont/1.0b.js" Name="TrueFont" Version="1.0b"/>
+			<Plugin Author="jhuckaby" File="Box2D/1.0b-min.js" Name="Box2D" Version="1.0b"/>
+		</Data>
+	</Record>
+	<Record Path="/admin/ip_block_list">
+		<Data>
+			<Block>^0\.0\.0\.0$</Block>
+		</Data>
+	</Record>
+</Setup>

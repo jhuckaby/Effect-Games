@@ -1,0 +1,326 @@
+/**
+ * Joe's JavaScript Toolkit
+ * Event Handling Code
+ * Copyright (c) 2007 Joseph Huckaby
+ * $Id: event.js,v 1.1 2007/11/13 03:18:18 jhuckaby Exp $
+ **/
+
+var dblclick_threshold = 0.25;
+
+// common key codes
+var SPACE_BAR = 32;
+var ENTER_KEY = 13;
+var ESC_KEY = 27;
+var DELETE_KEY = 8;
+var TAB_KEY = 9;
+var LEFT_ARROW = 37;
+var RIGHT_ARROW = 39;
+var UP_ARROW = 38;
+var DOWN_ARROW = 40;
+
+var mozKeyMap = {
+	192: '~',
+	187: '=',
+	189: '-',
+	111: '/',
+	106: '*',
+	109: '-',
+	219: '[',
+	221: ']',
+	220: "\\",
+	103: '7',
+	104: '8',
+	105: '9',
+	107: '+',
+	186: ':',
+	222: '\'',
+	100: '4',
+	101: '5',
+	102: '6',
+	188: ',',
+	190: '.',
+	191: '/',
+	97: '1',
+	98: '2',
+	99: '3',
+	96: '0',
+	110: '.'
+};
+
+function get_mouse_coords(e, obj) {
+	// get global mouse position, or relative to dom obj
+	var pt = {};
+
+	if (document.all) {
+		pt.x = e.clientX;
+		pt.y = e.clientY;
+	}
+	else {
+		pt.x = e.pageX;
+		pt.y = e.pageY;
+	}
+
+	if (obj) {
+		var info = get_dom_object_info(obj);
+		pt.x -= info.left;
+		pt.y -= info.top;
+	}
+
+	return pt;
+}
+
+function get_dom_object_info(obj) {
+	// get absolute coordinates for dom element
+	var info = {
+		left: 0, 
+		top: 0, 
+		width: obj.width ? obj.width : obj.offsetWidth, 
+		height: obj.height ? obj.height : obj.offsetHeight
+	};
+
+	while (obj) {
+		info.left += obj.offsetLeft;
+		info.top += obj.offsetTop;
+		// if (obj.scrollLeft) info.left -= obj.scrollLeft;
+		// if (obj.scrollTop) info.top -= obj.scrollTop;
+		obj = obj.offsetParent;
+	}
+
+	return info;
+}
+
+function delay_onChange_input_text(e) {
+	// this function is called for every keypress in every input field
+	// if key code is 13 (return/enter key), PREVENT form submit
+	// plus invoke onEnter handler if defined
+	// also, invoke onChange handler after slight delay to capture new contents
+	if (!e) e = window.event;
+	var ch = 0;
+	if (e.keyCode) ch = e.keyCode;
+	else if (e.which) ch = e.which;
+	if (ch == 13) {
+		if (this.getAttribute('onEnter')) invoke_dom_handler(this, 'onEnter');
+		if (e.preventDefault) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+		else {
+			e.returnValue = false;
+			e.cancelBubble = true;
+		}
+		return false;
+	}
+	
+	if (this.getAttribute('onChange')) {
+		var obj = this;
+		setTimeout( function() { invoke_dom_handler(obj, 'onChange'); }, 1 );
+	}
+	return true;
+}
+
+function delay_onChange_textarea() {
+	// invoke onChange handler after short delay, to capture new contents
+	if (this.getAttribute('onChange')) {
+		var obj = this;
+		setTimeout( function() { invoke_dom_handler(obj, 'onChange'); }, 1 );
+	}
+	return true;
+}
+
+function invoke_dom_handler(target, handlerName) {
+	// invoke a dom handler by name (e.g. onClick)
+	if (typeof(target[handlerName]) == 'function') return target[handlerName](); // already a function
+
+	var handler = target.getAttribute(handlerName);
+	if (!handler) return false;
+
+	var code = handler.toString ? handler.toString() : handler;
+	if (code.match(/^function\s+\w+\(\)/)) {
+		code = code.substring( code.indexOf("{") + 1, code.lastIndexOf("}") ) + "\r;";
+	}
+	target['__temp'] = new Function( code );
+	target['__temp']();
+}
+
+// allow first two events (assuming these will be mouseDown, mouseUp) to pass
+// so frame can be properly focused, in order to receive key events in Safari/FF
+// this cannot be forced with window.focus();
+var pass_event_counter = 2;
+
+function pass_event_if(state, e) {
+	// pass event through if state is true
+	if (pass_event_counter) {
+		pass_event_counter--;
+		return true;
+	}
+	
+	if (state) return true; // passthrough
+	else return stop_event(e);
+}
+
+function stop_event(e) {
+	// prevent default behavior for event
+	// debugstr("stopping event from bubbling");
+	if (e.preventDefault) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+	else {
+		e.returnValue = false;
+		e.cancelBubble = true;
+	}
+	return false;
+}
+
+var mouseObj = null; // DOM obj that receives mouse events
+
+function app_mouse_down(e) {
+	// handle mouse down event
+	if (!e) e = window.event;
+	
+	// if progress dialog is present, stop ALL clicks
+	if (session.progress) {
+		stop_event(e);
+		return false; // stop bubble
+	}
+	
+	session.last_mouse_event = e;
+	
+	var targetObj = e.target ? e.target : e.srcElement;
+
+	while (targetObj && !targetObj.tagName.match(/^(BODY|HTML)$/) && !targetObj.getAttribute('captureMouse')) {
+		targetObj = targetObj.parentNode ? targetObj.parentNode : targetObj.parentElement;
+	}
+
+	if (targetObj && targetObj.getAttribute('captureMouse')) {
+		var pt = get_mouse_coords(e, targetObj);
+		mouseObj = targetObj;
+		
+		targetObj['__captureMouse'] = eval( 'window.' + targetObj.getAttribute('captureMouse') );
+		if (!targetObj['__captureMouse']) return alert("captureMouse handler not found: " + targetObj.getAttribute('captureMouse'));
+		
+		var result = pass_event_if( targetObj.__captureMouse('mouseDown', e, pt), e );
+		if (!result) return false; // stop bubble
+	}
+
+	var pt = get_mouse_coords(e);
+	session.mouseIsDown = true;
+	session.mousePt = pt;
+	return true; // passthrough if not captured by "captureMouse"
+}
+
+function app_mouse_move(e) {
+	// handle mouse move event
+	if (!e) e = window.event;
+	
+	var globalPt = get_mouse_coords(e);
+	if ((globalPt.x < 0) || (globalPt.y < 0)) return true;
+	
+	// debugstr("mousemove: " + globalPt.x + ' x ' + globalPt.y);
+	
+	if (mouseObj) {
+		var pt = get_mouse_coords(e, mouseObj);
+		var result = pass_event_if( mouseObj.__captureMouse('mouseMove', e, pt), e );
+		if (!result) return false; // stop bubble
+	}
+	
+	session.mousePt = globalPt;
+	safe_call('notify_mouse_move', e);
+	return true; // passthrough if not captured by "captureMouse"
+}
+
+function app_mouse_up(e) {
+	// handle mouse up event
+	if (!e) e = window.event;
+	session.last_mouse_event = e;
+	
+	var globalPt = get_mouse_coords(e);
+	
+	if (mouseObj) {
+		var pt = get_mouse_coords(e, mouseObj);
+		var result = pass_event_if( mouseObj.__captureMouse('mouseUp', e, pt), e );
+		
+		// only fire "click" event if mouse is still within object bounds
+		if (1 || ((pt.x >= 0) && (pt.y >= 0) && (pt.x < mouseObj.offsetWidth) && (pt.y < mouseObj.offsetHeight))) {
+			// handle double-click too
+			if (mouseObj.__lastClick && (mouseObj.__lastClick > hires_time_now() - dblclick_threshold))
+				result = pass_event_if( mouseObj.__captureMouse('doubleClick', e, pt), e );
+			else
+				result = pass_event_if( mouseObj.__captureMouse('click', e, pt), e );
+				
+			mouseObj.__lastClick = hires_time_now();
+		}
+		
+		mouseObj = null;
+		
+		if (!result) return false; // stop bubble
+	}
+	
+	session.mousePt = globalPt;
+	
+	return true;
+}
+
+function ie_dblclick(e) {
+	// to handle double-clicks in IE, we need a special handler that
+	// fires a mousedown, then a mouseup event.
+	if (!e) e = window.event;
+	app_mouse_down(e);
+	return app_mouse_up(e);
+}
+
+function app_key_down(e) {
+	if (!e) e = window.event;
+	session.last_key_event = e;
+	var ch = e.keyCode;
+		
+	if (session.hooks.keys[ch]) {
+		var func = session.hooks.keys[ch];
+		delete session.hooks.keys[ch];
+		var result = pass_event_if( window[func](), e );
+		return result;
+	}
+	
+	safe_call('notify_key_down', e);
+	
+	return true;
+}
+
+function app_key_up(e) {
+	if (!e) e = window.event;
+	session.last_key_event = e;
+	var ch = e.keyCode;
+	
+	return true;
+}
+
+// install our event handlers
+if (window.addEventListener) {
+	window.addEventListener( 'mousedown', app_mouse_down, false );
+	window.addEventListener( 'mousemove', app_mouse_move, false );
+	window.addEventListener( 'mouseup', app_mouse_up, false );
+	window.addEventListener( 'keydown', app_key_down, false );
+	window.addEventListener( 'keyup', app_key_up, false );
+}
+else {
+	if (document.captureEvents) {
+		document.captureEvents(Event.MOUSEDOWN);
+		document.captureEvents(Event.MOUSEMOVE);
+		document.captureEvents(Event.MOUSEUP);
+		document.captureEvents(Event.KEYDOWN);
+		document.captureEvents(Event.KEYUP);
+	}
+	
+	var body = document.body ? document.body : document.getElementsByTagName('body')[0];
+	if (!body) body = {};
+	
+	window.onmousedown = document.onmousedown = body.onmousedown = app_mouse_down;
+	window.onmousemove = document.onmousemove = body.onmousemove = app_mouse_move;
+	window.onmouseup = document.onmouseup = body.onmouseup = app_mouse_up;
+	parent.onkeydown = window.onkeydown = document.onkeydown = app_key_down;
+	parent.onkeyup = window.onkeyup = document.onkeyup = app_key_up;
+	
+	if (ie) {
+		window.ondblclick = document.ondblclick = body.ondblclick = ie_dblclick;
+	}
+}

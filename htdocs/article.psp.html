@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	# Article placeholder for external links
+	# Contains content of article for spiders but redirects to actual presentation
+	if (!($self->{path_info} =~ m@^(.+)/([^/]+)$@)) {
+		$buffer .= "Bad Request: " . $self->{path_info}; 
+		return;
+	}
+	my ($article_path, $article_id) = ($1, $2);
+	
+	$self->log_debug(5, "Path: $article_path, Article ID: $article_id");
+	
+	my $article = $self->get_full_article( $article_path, $article_id );
+	if (!$article) { $buffer .= "Article not found: $article_id"; return; }
+	
+	# convert non-article anchor links to full URIs, because this is not the main /effect/ page
+	$article->{HTML} =~ s@(href\=\")(\#[A-Za-z])@ $1 . '/effect/' . $2; @eg; #"
+	
+	my $username = $article->{Username};
+	my $user = $self->get_user( $username );
+	
+	my $preview_text = $article->{Preview};
+	$preview_text =~ s@\x3C.+?\x3E@@g; # strip html
+	$preview_text =~ s@\n@@g; # strip EOLs
+	$preview_text =~ s@\x22@@g; # strip quotes
+	if (length($preview_text) > 255) { $preview_text = substr($preview_text, 0, 252) . '...'; }
+	
+	# HTTP Headers
+	$self->set_ttl( 'ViewTTL' );
+	$self->header_out( 'Last-Modified', time2str($article->{_Attribs}->{Modified}) );
+	$self->header_out( 'Vary', 'User-Agent' );
+	
+	# stuff variables into session so we can use them below (PSP design flaw)
+	$self->{session}->{_article_path} = $article_path;
+	$self->{session}->{_article_id} = $article_id;
+	$self->{session}->{_article} = $article;
+	$self->{session}->{_author} = ($user && $user->{Preferences}->{public_profile}) ? $user->{FullName} : $username;
+	$self->{session}->{_preview_text} = $preview_text;
+	$self->{session}->{_article_url} = $self->get_base_url() . '#Article' . $article_path . '/' . $article_id;
+	
+	# $self->log_debug(5, "Got here, title: " . $self->{session}->{_row}->{title} );
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><?= $self->{session}->{_article}->{Title}; ?> | EffectGames.com</title>
+	<meta name="generator" content="EffectGames.com Blog Engine">
+	<meta name="author" content="<?= $self->{session}->{_author}; ?>">
+	<meta name="keywords" content="<?= $self->{session}->{_article}->{Tags}; ?>">
+	<meta name="title" content="<?= $self->{session}->{_article}->{Title}; ?>">
+	<meta name="description" content="<?= $self->{session}->{_preview_text}; ?>">
+	<link rel="stylesheet" type="text/css" href="<?= $self->get_base_uri(); ?>main.css" >
+	<link rel="stylesheet" type="text/css" href="<?= $self->get_base_uri(); ?>doxter.css" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+</head>
+<body>
+	<script language="JavaScript"> window.no_hooky = true; </script>
+	<script type="text/javascript" src="/effect/code.psp.js"></script>
+	
+	<script language="JavaScript">
+		var config = <?= xml_to_javascript(
+			copy_hash_remove_keys($self->{config}, 
+				'Strings', 'DebugLevel', 'ContactReasons', 'Growl', 'Pages', 'StockAvatars', 
+				'FileMagic', 'RSSConfig', 'PrivateUserData', 'DefaultPrivileges', 'Emails', 'Session',
+				'StorageConfig', 'DatabaseTables', 'Handlers', 'Paths', 'ImageServiceURL', 
+				'FreeAccounts', 'LogTemplate', 'GameProjectStates', 'ClientInfo', 
+				'BitmapFontGlyphs', 'DefaultUser', 'ContactEmail', 'ImageManager', 'PreferenceConfig',
+				'MailProxy'
+			), 
+		1, compress => 1); ?>;
+		
+		var article = <?= xml_to_javascript(
+			copy_hash_remove_keys( $self->{session}->{_article}, 'HTML', 'Preview' ), 
+		1, compress => 1); ?>;
+		
+		function article_init() {
+			if (session.inited) return;
+			session.inited = true;
+			
+			assert( window.config, "Config not loaded" );
+			session.config = window.config;
+			
+			Debug.trace("Starting up");
+			
+			rendering_page = false;
+			
+			preload();
+			
+			// precalculate some common reg exps
+			window.$R = {};
+			for (var key in config.RegExpShortcuts) {
+				$R[key] = new RegExp( config.RegExpShortcuts[key] );
+			}
+			
+			// setup word wrap
+			ww_precalc_font("body", "effect_precalc_font_finish");
+			
+			// setup page manager
+			// page_manager = new Effect.PageManager( config.Pages.Page );
+			
+			var html = '';
+			var row = article;
+			var article_url = 'http://' + location.hostname + '/effect/article.psp.html' + row.Path + '/' + row.ArticleID;
+			var print_url = '/effect/article_print.psp.html' + row.Path + '/' + row.ArticleID;
+			var elem_class = 'article_info_row';
+			
+			html += '<div class="' + elem_class + '">' + icon('printer.png', '<span class="bold">Printer Friendly</span>', "window.open('" + print_url + "')") + '</div>';
+
+			html += '<div class="' + elem_class + '"><b>Category:</b><br/>' + icon('folder', article.CatTitle, '/effect/#ArticleCategory' + article.Path) + '</div>';
+			if (row.Tags) html += '<div class="' + elem_class + '"><b>Tags:</b><br/>' + icon('note.png', make_tag_links(row.Tags, 0, '/effect/')) + '</div>';
+			html += '<div class="' + elem_class + '"><b>Posted By:</b><br/>' + get_user_display(row.Username, '', '/effect/') + '</div>';
+			html += '<div class="' + elem_class + '"><b>Last Updated:</b><br/>' + icon('calendar', get_short_date_time(row.Published)) + '</div>';
+
+			if (article.AllowComments == 1) {
+				html += '<div class="' + elem_class + '"><b>Comments:</b><br/>' + icon('talk', row.Comments) + '</div>';
+			}
+			
+			$('d_article_info').innerHTML = html;
+			
+			// check for cookie
+			var session_id = session.cookie.get('effect_session_id');
+			if (session_id && session_id.match(/^login/)) {
+				// login from cookie
+				session.hooks.after_error = 'do_continue_loading';
+				effect_api_send('session_recover', {}, 'do_article_login', { _from_recover: 1, _on_error: do_continue_loading, _silent: 1 } );
+			}
+			else do_continue_loading();
+		}
+		
+		function do_article_login(response, tx) {
+			session.user = response.User;
+			session.username = session.user.Username;
+
+			hide_popup_dialog();
+			delete session.hooks.after_error;
+			
+			do_continue_loading();
+		}
+		
+		function do_logout_2() {
+			// override this and just continue loading
+			do_continue_loading();
+		}
+		
+		function do_continue_loading() {
+			if (article.AllowComments == 1) {
+				$('d_comments').innerHTML = Comments.get('Article' + article.Path + '/' + article.ArticleID);
+			}
+		}
+	</script>
+	
+	<div class="container">
+		
+		<!-- Spacer -->
+		<div style="height:20px"></div>
+		
+		<!-- Header -->
+		<div id="d_header" class="p100 fl clear rel header" style="cursor:pointer" title="EffectGames.com" onClick="window.location.href='/effect/'">
+			<div id="d_shadow" class="shadow">
+				<div id="d_tagline" class="tagline"></div>
+			</div>
+			<div class="logo"></div>
+			<div id="d_title" class="title"></div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="clear" style="height:10px;"></div>
+		
+		<div class="h1">
+			<div class="fl">EffectGames.com | <?= $self->{session}->{_article}->{CatTitle}; ?></div>
+			<div class="fr">
+				<a class="icon facebook" 
+				href="javascript:void(window.open('http://www.facebook.com/sharer.php?u=<?= uri_escape(get_request_url()); ?>&t=<?= uri_escape($self->{session}->{_article}->{Title}); ?>','sharer','toolbar=0,status=0,width=626,height=436'))" title="Share on Facebook">Facebook</a>
+				<a class="icon twitter" href="http://twitter.com/home?status=Reading%20<?= uri_escape($self->{session}->{_article}->{Title}); ?>%3A%20<?= uri_escape(get_request_url()); ?>" target="_blank" title="Share on Twitter">Twitter</a>
+			</div>
+			<div class="clear"></div>
+		</div>
+				
+		<div class="article_info_floater" id="d_article_info"></div>
+	
+		<div class="blog_title" style="margin-bottom:10px; font-size: 15pt; color:#444444;">
+			<?= $self->{session}->{_article}->{Title}; ?>
+		</div>
+	
+		<div class="article_body">
+			<?= $self->{session}->{_article}->{HTML}; ?>
+		</div>
+		
+		<div class="clear"></div>
+	
+		<!-- Comments -->
+		<div id="d_comments"></div>
+				
+		<div id="d_footer">
+			<p align="center" style="margin-top:40px;">
+				<img src="/effect/images/logo_40.<?= $ie6 ? 'gif' : 'png'; ?>" width="40" height="34" class="png"/><br/>
+				<span class="caption" style="padding-bottom:0px;">
+					Copyright &copy; 2005 - 2011 Effect Games
+				</span>
+				<br/>
+				<span class="caption" style="padding-bottom:20px;">
+					<a href="/effect/#Article/About_Effect_Games">About Effect Games</a>
+				</span>
+			</p>
+		</div>
+		
+	</div>
+	
+	<div id="d_dialog_outer" style="position:absolute; left:-2000px; top:0px; z-index:1100; display:block;">
+		<script> begin_section('dialog1', [38, 38, 46, 52], 'png'); </script>
+		<div id="d_dialog_inner" style="background-color:#fff;"></div>
+		<script> end_section(); </script>
+	</div>
+	
+	<div id="d_growl_wrapper">
+		<div id="d_growl_top"></div>
+	</div>
+			
+	<script> 
+		// Init when ready
+		if (document.addEventListener) {
+			// Good browsers
+			document.addEventListener( "DOMContentLoaded", function() {
+				document.removeEventListener( "DOMContentLoaded", arguments.callee, false );
+				article_init();
+			}, false );
+
+			// Just in case
+			window.addEventListener( "load", function() {
+				window.removeEventListener( "load", arguments.callee, false );
+				article_init();
+			}, false );
+		}
+		else if (window.attachEvent) {
+			// Bad browsers have to wait
+			window.attachEvent("onload", function() {
+				article_init();
+			});
+		} 
+	</script>
+	
+	<?= $self->{config}->{GoogAnalID} ? ("<script type=\"text/javascript\"> var _gaq = _gaq || [];_gaq.push(['_setAccount', '".$self->{config}->{GoogAnalID}."']);_gaq.push(['_trackPageview']); (function() {var ga = document.createElement('script');ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';ga.setAttribute('async', 'true');document.documentElement.firstChild.appendChild(ga);})(); </script>\n") : ''; ?>
+	
+</body>
+</html>

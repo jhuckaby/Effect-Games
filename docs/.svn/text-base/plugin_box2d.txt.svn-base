@@ -1,0 +1,577 @@
+=article_title Box2D Physics
+=article_path /plugins
+=article_tags plugin, physics, box2d
+=article_stags sidebar_plugins
+=article_comments 1
+=section_numbers 1
+=toc 1
+=toc_max 3
+
+=section i. Version History
+
+=table
+	Version | Date | Author | Description
+	1.0b | 11/28/2009 | [#User/jhuckaby jhuckaby] | Initial beta release, built with Box2D-JS v0.1.0.
+
+=section #. Overview
+
+=preview The Box2D Physics Plugin brings the wonderful world of Box2D into the Effect Engine.  Box2D is an open source two-dimensional physics engine used by several popular games, including Crayon Physics and Fantastic Contraption.  Using this Plugin you can bring realistic physics simulations into your own games.  The C++ Box2D physics library was first ported to ActionScript, then the ActionScript code was ported to JavaScript.  The JavaScript port was adapted for use in Effect Engine.
+
+=image /effect/images/docs/plugins/box2d/screenshot.jpg style="border:0; cursor:pointer;" onClick="window.open('/effect/example.psp.html?rev=box2d')"
+
+<center><table><tr><td>[button:controller.png /effect/example.psp.html?rev=box2d Play Demo...]</td></tr></table></center>
+
+The *Box2D Physics Plugin* brings the wonderful world of [http://www.box2d.org/ Box2D] into the Effect Engine.  Box2D is an open source two-dimensional physics engine used by several popular games, including [http://www.kloonigames.com/crayon/ Crayon Physics] and [http://fantasticcontraption.com/ Fantastic Contraption].  Using this Plugin you can bring realistic physics simulations into your own games.  The C++ Box2D physics library was first ported to ActionScript, then the ActionScript code was ported to JavaScript.  The JavaScript port was adapted for use in Effect Engine.
+
+You should be very familiar with the Box2D physics library to use it here.  We do not provide instructions or support for this library, only how to adapt it for use in the Effect Engine.  Please read the [http://www.box2d.org/manual.html Box2D Manual] before attempting a physics enabled game.  Note that the documentation is for the C++ library, but here we are using the JavaScript port, so not all functions and structures match up exactly.
+
+=section #.#. Internet Explorer Warning
+
+Before you invest too much time in a physics enabled game, please take note: The Box2D JavaScript library works quite well in most browsers, except for Internet Explorer.  Unfortunately, IE slows down to "unplayable" speeds with only a few physics objects on the screen.  This is the case with all IE versions, including 6, 7 and 8, and has nothing to do with the Effect Engine.  Something about the Box2D-JS Library itself causes IE to slow way down.
+
+So if you want your games to work well in IE, you need to make sure you keep the number of physics enabled objects quite low.  Hopefully this issue will be fixed in a later version of Box2D-JS, or perhaps in IE 9.
+
+=section #.#. Concepts
+
+The basic idea here is, Box2D simulates physical objects in its own "world", and the Effect Engine simply "renders" those objects in the main display port as sprites.  The physics engine completely replaces the built-in sprite movement and collision system in Effect.  Your sprites may still include a {logic()} method, but movement is handled quite differently (and in many cases, totally automatically).
+
+A physics-enabled sprite has both an Effect sprite class, and a Box2D object, which are both linked to one another.  Each sprite has a new "{physics}" property which points to the Box2D {b2Body} object.  Similarly, the {b2Body} object has a link back to the sprite, via a property named "{sprite}".  This way you can always get to one via the other.  The {b2Body} object can describe any physical shape, simple or complex, and the Effect sprite may look like whatever you want by attaching the right image.  Your image is positioned and rotated automatically to match the Box2D simulation, frame for frame.
+
+=section #.#. Namespace
+
+All code provided by this plugin exists in a "{Physics}" namespace, to avoid conflicts with the rest of the engine, and your own code.  The 3rd party Box2D code is not namespaced, but all functions and structures have a "{b2}" name prefix.
+
+=section #. Usage
+
+To use the Plugin, first activate it for your game.  This is done by clicking the "Game Settings..." button on the main "Game" tab.  Then select the "Box2d Physics" Plugin from the list and save your changes.
+
+=section #.#. World Setup
+
+The first thing you want to do after loading is to setup the Box2D world.  This is where you define the basic world boundaries and gravity, and should be called after each level is loaded (or when your game first loads, if you don't use "levels").  The Plugin comes with a simple world setup function called "{Physics.createBasicWorld()}" which you can call from your code.  Here is the source of the function so you can see what is happening behind the scenes:
+
+=syntax js
+	Physics.createBasicWorld = function() {
+		// create basic physics world, specifying the current level boundaries
+		// and basic downward gravity
+		var worldAABB = new b2AABB();
+		
+		// make sure we add some padding, because if any physics body hits the min or max vertex limit
+		// it "freezes" and stops simulating.
+		worldAABB.minVertex.Set(0 - Effect.Port.portWidth, 0 - Effect.Port.portHeight);
+		worldAABB.maxVertex.Set(Effect.Port.virtualWidth + Effect.Port.portWidth, Effect.Port.virtualHeight + Effect.Port.portHeight);
+		
+		// simple downward gravity, and allow bodies to "sleep"
+		// sleep means optimize them out of simulation when they are at rest.
+		var gravity = new b2Vec2(0, 400);
+		var doSleep = true;
+		var world = new b2World(worldAABB, gravity, doSleep);
+		
+		Effect.Game.world = world;
+		return world;
+	};
+
+This sets the maximum simulation boundaries well beyond the level bounds, for some padding.  This is because if any object reaches these bounds, it freezes and stops simulating.  These are not "walls", but rather the maximum mathematical boundaries for the simulation.  
+
+The function also sets basic downward gravity (assumes a side-scroller type game), and allows bodies to "sleep" (that is, they will be optimized out of the simulation when they come to rest -- this also means they have to be "woken up" if you move them manually).
+
+Finally, the {world} object is created, stored in {Effect.Game.world} for convenience, and returned from the function.  Typical places to call this function are in your [api:Effect.Game.onLoadGame] event listener callback, or in your [api:Effect.Game.loadLevel()] callback (if you are loading levels).  Example:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		Physics.createBasicWorld();
+	} );
+
+When you create (or load) your sprite and tile planes, you should give each one a reference to the Box2D world object, in a property named "{world}".  This is because you can potentially have multiple physics worlds active at once (perhaps one per plane).  Here is an example which creates a sprite plane from scratch:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		var world = Physics.createBasicWorld();
+		
+		var splane = new SpritePlane('sprites');
+		splane.world = world;
+		Effect.Port.attach(splane);
+	} );
+
+And here is an example which loads a level.  The level automatically creates both a sprite and a tile plane, but we still have to tell them which Box2D world to use.
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		Effect.Game.loadLevel( 'MyLevel1', function() {
+			var world = Physics.createBasicWorld();
+			
+			var splane = Effect.Port.getPlane('sprites');
+			var tplane = Effect.Port.getPlane('tiles');
+			
+			tplane.linkSpritePlane( splane );
+			
+			splane.world = world;
+			tplane.world = world;
+		} );
+	} );
+
+Notice we are also linking the planes together using [api:TilePlane.linkSpritePlane()].  This allows the planes to communicate, and one to create objects in the other.  This is important if you are going to use tiles as solid Box2D ground/wall objects (see [Tiles] below).
+
+=section #.#.#. Always Active Sprites
+
+A word of caution about using "Always Active" sprites with Box2D.  If you are placing physics-enabled sprites in the Level Editor, and your sprite class is marked "Always Active", then the sprite instances will be created *before* the [api:Effect.Game.onLoadLevel] event is fired.  This is done deliberately, because these sprites are supposed to be made available instantly, so your code inside the [api:Effect.Game.onLoadLevel] event listener can access them.
+
+However, with the addition of Box2D, things get a little more complicated.  If you are loading levels, you often won't have your physics world created until the load event fires (as seen in the example above), but unfortunately this is too late for "Always Active" sprites.  So in these special cases you will want to use a [api:Effect.Game.onInitLevel] event handler.  This event fires after the level is loaded, but *before* the level is "activated" (before your planes and sprites are created).  Here you can create your physics world, so it will be available to your "Always Active" sprites when they are auto-created.  However, please note that your sprite |planes| aren't even created at this point, so all you can do in the init callback is create the world object, store it, and then retrieve it later in your [api:Effect.Game.onLoadLevel] handler.  Example:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		
+		// Define our world variable out here, so both callbacks can access it.
+		var world = null;
+		
+		Effect.Game.addEventListener( 'onInitLevel', function() {
+			// The level is loaded, but not yet activated.
+			// Create our physics world here.
+			world = Physics.createBasicWorld();
+		} );
+				
+		Effect.Game.loadLevel( 'MyLevel1', function() {
+			// At this point the level is loaded and activated,
+			// so we can setup our planes.
+			var splane = Effect.Port.getPlane('sprites');
+			var tplane = Effect.Port.getPlane('tiles');
+			
+			tplane.linkSpritePlane( splane );
+			
+			splane.world = world;
+			tplane.world = world;
+		} );
+	} );
+
+There is one caveat to this technique, and that is using mutiple simultaneous Box2D worlds.  If you are setting up multiple worlds, one per plane, then "Always Active" sprites have no idea which physics world they belong to when they are created.  This is because the link between the Box2D worlds and their respective sprite planes must be setup in the [api:Effect.Game.onLoadLevel] callback.  So "Always Active" sprites will always use the latest Box2D world.  This may be fixed in a future engine release, if people really need it.
+
+=section #.#. Main Loop
+
+In your main logic loop, you need to tell Box2D to simulate its bodies, and update all their positions.  This is done by calling {Physics.step()}, and passing in a reference to the Box2D {world} object.  Example:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLogic', function(clock) {
+		Physics.step( Effect.Game.world );
+	} );
+
+You can optionally pass in a second argument representing the desired simulation accuracy.  Box2D calls this the "iteration count", and is essentially the number of inner loops to run to "solve" the physical simulation and correctly adjust for collisions.  Lower values are faster but less accurate, and higher values are slower but more accurate.  "{10}" is the recommended value, but this can slow down with large amounts of objects.  Therefore if not specified the Plugin defaults to "{5}" for Safari and Chrome (which are very, very fast browsers and can handle the load), and "{1}" for all other browsers.
+
+=section #.#. Basic Primitive Shapes
+
+Box2D allows you to create simple or complex bodies, made up of one or more shapes.  These shapes can be convex polygons or spheres.  The Plugin comes with two utility functions for creating simple boxes and spheres, which you may use if you like.  Note that these are low-level functions that only create the body in the physics engine -- they do not attach the object to a sprite, and are not visible.  These are mainly used internally by the Plugin, and the provided base sprite classes.  Here is the source to the functions:
+
+=syntax js
+	Physics.createBox = function(world, x, y, width, height, fixed) {
+		// create a basic box
+		if (typeof(fixed) == 'undefined') fixed = true;
+		
+		var boxSd = new b2BoxDef();
+		if (!fixed) boxSd.density = 1.0;
+		boxSd.extents.Set(width / 2, height / 2);
+		
+		var boxBd = new b2BodyDef();
+		boxBd.AddShape(boxSd);
+		boxBd.position.Set(x,y);
+		
+		return world.CreateBody(boxBd);
+	};
+	
+	Physics.createBall = function(world, x, y, radius) {
+		// create a basic ball (sphere with some bounce to it)
+		var ballSd = new b2CircleDef();
+		ballSd.density = 1.0;
+		ballSd.radius = radius;
+		ballSd.restitution = 0.5;
+		
+		var ballBd = new b2BodyDef();
+		ballBd.AddShape(ballSd);
+		ballBd.position.Set(x,y);
+		
+		return world.CreateBody(ballBd);
+	};
+
+These utility functions must be passed a reference to the Box2D world object (hint: you can always get to this via "{$G.world}" -- {$G} is a [api:Shortcuts Shortcut] for {Effect.Game}).  The "{x}" and "{y}" coordinates represent the exact center of the object, and the width and height are in pixels.
+
+The "{Physics.createBox()}" function creates a box at the given position and size (does not have to be square).  Passing a {true} value for the "{fixed}" argument makes the body "fixed" in space (so it can never move).  The "{Physics.createBall()}" function creates a spherical body with the given position and radius.  It has a {restitution} value of "{0.5}" so it is somewhat bouncy.
+
+=section #.#. Ground, Walls and Ceiling
+
+To create basic ground, walls and/or ceiling at the edges of your level, you can call "{Physics.createGround()}", "{Physics.createWalls()}" and/or "{Physics.createCeiling()}".  Note that these bodies are not tied to any sprites, and exist only in the physics engine.  The objects are all created |just| outside the level boundaries.  Here is the source of these functions:
+
+=syntax js
+	Physics.createGround = function(world) {
+		// create basic ground under the level bottom
+		// this has a bit of give to it (give = restitution)
+		var vWidth = Effect.Port.virtualWidth;
+		var vHeight = Effect.Port.virtualHeight;
+		
+		var groundSd = new b2BoxDef();
+		groundSd.extents.Set(vWidth / 2, 50); // these are doubled
+		groundSd.restitution = 0.2;
+		
+		var groundBd = new b2BodyDef();
+		groundBd.AddShape(groundSd);
+		groundBd.position.Set(vWidth / 2, vHeight + 50);
+		
+		return world.CreateBody(groundBd);
+	};
+	
+	Physics.createWalls = function(world) {
+		// create basic walls just off the left and right sides of the level
+		var vWidth = Effect.Port.virtualWidth;
+		var vHeight = Effect.Port.virtualHeight;
+		
+		Physics.createBox(world, -10, vHeight / 2, 20, vHeight, true);
+		Physics.createBox(world, vWidth + 10, vHeight / 2, 20, vHeight, true);
+	};
+	
+	Physics.createCeiling = function(world) {
+		// create basic ceiling above the level top
+		var vWidth = Effect.Port.virtualWidth;
+		var vHeight = Effect.Port.virtualHeight;
+		
+		return Physics.createBox(world, vWidth / 2, -50, vWidth, 100, true);
+	};
+
+You can alternatively use tiles to represent ground, walls and ceiling.  See [Tiles] below for details.
+
+Note that the ground object is created without calling {createBox()}, so we can manually set the "{restitution}" property on the box shape.  This gives objects a little "bounce" as they hit the ground.  Also note that all these bodies are "fixed" so they can never move, once created.  Feel free to customize these behavioral settings for your game, by providing your own funtions.
+
+=section #.#. Sprites
+
+Now comes the fun part.  Each physics-enabled sprite needs to be "linked" to a Box2D physics body.  The body is simulated in the Box2D world, and its position and orientation (rotation) are then reflected in the Effect sprite when it is drawn.  You can create and maintain this linkage manually (see [Custom Sprite Classes] below), or extend one of the provided base classes.
+
+=section #.#.#. Base Classes
+
+The following base sprite classes are provided in the plugin for your game code to extend.  They represent only simple physics bodies, but you can use the framework to create your own complex classes which use the same techniques.
+
+=section #.#.#.#. Physics.BoxSprite
+
+The {Physics.BoxSprite} base class represents a simple box.  It uses the built-in static utility function {Physics.createBox()} to create the Box2D body.  When you extend the class, you must provide its width, height and image.  Example:
+
+=syntax js
+	Physics.BoxSprite.extend( 'MyBox', {
+		width: 32,
+		height: 32,
+		url: '/images/sprites/mybox.png',
+		dieOffscreen: true
+	} );
+
+The image you specify should be attached to the sprite class in the Effect Web UI, and have a *Rotation + Padding* filter applied (see the [article:docs/Sprites and Tiles Guide]).
+
+If you are creating a non-square sprite, set the {width} and {height} to the size of one animation frame, including any padding you have around the image (*not* including filter padding).  Then, include a [api:Sprite.hitRect] property, which should be set to encompass the actual physical object without padding.  Example:
+
+=syntax js
+	Physics.BoxSprite.extend( 'MyWideBox', {
+		width: 64,
+		height: 32,
+		hitRect: new Rect(0, 16, 64, 48),
+		url: '/images/sprites/mywidebox.png',
+		dieOffscreen: true
+	} );
+
+=section #.#.#.#. Physics.BallSprite
+
+The {Physics.BallSprite} base class represents a simple sphere.  It uses the built-in static utility function {Physics.createBall()} to create the Box2D body.  When you extend the class, you must provide its width, height and image.  Example:
+
+=syntax js
+	PhysicsBall.extend( 'MyBall', {
+		width: 32,
+		height: 32,
+		url: '/images/sprites/myball.png',
+		dieOffscreen: true
+	} );
+
+The image you specify should be attached to the sprite class in the Effect Web UI, and have a *Rotation* filter applied (see the [article:docs/Sprites and Tiles Guide]).
+
+=section #.#.#.#. Common
+
+In either case, feel free to specify your own {logic()} method, but if you include your own {setup()} method, be sure to invoke the parent {setup()} method, which handles setting up and linking the physics body.  Example:
+
+=syntax js
+	MyBox.add({
+		setup: function() {
+			// call super's setup()
+			this.__parent.setup.call(this);
+			
+			// perform our own setup here
+		}
+	} );
+
+When you create instances of the sprite, you can specify its |center point|, by passing "{cx}" and "{cy}" properties to the instance.  This is optional, as the stanard top-left "{x}" and "{y}" properties work as well.  But in the Box2D physics world, all object positions represent the center of the object by default.  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	
+	splane.createSprite( 'MyBox', {
+		cx: 50,
+		cy: 50
+	} );
+
+After the sprite is created, it will have a link to its Box2D counterpart via a property named "{physics}".  You can access this at any time to move the object, check for collisions, or query its velocity.
+
+When the sprite is destroyed, either by leaving the screen (if [api:Sprite.dieOffscreen] is set, or manually by calling [api:Sprite.destroy()], its Box2D counterpart is also automatically removed from the world.
+
+=section #.#.#. Moving
+
+Unlike regular Effect sprites, you cannot simply set [api:Sprite.x] and [api:Sprite.y], and you do not call [api:Sprite.move()].  Neither has any effect.  Instead, you manipulate the Box2D physics object directly, and the Effect Engine automatically positions and rotates the sprite to match.
+
+Each physics-enabled sprite has a "{physics}" property, which is a reference to the Box2D {b2Body} object.  Using this you can call Box2D methods such as {SetCenterPosition()} or {SetLinearVelocity()}.  Example:
+
+=syntax js
+	MyBox.add({
+		jump: function() {
+			// make object "jump" by setting the linear velocity upward
+			this.physics.WakeUp();
+			this.physics.SetLinearVelocity( new b2Vec2(0, -500) );
+		}
+	});
+
+=section #.#.#. Dragging
+
+To "drag" a physics-enabled sprite using the mouse, we have to first locate which body that was clicked on, and create a temporary "joint" which links the body to the mouse coordinates.  Then, we track the mouse movement through the drag and update the joint.  Finally, when the mouse button is released we destroy the joint.
+
+First, we need a few persistent variables, to hold a reference to the sprite being dragged, and our temporary joint object.
+
+=syntax js
+	var dragSprite = null;
+	var mouseJoint = null;
+
+Next, we create a [api:Effect.Game.onMouseDown] event listener, and locate which sprite that was clicked on.  For this we use {Physics.findSpriteByPoint()}, which precisely locates the sprite by querying the Box2D world.  If we successfully found a sprite, we create our "joint" and setup the drag.
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseDown', function(pt, buttonIdx) {
+		// see if we clicked on a sprite or not
+		var sprite = Physics.findSpriteByPoint(world, pt);
+		if (sprite) {
+			var body = sprite.physics;
+			
+			var md = new b2MouseJointDef();
+			md.body1 = world.m_groundBody;
+			md.body2 = body;
+			md.target.Set(pt.x, pt.y);
+			md.maxForce = 30000 * body.m_mass;
+			md.timeStep = 1.0 / Effect.Game.getTargetFPS();
+			
+			mouseJoint = Effect.Game.world.CreateJoint(md);
+			body.WakeUp();
+			dragSprite = sprite;
+		}
+	} );
+
+So if a sprite was clicked on, we get a reference to its Box2D {b2Body} object via the "{physics}" property.  Then we create our mouse joint, and store it in our "{mouseJoint}" variable.  Finally, the physics body is woken up, and the sprite is stored in our "{dragSprite}" variable.
+
+Next, we define a [api:Effect.Game.onMouseMove] event listener, and update the position of our joint if one is active.
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseMove', function(pt) {
+		if (dragSprite) {
+			// adjust sprite that we clicked on by moving our joint
+			var p2 = new b2Vec2(pt.x, pt.y);
+			mouseJoint.SetTarget(p2);
+		}
+	} );
+
+Finally, we have a [api:Effect.Game.onMouseUp] event listener, which releases the drag and destroys the joint object.
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseUp', function(pt, buttonIdx) {
+		// end drag
+		if (dragSprite) {
+			world.DestroyJoint(mouseJoint);
+			mouseJoint = null;
+			dragSprite = null;
+		}
+	} );
+
+This code was adapted from the [http://mrdoob.com/projects/chromeexperiments/ball_pool/ Ball Pool Chrome Experiment] by [http://mrdoob.com/blog Ricardo Cabello].
+
+=section #.#.#. Collision Detection
+
+The Box2D physics engine handles all collision detection for you, but sometimes you need to trigger actions in your game code when particular collisions occur.  To do this, you can query the engine for all sprites that are currently in contact with the sprite in question, using the {getContactSprites()} method, which is provided in all physics-enabled sprite classes.  This method returns an array of sprites.  Example:
+
+=syntax js
+	MyBox.add({
+		logic: function(clock) {
+			// see if we are in contact with any other sprites
+			var sprites = this.getContactSprites();
+			if (sprites.length > 0) {
+				// yes, other sprites are touching us!
+				
+				// any enemies?
+				sprites.each( funciton(sprite) {
+					if (sprite.type == 'Enemy') {
+						// ouch!
+						this.hurt( sprite );
+					}
+				} );
+				
+			}
+		}
+	});
+
+Rememer that when a sprite is "sitting" on top of another, there is constant contact between the two of them.  These aren't really collision "events", but you can treat them as such if you set a custom property that specifies whether the sprite is currently in contact with anything, or not.  Then when the property changes state to true, you can consider that a collision, and take the appropriate action.  See the next section for an example of this.
+
+=section #.#.#.#. Collision Sound Effects
+
+One idea for collision detection is to play a sound.  For example, here is code for playing a random wood smashing sound when the {MyBox} sprite collides with something.
+
+=syntax js
+	MyBox.add({
+		contactState: false,
+		
+		logic: function(clock) {
+			var sprites = this.getContactSprites();
+			switch (this.contactState) {
+				case false:
+					if (sprites.length > 0) {
+						// we hit something, play random crate noise
+						var soundNum = 1 + Math.floor( Math.random() * 8 );
+						Effect.Audio.playSound( 'crate' + soundNum + '.mp3' );
+						this.contactState = true;
+					}
+					break;
+					
+				case true:
+					if (sprites.length == 0) {
+						// no longer contacting anything
+						this.contactState = false;
+					}
+					break;
+			}
+		}
+	});
+
+Notice we added a custom "{contactState}" property to the class definition.  This is so we can take action when the state changes from "no contacts" to "contacting one or more things".  At this state change we play a sound.  If you were to simply play a sound when {GetContactSprites()} returned one or more sprites, the sound would be continuously played if the sprite were "sitting" on top of something.  This way the sound only plays when the sprite actually "collides" with an object.
+
+We can take this one step further, and play a particular sound depending on what type of sprite was hit.  For example, this code plays a "clack" noise when two ball sprites hit each other (like pool balls), or a generic hit sound if the sprite hits something else.
+
+=syntax js
+	MyBall.add({
+		contactState: false,
+		
+		logic: function(clock) {
+			var sprites = this.getContactSprites();
+			switch (this.contactState) {
+				case false:
+					if (sprites.length > 0) {
+						// we hit something
+						// if we hit another ball, play specific sound
+						var hitBall = false;
+						sprites.each( function(sprite) {
+							if (sprite.type == 'MyBall') hitBall = true;
+						} );
+						
+						if (hitBall) {
+							// we hit another ball, play a "clack" noise
+							var soundNum = 1 + Math.floor( Math.random() * 3 );
+							Effect.Audio.playSound( 'pool_ball' + soundNum + '.mp3' );	
+						}
+						else {
+							// we hit something else, play generic hit sound
+							var soundNum = 1 + Math.floor( Math.random() * 3 );
+							Effect.Audio.playSound( 'generic_hit.mp3' );
+						}
+						this.contactState = true;
+					}
+					break;
+					
+				case true:
+					if (sprites.length == 0) {
+						// no longer contacting anything
+						this.contactState = false;
+					}
+					break;
+			}
+		}
+	});
+
+Here we are examining the sprites returned from the {GetContactSprites()} call (the array is augmented with an {each()} method, for looping through all elements and executing code on each).  If any of the sprites we are in contact with have their {type} property set to "{MyBall}", then we set a flag which changes the sound that is played.
+
+=section #.#.#. Custom Sprite Classes
+
+If you want to create your own custom shapes beyond simple boxes and spheres, absolutely no problem.  Simply extend the {Physics.BaseSprite} class (which provides the framework for all physics enabled sprites in the Effect Engine), and provide your own "{setup()}" method to create the Box2D body that represents your sprite.  Example:
+
+=syntax js
+	Physics.BaseSprite.extend( 'MyTriangle', {
+		setup: function() {
+			var pt = this.centerPoint();
+			var points = [[-30, 0], [30, 0], [0, 30]];
+			
+			var polySd1 = new b2PolyDef();
+			polySd1.vertexCount = points.length;
+			for (var i = 0; i < points.length; i++) {
+				polySd1.vertices[i].Set(points[i][0], points[i][1]);
+			}
+			polySd1.density = 1.0;
+			
+			var polyBd = new b2BodyDef();
+			polyBd.AddShape(polySd1);
+			polyBd.position.Set(pt.x, pt.y);
+			
+			this.physics = this.world.CreateBody(polyBd);
+			this.physics.sprite = this;
+		}
+	} );
+
+This creates a triangle body, which is added to the Box2D world.  Note that we store the body in the "{physics}" property of our sprite, and we create a "{sprite}" reference back to the sprite object inside the physics body.  Both of these are extremely important, as it allows the engine to locate one from the other.
+
+=section #.#. Tiles
+
+While you can manually create ground, walls and ceilings for your simulation, you may want simply use tiles.  The Physics Plugin comes with a special tile class that automatically creates a solid, static box for every tile as it comes onscreen, and deletes it as it leaves the screen.  All you have to do is extend the class "{Physics.GroundTile}", and assign your class to tiles in the Level Editor.  Example:
+
+=syntax js
+	Physics.GroundTile.extend( 'MyGround', {} );
+
+This assumes you have a tile class defined in the web interface named "{MyGround}".  Simply draw this tile into your level, and the Plugin will automatically create the appropriate static box objects to make solid ground, walls and/or ceiling for you.
+
+=section #. Links
+
+Here is a list of external links related to this plugin:
+
+=list
+	[http://www.box2d.org/ Box2D Home]
+	[http://www.box2d.org/manual.html Box2D Manual]
+	[http://www.box2d.org/wiki/index.php?title=Main_Page Box2D Wiki]
+	[http://box2dflash.sourceforge.net/ Box2D ActionScript Port]
+	[http://box2d-js.sourceforge.net/ Box2D JavaScript Port]
+	[http://mrdoob.com/projects/chromeexperiments/google_gravity/ Google Gravity Chrome Experiment] (uses Box2D-JS)
+	[http://mrdoob.com/projects/chromeexperiments/ball_pool/ Ball Pool Chrome Experiment] (uses Box2D-JS)
+
+=section #. Source Code
+
+Here is the raw source code for the Box2D Physics Plugin, before optimization.  This includes the complete source code to the Box2D JavaScript port by Erin Catto.
+
+=table
+	Version | Source URL
+	1.0b | [http://www.effectgames.com/effect/engine/plugins/Box2D/1.0b.js]
+
+=section #. Examples
+
+=list
+	[/effect/example.psp.html?rev=box2d Basic Physics Demo]
+
+=section #. Quick Reference
+
+Here are all the namespaces, classes and functions provided by the Box2D Physics Plugin:
+
+=deflist
+	{Physics} | This is the top-level namespace, under which all the plugin classes and functions live.
+	{Physics.BaseSprite} | This is the base sprite class that {Physics.BoxSprite} and {Physics.BallSprite} both inherit from.  You can also extend this class to provide your own custom physics objects.
+	{Physics.BoxSprite} | This is a basic box sprite, which you can extend for your own use.
+	{Physics.BallSprite} | This is a basic ball sprite, which you can extend for your own use.
+	{Physics.TileSprite} | This is an internal class, which represents an invisible solid box (automatically created for solid tiles).  You should never need to interact with this class directly.
+	{Physics.GroundTile} | This is a special tile class which you can extend to provide physics-enabled solid tiles for ground, walls and/or ceilings.
+	{Physics.createBasicWorld()} | This creates a basic Box2D world, large enough for the current level and with basic gravity.
+	{Physics.createGround()} | This creates a basic ground plane under the bottom of the level.  It has a slight restitution (bounce).
+	{Physics.createWalls()} | This creates two wall objects just off the left and right sides of the level.
+	{Physics.createCeiling()} | This creates a ceiling object above the top of the level.
+	{Physics.createBox()} | This creates a generic box object, and is used by many of the built-in functions and classes.
+	{Physics.createBall()} | This creates a generic ball object (sphere) with some bounce.  This is used by the {Physics.BallSprite} class.
+	{Physics.step()} | This advances the physics simulation, updating all the object positions and calculating collisions.  Should be called once per logic loop iteration.
+	{Physics.findSpriteByPoint()} | This locates a sprite given a set of world coordinates (such as from a mouse click).
+
+=section #. Copyright
+
+Copyright &copy; 2009 Effect Games LLC and Joseph Huckaby.  This Plugin source code is released under the [http://www.opensource.org/licenses/lgpl-3.0.html GNU Lesser General Public License v3.0].
+
+[http://box2d-js.sourceforge.net/ Box2D-JS] is copyright (c) 2006-2007 by Erin Catto.

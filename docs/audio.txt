@@ -1,0 +1,398 @@
+=article_title Audio Guide
+=article_path /docs
+=article_tags docs, audio, sound, music, mp3
+=article_stags sidebar_docs
+=article_comments 1
+=section_numbers 1
+=toc 1
+
+=section #. Overview
+
+The Effect Engine allows you to easily play high quality stereo sound effects and music in your games.  Simply provide [wikipedia:MP3] formatted audio files (or use some of our [Free Stock Sound Effects]), and they can be used in your games via a simple API.  You can choose to preload some or all your files at startup, or load them on demand per level or per sprite.
+
+=section #.#. Formatting Files
+
+All your sounds effects and music files should be saved as [wikipedia:MP3] format before uploading to Effect Games, one file per sound effect or music track.  If you already have audio files in another format, you will need to convert them for use in the Effect engine.  Many audio programs exist for doing this, but two very popular free ones are [http://www.apple.com/itunes/ Apple iTunes] and [http://audacity.sourceforge.net/ Audacity].  We provide instructions for using both (see [Converting Sounds] below).
+
+To reduce latency in sound effects, make sure there is no silence at the beginning of your tracks.  This can happen when recording your own sound effects, or sometimes even with free or commercial files.  It is highly recommended you open each sound effect in your audio editor of choice, zoom into the beginning of the sound, and crop any silence before the sound actually begins.  Here is a [wikipedia:audio software, list of audio software] programs for editing and saving your audio files.
+
+=section #.#. Audio Quality
+
+In an effort to minimize loading time and provide the best user experience, it is recommended that you encode your audio files at a bitrate of *64 kbps*, however all standard MP3 bitrates are technically supported, including [wikipedia:Variable_bitrate, VBR] (variable bit rate).  Tracks can be mono or stereo, and may be looped.
+
+=section #. Using the Audio Tab
+
+Once you create or join a game project on EffectGames.com, you can click on the "Audio" tab to manage your sounds and music.
+
+=image /effect/images/docs/getting_started/audio_tab.png style="border:0"
+=caption Screenshot of the "Audio" tab.
+
+This is where you can adjust all the audio settings for your game.  Please note that you will still have full control over everything in your code using our API (see below).  The settings in the user interface are only defaults (with the exception of the master control switch -- see next section).
+
+Any MP3 audio files uploaded to the "Assets" tab (in any folder) are automatically imported into the audio engine and displayed here.  You can click the "play" icon next to each audio track to hear a preview.
+
+=section #.#. Master Control
+
+The master switch controls whether the Effect audio system is enabled or disabled.  Disabling it here means that the entire audio engine, and your audio files, are not even loaded, so it cannot be turned back on from inside your game.  Only disable this if you really want a completely silent game (no audio).
+
+The master volume control affects all the individual categories and sound track volumes.  Like a mixer board, each individual audio track has its own volume control, as does the "category" to which it belongs (see next section), but everything is governed by the master volume.  Mathematically speaking, volumes are stored as floating point numbers between 0.0 and 1.0, and calculated using this equation: {(track volume) x (category volume) x (master volume) = (final volume)}.
+
+=note The user can also disable the audio system via the in-game toolbar, but this is a "temporary" master switch which can be turned back on by the user at any time.  Meaning, even if the user has disabled audio via the toolbar, the audio engine and your audio tracks are still loaded and made ready to play.
+
+=section #.#. Categories
+
+Each audio track may be assigned to one of three categories, *SFX*, *Music* or *Video*, which groups the sounds together and governs the overall volume.  This is useful for sending API commands to all the tracks in a category, for example, "stop all music" or "drop all SFX volume to 50%".
+
+On the upper-right side of the screen you can adjust the overall category volumes.  Each track volume is governed by the category volume (and then by the master volume).  So for example, if a track volume is set to 50%, the category volume is 50% and the master volume is also 50%, then the actual final calculated volume for the track is only 12.5% (very quiet).
+
+The *Video* category is special because it affects the audio track of all video clips in your game (see the [article:docs/Video Guide] for details on playing videos).  Otherwise it works like any other category, and you can still assign MP3 sounds to it if you want.
+
+The *Music* category has one special purpose.  If you have any audio tracks assigned to the music category, the user is given a "music control" icon in the in-game toolbar.  Clicking this disables all music (but leaves all sound effects enabled).  You don't need to change anything in your code to support this feature.
+
+=section #.#. Preload
+
+Audio tracks may be set to automatically preload at game startup, by checking the "Preload" checkbox next to each track.  This means they will always be loaded and ready to play at any time.  Disabling this checkbox means you have to "attach" the sound to a sprite or level to load it on-demand, in order to play it.  See the [article:docs/Sprites and Tiles Guide] and the [article:docs/Level Editor Guide] for details.
+
+=section #.#. Volume & Balance
+
+You can adjust the individual track volume and balance by selecting values from the drop-down menus.  Please note that these values are just defaults, and can be overridden in code using our API.
+
+=note The "Balance" (stereo pan) feature is not supported on all browsers, but we are working to improve this.
+
+=section #.#. Loop
+
+Each audio track may be set to "loop" (repeat indefinitely).  This means that if you start the sound playing, it will continue playing, looping back to the beginning of the sound, until it is explicitly stopped using the API.  This is commonly used for background music tracks and environmental sound effects.
+
+=note You may hear a short "gap" when the track loops, depending on your browser and platform.  We are working to eliminate this bug, but in the meantime you can reduce the effect by "duplicating" your loop track multiple times in the same file (thereby reducing the frequency of the loops), and/or fading the sound out at the end, and fading it in at the beginning.  These tricks can be done using an [wikipedia:audio software, audio editor] before uploading the file to your project.
+
+=section #.#. Multiplex
+
+This feature allows the audio track to be played multiple times simultaneously.  Normally each audio track can only be playing once, and if another "playSound" command is sent while the sound is playing, it will be stopped and re-played (monophonic).  With the "Multiplex" feature checked on the audio track, the sound can be multiplexed on top of itself (polyphonic), so if multiple play commands are sent, multiple copies of the sound are played.
+
+=note This feature is only intended for sound effects, not music tracks.
+
+=section #. API Usage
+
+This section describes how to play sounds and music in your games, once you have everything uploaded and assigned to categories.  For a complete reference, see the [article:docs/API Reference Guide].
+
+=section #.#. Playing Sound Effects
+
+To play a sound, simply call the [api:Effect.Audio.playSound()] function:
+
+=syntax js
+	Effect.Audio.playSound("/audio/effects/explosion.mp3");
+
+Make sure you include a leading slash, and specify the file extension.  Remember that file paths are case sensitive.
+
+As long as all your sounds have unique names, you can use a shortcut and just specify the filename, without the path and extension:
+
+=syntax js
+	Effect.Audio.playSound("explosion");
+
+This is the simplest way of playing sound effects, and uses the default volume and balance.  To quiet all sounds currently playing, call the [api:Effect.Audio.quiet()] function:
+
+=syntax js
+	Effect.Audio.quiet();
+
+=section #.#. Audio Tracks
+
+Each audio track has its own object, which you can fetch and control separately.  This is the preferred way for dealing with music tracks, but sound effects can be handled this way as well.  To fetch an audio track, call the [api:Effect.Audio.getTrack()] function:
+
+=syntax js
+	var mytrack = Effect.Audio.getTrack("explosion");
+
+You can specify the shortcut here (filename sans extension), or the full asset file path with a leading slash.  Make sure your audio file is loaded (either by checking the "Preload" checkbox, or make sure the attached sprite or level is loaded).  If you try to fetch a track that is not loaded, {getTrack()} will return {undefined}.
+
+Once you have a reference to your audio track, you can call methods directly on it:
+
+=deflist Audio Track Methods
+	[api:Effect.AudioTrack.play() play()] | This plays the sound.  Has no effect if the sound is already playing.
+	[api:Effect.AudioTrack.playSound() playSound()] | This plays the sound as an effect.  Meaning if the sound is already playing, it will be stopped and played again from the beginning (or multiplexed, depending on how the track is configured -- see [Multiplex]).
+	[api:Effect.AudioTrack.stop() stop()] | This stops the sound if it is playing.  If multiple copies of the sound are playing via [Multiplex], all of them are stopped.
+	[api:Effect.AudioTrack.rewind() rewind()] | This rewinds the sound to the beginning.
+	[api:Effect.AudioTrack.setVolume() setVolume()] | This sets the volume of the audio track.  Specify a floating point number between 0.0 (silent) to 1.0 (full volume).  Remember that the sound volume is also governed by the category and master volume.
+	[api:Effect.AudioTrack.setBalance() setBalance()] | This sets the balance (stereo pan) of the audio track.  Specify a floating point number between -1.0 (full left) to 0.0 (center) to 1.0 (full right).  Please note that this feature is not supported on all browsers.
+	[api:Effect.AudioTrack.isPlaying() isPlaying()] | Returns {true} if the track is currently playing, {false} otherwise.  Does not apply to multiplexed tracks.
+	[api:Effect.AudioTrack.getPosition() getPosition()] | Returns the exact playhead position of a track that is currently playing, in seconds.  Does not apply to multiplexed tracks.
+	[api:Effect.AudioTrack.setPosition() setPosition()] | Sets the exact playhead position of a track that is currently playing, in seconds.  Does not apply to multiplexed tracks.
+	[api:Effect.AudioTrack.fadeIn() fadeIn()] | Fades the track in with an optional tween algorithm.
+	[api:Effect.AudioTrack.fadeOut() fadeOut()] | Fades the track out with an optional tween algorithm.
+	[api:Effect.AudioTrack.crossfade() crossfade()] | Crossfade between two tracks, with an optional tween algorithm.
+
+Examples:
+
+=syntax js
+	var mytrack = Effect.Audio.getTrack("explosion");
+	mytrack.setVolume(0.5); // half volume
+	mytrack.setBalance(1.0); // full right speaker
+	mytrack.playSound();
+
+All the track methods return the track object, so you can chain commands together:
+
+=syntax js
+	var mytrack = Effect.Audio.getTrack("explosion");
+	mytrack.stop().setVolume(0.5).setBalance(1.0).rewind().play();
+
+=section #.#.#. Audio Track Events
+
+You can register event listeners on audio tracks, to receive notification when certain things happen.  Currently, only the [api:AudioTrack.onEnded] event is supported, which fires when the track finishes playing.  This only applies to non-looped, non-multiplexed tracks.  Example:
+
+=syntax js
+	var mytrack = Effect.Audio.getTrack("explosion");
+	mytrack.addEventListener( 'ended', function() {
+		// do something here
+	} );
+
+=section #.#.#. Fading
+
+If you want to fade tracks in and out, you can just call [api:Effect.AudioTrack.setVolume()] for every logic frame, or you can setup a tween (see the [article:docs/Tweening Guide]), but there is an even easier way.  Just call [api:Effect.AudioTrack.fadeOut()] or [api:Effect.AudioTrack.fadeIn()].  Example:
+
+=syntax js
+	var music = Effect.Audio.getTrack('music');
+	music.fadeIn( 60 );
+
+This will start the music playing at volume "{0.0}", then fade it in every frame for 60 frames.  At the end the volume will be "{1.0}" (or whatever you had the track volume set to before fading).  There is also a [api:Effect.AudioTrack.fadeOut()] call which does what you would expect (it also stops the sound when the fade completes):
+
+=syntax js
+	var music = Effect.Audio.getTrack('music');
+	music.fadeOut( 60 );
+
+Both functions have two optional arguments which control the tween (see [article:docs/Tweening Guide]).  If specified, you can fade along a quadratic or sine wave, affecting the progression of the volume.  Example:
+
+=syntax js
+	var music = Effect.Audio.getTrack('music');
+	music.fadeIn( 60, 'EaseInOut', 'Quadratic' );
+
+=section #.#.#.#. Crossfade
+
+To perform a crossfade between two tracks, simply fade your currently playing track out using [api:Effect.AudioTrack.fadeOut()], then immediately fade the new one in via [api:Effect.AudioTrack.fadeIn()], both using the same duration.  The fades are asynchronous, so they both take the same amount of frames to complete.  Example:
+
+=syntax js
+	var music1 = Effect.Audio.getTrack('music1');
+	var music2 = Effect.Audio.getTrack('music2');
+	
+	// assuming music1 is already playing
+	music1.fadeOut( 60 );
+	music2.fadeIn( 60 );
+
+However, I couldn't help but provide a [api:Effect.AudioTrack.crossfade()] function, which essentially does the same thing, but with one call:
+
+=syntax js
+	Effect.Audio.getTrack('music1').crossfade( 'music2', 60 );
+
+The first argument is the Track ID to fade to, followed by the duration.  This function also accepts the optional tween mode and algorithm names.
+
+=section #.#. Playing Music
+
+If you are planning on using the audio system to play background music tracks in your game, there are a couple of a things to consider.  First, if the user pauses the game, it is up to you to stop any music tracks that may be playing (you should probably stop all sounds too), and resume them again when the game is unpaused.  This can easily be done by using [api:Effect.Game.onPause] and [api:Effect.Game.onResume] event listeners.  Example:
+
+=syntax js
+	Effect.Game.addEventListener( 'onPause', function() {
+		// user has paused the game, let's silence all audio
+		Effect.Audio.quiet();
+	} );
+	
+	Effect.Game.addEventListener( 'onResume', function() {
+		// user has resumed game play, start our music again
+		Effect.Audio.getTrack( 'my_music.mp3' ).play();
+	} );
+
+There is one more situation we have to handle, and that is if the user disables music by clicking on the button in the toolbar, then re-enables it later.  Disabling music automatically stops any music tracks for you, but re-enabling music is something we have to handle.  So we have to include a [api:Effect.Game.onEnableMusic] event listener too.  Example:
+
+=syntax js
+	Effect.Game.addEventListener( 'onEnableMusic', function() {
+		// user has re-enabled music on the toolbar, so restart our track
+		Effect.Audio.getTrack( 'my_music.mp3' ).play();
+	} );
+
+If you also want to play a sound effect when the game is paused / resumed, simply include a call to [api:Effect.Audio.playSound()] in your [api:Effect.Game.onPause] and [api:Effect.Game.onResume] handlers:
+
+=syntax js
+	Effect.Game.addEventListener( 'onPause', function() {
+		// user has paused the game, let's silence all audio and play a pause sound
+		Effect.Audio.quiet();
+		Effect.Audio.playSound( 'pause.mp3' );
+	} );
+	
+	Effect.Game.addEventListener( 'onResume', function() {
+		// user has resumed game play, so play a sound and restart our music
+		Effect.Audio.playSound( 'pause.mp3' );
+		Effect.Audio.getTrack( 'my_music.mp3' ).play();
+	} );
+
+If you have multiple levels in your game, and different music tracks per level, simply create a level property called "{music}" (or whatever name you want), and enter the filename of the music track in each level definition (and place the file in the level as a resource too, so it gets loaded).  Then, you can simply pull the property value via a call to [api:Effect.Game.getLevelProps()] to start the music track:
+
+syntax js
+	Effect.Game.addEventListener( 'onPause', function() {
+		// user has paused the game, let's silence all audio and play a pause sound
+		Effect.Audio.quiet();
+		Effect.Audio.playSound( 'pause.mp3' );
+	} );
+	
+	Effect.Game.addEventListener( 'onResume', function() {
+		// user has resumed game play, so play a sound and restart our level music
+		Effect.Audio.playSound( 'pause.mp3' );
+		var music = Effect.Game.getLevelProps().music;
+		Effect.Audio.getTrack( music ).play();
+	} );
+	
+	Effect.Game.addEventListener( 'onEnableMusic', function() {
+		// user has re-enabled music on the toolbar, so restart our level music
+		var music = Effect.Game.getLevelProps().music;
+		Effect.Audio.getTrack( music ).play();
+	} );
+
+=section #.#. Adjusting Settings
+
+You can adjust settings (volume and balance) while sounds are stopped or playing, and even do this at a category or master level.  To set the master volume at any time, call the [api:Effect.Audio.setMasterVolume()] function:
+
+=syntax js
+	Effect.Audio.setMasterVolume( 0.5 );
+
+Specify a floating point number between 0.0 (silent) and 1.0 (full).  To set a category volume, use the [api:Effect.Audio.setCategoryVolume()] function:
+
+=syntax js
+	Effect.Audio.setCategoryVolume("music", 0.75);
+
+The first argument is the category name, which should be "{sfx}", "{music}" or "{video}", all lower-case.  The second argument is the volume itself, which should be a floating point number between 0.0 (silent) and 1.0 (full).  Remember that category volumes are affected by the master volume.
+
+You can also send a "quiet" command to a specific category, stopping all the sounds that are assigned to that category and currently playing.  To do this, use the [api:Effect.Audio.quietCategory()] function:
+
+=syntax js
+	Effect.Audio.quietCategory("sfx");
+
+Same as above, specify one of "{sfx}", "{music}" or "{video}" for the category name, all lower-case.
+
+=section #.#. 2D Spacial Effects
+
+The Effect Engine can automatically set the volume and stereo balance of a sound effect, based on the 2D sprite position relative to the center of the screen.  Meaning, if the sprite is the "origin" of the sound, the engine can fade the volume based on the distance of the sprite from the center of the screen, and set the balance (stereo L/R pan) based on the horizontal position.  To do this, call the [api:Sprite.playSound2D()] method on the Sprite object itself.
+
+=syntax js
+	mysprite.playSound2D("explosion");
+
+As before, you can specify the shortcut here (filename sans extension), or the full asset file path with a leading slash.  You can also pass an optional second argument which is the maximum distance (in pixels) from the center of the screen before the sound hits zero volume and doesn't play.  The default is the screen size (horiz or vert, whichever is larger).
+
+=syntax js
+	mysprite.playSound2D("explosion", 640);
+
+The function returns {true} if the sound actually played, and {false} if the distance was too great.  Please see the [article:docs/Sprites and Tiles Guide] for details on sprites.
+
+If you would rather adjust the volume and balance of a sound currently playing (such as a looped sound like an engine noise, or environmental music), you can use the [api:Sprite.get2DSoundSettings()] method.  This returns the adjusted volume and balance levels, taking the sprite's position into account, relative to the center of the screen.  Example:
+
+=syntax js
+	var settings = mysprite.get2DSoundSettings();
+	var track = Effect.Audio.getTrack('my_looped_sound');
+	track.setVolume( settings.volume );
+	track.setBalance( settings.balance );
+
+For performance considerations, it is recommended you only adjust volume and balance every 4th frame for 30fps games, or every 8th frame for 60fps games.  The global [api:Effect.Game.logicClock] variable always holds the current logic frame clock (and this is passed to all sprite {logic()} methods).
+
+=section #. Examples
+
+=list
+	[/effect/example.psp.html?rev=audio_simple Simple example of playing a sound effect]
+	[/effect/example.psp.html?rev=audio_music Example of playing background music with stereo panning]
+	[/effect/example.psp.html?rev=audio_2d Example of playing a 2D spacial audio sound effect]
+
+=section #. Converting Sounds
+
+This section contains instructions for preparing your sound effects and music tracks for use in the Effect Game Engine.  Even if you already have all your audio files in MP3 format, you may want to adjust the bitrate (sound quality) to reduce loding time.
+
+=section #.#. Apple iTunes
+
+Here is how to use [http://www.apple.com/itunes/ Apple iTunes] to prepare your audio files.  iTunes is a free download available from Apple, and works on both Mac and Windows platforms.  iTunes can convert multiple files at once, so you can batch-convert all your sounds in a single pass.  However, you cannot use it to trim "whitespace" (silence) from your sounds, or adjust levels.
+
+Once you have iTunes installed, launch it and drag & drop all your sound files into the main Library area.
+
+=image /effect/images/docs/audio/itunes_library_before.png
+=caption Screenshot showing iTunes library with some WAV files.
+
+You can see in the screenshot above that the sound files are too large for a web based game, because the bit rate is far too high, and they are not even in MP3 format.  So the first thing to do is configure the iTunes "Import Settings".  Go to the "iTunes" menu and select "Preferences...".
+
+=image /effect/images/docs/audio/itunes_prefs_general.png
+=caption Screenshot showing the iTunes Preferences dialog.
+
+Make sure the "General" tab is highlighted, and you'll see a button called "Import Settings...".  Click on that to adjust the MP3 conversion settings.
+
+=image /effect/images/docs/audio/itunes_encode_settings_1.png
+=caption Screenshot showing the iTunes Import Settings.
+
+Here you can choose your MP3 settings including the bitrate (quality / file size), and options like stereo or mono.  Keep in mind that the bitrate you select is for |stereo| audio files.  So if your files are mono, iTunes will cut the bitrate in half.  Meaning, select 128kbps if you want mono 64kbps.
+
+Once you have your settings how you like them, go back to the Library, select all your audio files, go to the "Advanced" menu and select "Create MP3 Version".  iTunes will now convert your files to MP3 using your selected bitrate and channel options.  This also works for files that are already in MP3 format, where you just want to drop the quality.
+
+=image /effect/images/docs/audio/itunes_library_after.png
+=caption Screenshot showing audio files after conversion.
+
+You can see in the screenshot above that iTunes has duplicated all the selected audio files.  Make sure you select the new, converted files to copy out of the program.  To do that, simply select and drag & drop the converted files to a folder.  Then you can upload the files to your project at EffectGames.com.
+
+=section #.#. Audacity
+
+Here is how to use [http://audacity.sourceforge.net/ Audacity] to process your sound files.  Audacity is a free and open source sound editor, allowing you to edit the waveform of your individual sound files, trim silence and adjust volume levels.  It works on both Mac and Windows platforms.  Alas, you will have to convert files one at a time, and you'll need to install an additional library to export into MP3 format.
+
+After you download and install Audacity, grab the free [http://audacity.sourceforge.net/help/faq?s=install&item=lame-mp3 LAME MP3 Encoder Library] and install that as well.  Audacity uses the library to support converting files to MP3 format, a requirement for using them in Effect Games.
+
+Open your sounds one at a time using Audacity.
+
+=image /effect/images/docs/audio/audacity_main_view.png
+=caption Screenshot showing audio file opened in Audacity.
+
+At this point you can trim silence using the built-in tools, and/or apply effects such as "Amplify" to raise or lower volume levels.  When the sound is exactly how you want it, go to the "File" menu and select "Export...".
+
+=image /effect/images/docs/audio/audacity_save_as.png
+=caption Screenshot showing the Audacity "Save as..." dialog.
+
+While in the "Save as..." dialog, select "MP3" from the "Format" drop-down menu, and click "Options..." to set the MP3 quality.
+
+=image /effect/images/docs/audio/audacity_mp3_settings.png
+=caption Screenshot showing the Audacity MP3 Options dialog.
+
+Here you can set the desired MP3 bitrate (quality / file size) for your export.  Alas, as of this writing, Audacity can only export stereo MP3s.  Once you export all your files as MP3s, you can upload them to your project at EffectGames.com.
+
+=section #. Free Stock Sound Effects
+
+Here is a small set of free sound effects you can use in your games.  They are pre-trimmed (all silence chopped off) and compressed down to 32kbps for fast download times.  These are best used as "placeholder assets" which you can swap out with different or higher quality sounds at a later time.
+
+*[/effect/images/docs/audio/stock_audio_assets.zip Stock Audio Assets]*
+
+These are provided completely royalty free for use in your games.  They were created by the Effect Games team using various instruments in [http://www.apple.com/ilife/garageband/ Apple GarageBand].
+
+=section #. Native Browser Audio
+
+The Effect Engine supports native [wikipedia:HTML 5] audio in Safari on Mac OS X Leopard, and Firefox 3.6+ on Mac OS X, Windows and Linux.  More browsers will be added as native audio technology spreads (Google Chrome is very close, as of this writing).  All other browsers use a Flash based audio system.
+
+For native audio in Firefox, your MP3 audio files must be [wikipedia:Transcode, transcoded] over to [wikipedia:Ogg Vorbis] format.  This is because Firefox does not natively support the MP3 format.  The Ogg transcoding is performed automatically for you in the background, when you publish a game revision.  So when playing your game during development (i.e. using a Local Development instance or via Quick Play), the engine still uses Flash audio for Firefox.
+
+We understand that transcoding audio from one lossy format to another results in quality degradation.  To address that, we provide a number of options.  You can control the Ogg encoding quality (bitrate), you can opt out entirely and stick with MP3 + Flash in Firefox, or you can include your own Ogg files.  Let's look at the first two options:
+
+To specify custom settings for the audio system, simply include an XML asset file named "{game.xml}", and place it in your game's "{text/}" folder.  Here is an example:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<GameSettings>
+		<OggBitrate>64</OggBitrate>
+		<OggDisable>0</OggDisable>
+	</GameSettings>
+
+The {<OggBitrate>} element specifies the desired bitrate (kilobits per second) for the Ogg files.  The default bitrate is 64 kbps.  The {<OggDisable>} element allows you to opt out entirely, meaning if this element is set to "{1}", then no Ogg files will be created, and Firefox 3.6+ will continue to use a Flash based system for your MP3 game audio.
+
+Please note that since the Ogg transcoding happens asynchronously, your game revision may not immediately use native audio in Firefox.  Meaning, if you publish and then immediately play it in Firefox, the engine may still use Flash audio.  Just give it a few minutes and try again.  If any errors occur during the conversion (corrupted MP3 files, etc.), you will be sent an e-mail with all the details.
+
+Finally, for complete control over the Ogg files, you can simply upload your own.  Meaning, create your own Ogg files from your master audio tracks, and upload them as assets.  All you have to do is make sure the filenames match their MP3 counterparts, except for an "{.ogg}" file extension (lower-case).  Example:
+
+=filesystem
+	audio/
+		effects/
+			shoot.mp3
+			shoot.ogg
+			explosion.mp3
+			explosion.ogg
+		music/
+			level1.mp3
+			level1.ogg
+			title_theme.mp3
+			titie_theme.ogg
+
+The Effect Engine will detect that you have provided Ogg audio files, and automatially enable native audio support for Firefox 3.6+.  Again, this happens only when game revisions are published, and not for internal game development (which will use Flash + MP3).
+
+Please note that Firefox Native audio is only available in Effect Engine versions 1.0 Beta 2 and later.  If you have already started developing a game and are using Beta 1, please choose the new engine version on the Local Development screen, and on the Game Publisher.

@@ -1,0 +1,70 @@
+=article_title Frequently Asked Questions
+=article_path /docs
+=article_tags faq, help, questions
+=article_comments 1
+
+Here are some frequently asked questions from developers, and our answers.
+
+=section #. Misc Questions
+
+=section #.#. Where can I get stock assets for my game?
+
+We are working on a library of stock audio and graphic assets, but until this is ready, you still have a number of options.  You can use our [#PlaceholderGen Placeholder Image Generator] to use placeholder images instead of real ones.  You can download our small set of [/effect/images/docs/audio/stock_audio_assets.zip sample audio assets], or grab some free ones from the [http://www.freesound.org/ Freesound Project].  If you want to purchase professional sound effects and music for your game, we highly recommend [http://www.shockwave-sound.com/ Shockwave-Sound.com].
+
+There are also places to get stock graphic assets out on the internet.  One of our favorite sites is [http://lostgarden.com/labels/free%20game%20graphics.html LostGarden.com] for amazing game art, which is free to use under a [http://lostgarden.com/2007/03/lost-garden-license.html creative commons license].
+
+=section #.#. Can I embed my game on my own website?
+
+Absolutely!  When you publish your game, simply click on the sharing icon in the toolbar, copy the embed code, and paste it into your website or blog.  See the [article:docs/Publishing Guide] for details.
+
+=section #.#. Can I host my game on my own website?
+
+Yup, just use our [http://www.effectgames.com/effect/#Article/docs/Publishing_Guide|standalone_publish Standalone Publish] feature, which allows you to download a ZIP file for your game release.  This can be decompressed and hosted on your own web server, and will not contact the Effect Games servers at all.  It contains all your game assets, code, and the standalone Effect Games Engine.
+
+=section #.#. Can I develop my game locally?
+
+Most definitely!  After you create your game project, click on the "Develop Locally..." button and you'll be given a snippet of HTML to place into your local page, which loads the engine and allows you to reference code on your local machine.  You don't need to upload any code until you actually publish a release.  Please note that it is highly recommend you run a local HTTP server, and we provide easy instructions for setting this up.  See the [article:docs/Local Development Guide] for details.
+
+=section #.#. Can I work on my game offline?
+
+Sorry, you must have an active internet connection, but there is a good reason why.  We store your assets on our servers so we can provide real-time transformations.  For example, all the image scaling (zooming) happens on the server, as well as image transformations such as rotation and environment effects.  Also, fonts are generated on our servers in real-time.  We also may transcode your audio files to other formats to use in certain browser technologies.  All this cannot be done offline.
+
+That said, we may offer a limited version of the engine for offline use in the future.  Certain features will be disabled (namely zooming, fonts and image transforms), but you would be able to work on your game locally without an internet connection.  Stay tuned!
+
+=section #. Engine Questions
+
+=section #.#. Why can't I get access to my sprite DOM elements?
+
+Well, the short answer is, you can.  But it is highly recommended that you stay away from the DOM when using the Effect Engine.  The reason is, we may not always render using DOM elements.  We may use the HTML 5 Canvas, Web GL, or some other technology.  Think about downloadable games or mobile phones -- we may provide the ability to publish to these platforms in the near future!  The idea is that the Effect Engine provides a single API for your game, but you don't have to worry about the underlying implementation.  Write your game once, and it'll work everywhere the Effect Engine runs.
+
+That said, if you *must* access the DOM for debugging or troubleshooting, we're not going to stop you.  Each sprite object has a "{div}" property that is a reference to the underlying DOM DIV element where the graphics are displayed.  But don't do it!  You'll ruin everything!
+
+=section #.#. I want to use CSS to spice up my game.  How do I do this?
+
+You don't (see previous question).  CSS is implemented differently in all browsers, which makes it nearly impossible to provide a consistent experience for your players.  If you stick to using the Effect Engine API, your game will look and play the same on all browsers and platforms.  Also, in the future we may not even use the browser DOM -- we may use the HTML 5 Canvas, Web GL, or some other technology.
+
+=section #.#. Why aren't you using the HTML 5 Canvas?
+
+Well, we just might in the future.  We aren't using it right now because using the DOM is currently faster for sprite and tile based games (especially with multiple parallax layers).  Also, IE still doesn't support canvas (yes, we know about the excellent [http://code.google.com/p/explorercanvas/ ExplorerCanvas], but it isn't nearly fast enough for games).  This is definitely a work in progress, and we will likely use the Canvas element on some browsers in the future, but the Effect Engine API will not change -- your game never has to worry about the underlying implementation.
+
+=section #.#. Why aren't you using HTML 5 Audio on Firefox?
+
+We very, very much want to.  But there are a few hurdles to jump over still.  First, we would have to transcode all your MP3 audio assets into [wikipedia:Ogg Vorbis] format, and that raises a bunch of questions about bit rate, and how/when to do this.  Secondly, as of this writing, Firefox 3.5 has [https://bugzilla.mozilla.org/buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__open__&content=ogg tons of open bugs] relating to Ogg Vorbis, especially playing short sounds.  We're watching this closely, and working to provide native audio on as many platforms as possible.
+
+=section #.#. Why is there a sound delay on PC?
+
+Alas, when native audio isn't available, we currently fall back to using Adobe Flash Player, and this comes with its own set of bugs.  On PC, there is a slight delay when playing sound effects |if another sound is playing at the same time|.  Believe me, we worked on this for months and could not find a workaround.  The bug is even reproducible using only pure Flash (no JavaScript), and even happens if |another| Flash movie is playing a sound, even in |another| browser on the machine.  Unbelievable, but true.  Nice going, Adobe.
+
+Anyway, we hope that HTML 5 Audio is the solution.  This technology is working its way into more and more browsers, and we are staying on top of this.  Right now we have a fully working native audio implementation in Safari, and Firefox is coming very soon.  We have some ideas about IE, but I can't promise anything.
+
+=section #.#. Why don't my sounds loop properly?
+
+Alas, looping MP3 audio tracks is tricky at best.  While you can [http://www.compuphase.com/mp3/mp3loops.htm preprocess the sound to make it loop better], there is still going to be a short "blip", depending on the browser and audio technology being used.  The only thing you can do right now is |duplicate| your sound multiple times in the same track (copy & paste using an audio editor).  This makes the sound take longer to load, but reduces the occurrences of the blip.
+
+We are actively working on this.
+
+=section #.#. Can I use jQuery or other JavaScript libraries in my game?
+
+Well, yes and no.  Sure you can include any libraries that you want, but they don't provide much usefulness, because the DOM is abstracted in the Effect Engine.  Meaning, you don't manipulate DOM elements directly, nor do you construct HTML or use CSS selectors -- you just use the Effect API.  That said, there are plenty of libraries that could provide useful features, such as a physics library, or an object oriented framework.
+
+Any external libraries you use must be uploaded along with your game code when you publish a release.

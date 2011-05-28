@@ -1,0 +1,721 @@
+=article_title Geometry and Collision Guide
+=article_path /docs
+=article_tags docs, geometry, collision, point, rect
+=article_comments 1
+=article_stags sidebar_docs
+=section_numbers 1
+=toc 1
+=toc_max 2
+
+=section #. Overview
+
+This document describes the classes and functions provided by the Effect Engine to handle 2D geometry, and collision detection for sprites and tiles.  You are of course free to write your own geometry and collision code, or even bring in a 3rd party library.  However, the built-in system should suffice for many games.
+
+=section #. Geometry
+
+To assist you in programming your game, the Effect Engine offers basic classes for managing 2D points and rectangles.  These are used internally by the engine, and also can be instantiated directly in your code.  The following sections describe each class.
+
+=section #.#. Points
+
+A [api:Point] represents a single point in 2D space.  It has "{x}" and "{y}" properties which hold the coordinates, and a number of methods for moving, measuring and manipulating.  The coordinates may be floating point decimals or integers.
+
+=section #.#.#. Basic Point Usage
+
+There are two main ways to get a Point object: have it passed to you via a mouse event handler, or create one manually.  Let's take a look at both.  First, from an event handler:
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseDown', function(pt, buttonIdx) {
+		// pt is a Point object containing the mouse position,
+		// converted to global world coordinates.
+		alert( "You clicked " + pt.x + " by " + pt.y );
+	} );
+
+Another way is to just create your own points from scratch:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	alert( "My point is at " + pt.x + " by " + pt.y );
+
+=section #.#.#. Point Moving
+
+Once you have a point object, you can manipulate it a number of ways.  For example, you can use the [api:Point.set()] method to reposition the point, or [api:Point.offset()] to move it:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	
+	// reposition the point
+	// same as: pt.x = 75; pt.y = 75;
+	pt.set( 75, 75 );
+	
+	// offset the point (move it by +5,+5)
+	// same as: pt.x += 5; pt.y += 5;
+	pt.offset( 5, 5 );
+
+As you can see in the examples above, we are passing two arguments to the functions.  But they both actually accept a [api:Point] object, meaning the "{x}" and "{y}" properties from the external point are used as the arguments.  Example:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	
+	// create a second point which contains our offset numbers
+	var pt2 = new Point( 5, 5 );
+	
+	// now offset our point by the new point's coordinates
+	pt.offset( pt2 );
+
+=section #.#.#. Point Floor and Ceiling
+
+If you need to make sure your point coordinates are integers, you can call [api:Point.floor()].  This would be the same as calling {Math.floor()} on both the "{x}" and "{y}" properties.  Example:
+
+=syntax js
+	var pt = new Point( 50.1, 50.1 );
+	pt.floor(); // new coords will be 50,50
+
+You can also call [api:Point.ceil()] which rounds |upward| to the nearest integer.
+
+=section #.#.#. Point Chaining
+
+Most of the methods actually return the point object itself, so you can chain them together.  Example:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	pt.set( 75, 75 ).offset( 5.5, 5.5 ).floor();
+
+=section #.#.#. Point Cloning
+
+If you want to make a copy of a point, call the [api:Point.clone()] method.  The return value is a new [api:Point] object, with the "{x}" and "{y}" properties copied from the original point.  Example:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	var pt2 = pt.clone();
+
+=section #.#.#. Angles and Distances
+
+The [api:Point] class also has a number of methods for calculating angles and distances between points.  This can be very useful in games, for things like A.I. (locating and responding to enemies), and control schemes (especially top-view games with rotating objects).
+
+To get the angle between two points, use the [api:Point.getAngle()] method:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	var pt2 = new Point( 100, 100 );	
+	var angle = pt.getAngle( pt2 );
+
+In the above example, the "{angle}" variable would be "{315}".  Angles start at 3 o'clock and proceed counter-clockwise. So 0 degrees is 3 o'clock, 90 degrees is 12 o'clock, 180 degrees is 9 o'clock, and 270 degrees is 6 o'clock.
+
+As with [api:Point.set()] and [api:Point.offset()], the [api:Point.getAngle()] accepts both a [api:Point] object (as seen in the example above), and separate "{x}" and "{y}" arguments.
+
+To get the distance between two points, use the [api:Point.getDistance()] method:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	var pt2 = new Point( 100, 100 );
+	var dist = pt.getDistance( pt2 );
+
+In the above example, the "{dist}" variable would be "{70.71067811865476}".  You can also pass in separate "{x}" and "{y}" arguemnts, instead of a [api:Point] object.
+
+Another useful feature is the ability to "project" points out at a specified angle and distance.  This comes in very handy for players or sprites that rotate, and can move in any direction.  If you store an "{angle}" property in your sprite, you can use [api:Point.project()] to move a point in the angle, and move the sprite to the new coordinates.  Example:
+
+=syntax js
+	var pt = new Point( 50, 50 );
+	pt.project( 90, 10 );
+
+The above example projects the point out by 10 pixels at a 90 degree angle.  The new coordinates would be 50 by 40.
+
+=section #.#.#. Points and Sprites
+
+Here is an example of using points with sprites.  This code snippet finds the closest enemy sprite to our player, and is designed to be a sprite method on your player (character) sprite.  It assumes your player sprite class is named "{MyPlayerSprite}", and the enemies you are looking for are of type "{MyEnemySprite}".
+
+=syntax js
+	MyPlayerSprite.add({
+		
+		findClosestEnemy: function() {
+			// first, get all active enemies
+			var enemies = this.plane.findSprites({ type: 'MyEnemySprite' });
+			
+			// find closest enemy
+			var centerPt = this.centerPoint();
+			var closestEnemy = null;
+			var minDist = 99999;
+			
+			for (var idx = 0, len = enemies.length; idx < len; idx++) {
+				var enemy = enemies[idx];
+				var dist = centerPt.getDistance( enemy.centerPoint() );
+				if (dist < minDist) {
+					closestEnemy = enemy;
+					minDist = dist;
+				}
+			} // foreach enemy
+			
+			// 'closestEnemy' is now the closest enemy sprite to us,
+			// or null if no enemies are active.
+			return closestEnemy;
+		}
+		
+	});
+
+So this function first gets an array of all enemy sprites by calling [api:SpritePlane.findSprites()].  It then loops through all the enemy sprites, and uses [api:Sprite.centerPoint()] and [api:Point.getDistance()] to calculate the distance between the enemy and our sprite.  It returns the enemy sprite with the lowest distance, or {null} if none were found.
+
+=section #.#.#. Point Method Summary
+
+=deflist
+	[api:Point.set() set()] | Sets the "{x}" and "{y}" properties of the point.  Pass in a [api:Point] object, or separate "{x}" and "{y}" coordinates.
+	[api:Point.offset() offset()] | Move the point by the horizontal and vertical values specified.  Pass in a [api:Point] object, or separate "{x}" and "{y}" offset values.
+	[api:Point.floor() floor()] | Rounds the "{x}" and "{y}" properties downward to the nearest integer.
+	[api:Point.ceil() ceil()] | Rounds the "{x}" and "{y}" properties upward to the nearest integer.
+	[api:Point.getAngle() getAngle()] | Returns the angle between the current point and specified point.  Pass in a [api:Point] object, or separate "{x}" and "{y}" coordinates.
+	[api:Point.getDistance() getDistance()] | Returns the distance between the current point and specified point.  Pass in a [api:Point] object, or separate "{x}" and "{y}" coordinates.
+	[api:Point.project() project()] | Projects the current point outward at the specified angle and distance.
+	[api:Point.getMidPoint() getMidPoint()] | Returns a new point that is halfway bettwen the current point and specified point.  Pass in a [api:Point] object, or separate "{x}" and "{y}" coordinates.
+	[api:Point.clone() clone()] | Returns a copy of the current point.
+
+=section #.#. Rectangles
+
+The [api:Rect] class represents a rectangle in 2D space.  It has four properties: "{left}", "{top}", "{right}" and "{bottom}".  The "{right}" property should be |one pixel beyond| the right side, and the "{bottom}" property should be one pixel beyond the bottom.  This makes sense when you imagine the properties describing an outline |around| the rectangle.  So a rectangle with values "{0, 0, 1, 1}" is actually one pixel in width and height.  A rectangle with "{0, 0, 0, 0}" is invalid.
+
+=section #.#.#. Basic Rectangle Usage
+
+To create a rectangle, simply provide the four coordinates to the constructor:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+
+The arguments to the constructor are: "left", "top", "right", and "bottom", in that order.  You can of course manipulate the properties directly if you want:
+
+=syntax js
+	var rect = new Rect();
+	rect.left = 0;
+	rect.top = 0;
+	rect.right = 50;
+	rect.bottom = 50;
+
+For a rectangle to be "valid", the right and bottom must be greater than the left and top, respectively.  If a rectangle is not valid, all the methods below are not guaranteed to work.  You can tell if a rectangle is valid by calling [api:Rect.valid()].  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	assert( rect.valid() ); // yup, this is valid
+	
+	rect.set( 0, 0, 0, 0 );
+	assert( !rect.valid() ); // invalid!
+
+Also seen here is the [api:Rect.set()] method, which allows you to quickly change all four properties in one shot.  Some other basic manipulation methods include offsetting (moving) the rectangle, or resetting the position.  Examples:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	rect.offset( 5, 5 ); // new coords: 5, 5, 55, 55
+	rect.moveTo( 50, 50 ); // new coords: 50, 50, 100, 100
+
+The [api:Rect.offset()] and [api:Rect.moveTo()] methods also accept a single [api:Point()] object, instead of separate "{x}" and "{y}" coordinates as shown above.  Examples:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	
+	var pt = new Point( 5, 5 );
+	rect.offset( pt ); // new coords: 5, 5, 55, 55
+	
+	var pt2 = new Point( 50, 50 );
+	rect.moveTo( pt2 ); // new coords: 50, 50, 100, 100
+
+[api:Rect.moveTo()] also accepts a [api:Rect] object (it moves the current rectangle so the {left} and {top} properties match).
+
+=section #.#.#. Width and Height
+
+To get the width or height of the rectangle, call [api:Rect.width()] or [api:Rect.height()].  Examples:
+
+=syntax js
+	var rect = new Rect( 25, 25, 75, 75 );
+	assert( rect.width() == 50 );
+	assert( rect.height() == 50 );
+
+These can also be used to |set| the width and height.  Just pass a new value to each.  Examples:
+
+=syntax js
+	var rect = new Rect( 25, 25, 75, 75 );
+	rect.width( 100 );
+	rect.height( 100 );
+	assert( rect.right == 125 && rect.bottom == 125 );
+
+=section #.#.#. Collapse and Expand
+
+Another way to manipulate a rectangle is [api:Rect.inset()].  This collapses (or expands) all sides of the rectangle, by the specified horizontal and vertical amounts.  Examples:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	
+	rect.inset( 2, 2 ); // new coords: 2, 2, 48, 48
+	rect.inset( -4, -4 ); // new coords: -2, -2, 52, 52 
+
+=section #.#.#. Rect Cloning
+
+To make a copy of a rectangle, call the [api:Rect.clone()] method.  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	var rect2 = rect.clone();
+
+=section #.#.#. Points in Rectangles
+
+Points and rectangles can work together in a number of ways.  First, you can get a [api:Point] object for any corner of the rectangle, or right in the center.  Examples:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	var tl = rect.topLeftPoint();     // 0, 50
+	var tr = rect.topRightPoint();    // 50, 0
+	var br = rect.bottomRightPoint(); // 50, 50
+	var bl = rect.bottomLeftPoint();  // 0, 50
+	var ctr = rect.centerPoint();     // 25, 25
+
+If you just want the horizontal or vertical center coordinate, you can call [api:Rect.centerPointX()] or [api:Rect.centerPointY()].  Instead of a [api:Point] object, these just return a number.
+
+Second, you can determine if a [api:Point] object is located within the bounds of a rectangle by calling [api:Rect.pointIn()].  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	
+	var pt1 = new Point( 0, 0 );
+	assert( rect.pointIn(pt1) ); // inside
+	
+	var pt2 = new Point( 25, 25 );
+	assert( rect.pointIn(pt2) ); // inside
+	
+	var pt3 = new Point( 50, 50 );
+	assert( !rect.pointIn(pt3) ); // outside
+
+Notice that position "{50,50}" is considered outside the rectangle, even though the right and bottom sides are, in fact, set to 50.  This is because the right and bottom properties are |one pixel beyond| the content of the rectangle.
+
+The [api:Rect.pointIn()] also accepts two arguments (one for "{x}" and one for "{y}") instead of a single [api:Point] object.  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	
+	assert( rect.pointIn( 0, 0 ) ); // inside
+	assert( rect.pointIn( 25, 25 ) ); // inside
+	assert( !rect.pointIn( 50, 50 ) ); // outside
+
+=section #.#.#. Rectangles in Rectangles
+
+A very useful rectangle method is [api:Rect.rectIn()], which can detect if the current rectangle intersects with another.  This returns {true} if the two rectangles intersect, {false} if not.  Note that the rectangles do not have to |completely| intersect each other.  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	
+	var rect2 = new Rect( 25, 25, 75 75 );
+	assert( rect.rectIn( rect2 ) ); // yup
+	
+	var rect3 = new Rect( 50, 50, 100, 100 );
+	assert( !rect.rectIn( rect3 ) ); // nope
+
+This method is the basis for sprite vs. sprite collision detection (see [Collision Detection] below).
+
+=section #.#.#. Unions and Intersections
+
+In certain cases you may need to combine two rectangles into one (called a "union").  To do this, call [api:Rect.union()] and pass in a rectangle.  The current rectangle will be transformed into the union of the two.  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	var rect2 = new Rect( 25, 25, 75 75 );
+	
+	rect.union( rect2 );
+	assert(
+		rect.left == 0 && 
+		rect.top == 0 && 
+		rect.right == 75 && 
+		rect.bottom == 75
+	);
+
+A similar method is [api:Rect.intersect()], which transforms the current rectangle into an |intersection| with another.  Meaning, the current rectangle will be modified to only occupy the space where the two overlap.  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	var rect2 = new Rect( 25, 25, 75, 75 );
+	
+	rect.intersect( rect2 );
+	assert(
+		rect.left == 25 && 
+		rect.top == 25 && 
+		rect.right == 50 && 
+		rect.bottom == 50
+	);
+
+Note that this method only works if the two rectangles overlap.  If they do not, the result is an invalid rectangle.
+
+=section #.#.#. Morphing
+
+By [wikipedia:Morphing] we mean the current rectangle's position and size will be modified along a path to match another rectangle.  You provide the destination rectangle, and the amount ("{0.0}" to "{1.0}").  The [api:Rect.morph()] method handles this transform, and applies the results to the current rectangle.  Example:
+
+=syntax js
+	var rect = new Rect( 0, 0, 50, 50 );
+	var rect2 = new Rect( 100, 100, 200, 200 );
+	
+	rect.morph( rect2, 0.5 ); // morph half way
+	assert( rect.left == 50 && rect.width() == 75 );
+
+The default action is to use linear interpolation to calculate the points in-between the two rectangles.  However, you can optionally supply a tween mode and algorithm as the 3rd and 4th arguments (see the [article:docs/Tweening Guide]).  Example:
+
+=syntax js
+	rect.morph( rect2, 0.5, 'EaseOut', 'Quadratic' );
+
+Note that simply calling the {morph()} method once does not automatically animate the rectangle into another.  It only transforms the current rectangle to one point along the animation path.  You'll have to call it multiple times to achieve actual animation (if that is the desire).
+
+=section #.#.#. Rect Method Summary
+
+=deflist
+	[api:Rect.valid() valid()] | Returns {true} if the rectangle is valid, {false} otherwise.
+	[api:Rect.set() set()] | Sets all four properties at once ("{left}", "{top}", "{right}" and "{bottom}").  Pass in four numbers, or another [api:Rect] object.
+	[api:Rect.offset() offset()] | Moves the rectangle by the specified horizontal and vertical amounts.  Pass in two numbers, or a [api:Point] object.
+	[api:Rect.moveTo() moveTo()] | Moves the rectangle to the specified coordinates.  Pass in two numbers, a [api:Point] object, or a [api:Rect] object.
+	[api:Rect.width() width()] | Returns the width of the rectangle, and optionally sets it.
+	[api:Rect.height() height()] | Returns the height of the rectangle, and optionally sets it.
+	[api:Rect.centerPointX() centerPointX()] | Returns the horizontal coordinate of the center of the rectangle.
+	[api:Rect.centerPointY() centerPointY()] | Returns the vertical coordinate of the center of the rectangle.
+	[api:Rect.centerPoint() centerPoint()] | Returns a point right at the center of the rectangle.
+	[api:Rect.topLeftPoint() topLeftPoint()] | Returns a point at the top-left corner of the rectangle.
+	[api:Rect.topRightPoint() topRightPoint()] | Returns a point at the top-right corner of the rectangle.
+	[api:Rect.bottomRightPoint() bottomRightPoint()] | Returns a point at the bottom-right corner of the rectangle.
+	[api:Rect.bottomLeftPoint() bottomLeftPoint()] | Returns a point at the bottom-left corner of the rectangle.
+	[api:Rect.pointIn() pointIn()] | Returns {true} if a point is located inside the rectangle, {false} otherwise.
+	[api:Rect.rectIn() rectIn()] | Returns {true} if the rectangle intersects with a specified rectangle, {false} otherwise.
+	[api:Rect:clone() clone()] | Returns a copy of the rectangle.
+	[api:Rect.morph() morph()] | Morphs the rectangle into another, with optional tween algorithm.
+	[api:Rect.union() union()] | Transforms the rectangle into a union with another.
+	[api:Rect.intersect() intersect()] | Transforms the rectangle into an intersection with another.
+	[api:Rect.inset() inset()] | Collapses or expands the rectangle sides by the specified amount.
+
+=section #. Collision Detection
+
+[wikipedia:Collision detection] is the ability to detect when objects collide with each other in your game world.  The Effect Engine provides a simple, built-in collision deteciton system that uses "intersecting rectangles" (rectangle vs. rectangle), as well as point vs. rectangle, and line vs. rectangle.  Using this system you can "move" points, lines or rectangles in any direction, and be notified if they hit any sprites or tiles.  If the target object is marked as "solid", your point, line or rectangle is "corrected" so it doesn't land |inside| the target (it is essentially "backed out" of the collision).
+
+Collisions are typically detected between sprites on the same plane, or between sprites and tiles on a different plane.  For example, moving your character and detecting if he hit a wall (tile), or an enemy (sprite).  For the easiest detection method, check out [Moving Sprites] below.  Using one function call, the system handles moving your sprite in any direction, correcting its position for solid hits, and returning a detailed object describing what was hit, if anything.  However, there are other, lower-level calls for moving single points and lines.
+
+=section #.#. Setup
+
+To start using collision detection in your game, you just have to decide which planes can collide with which.  You may only care about sprite-to-sprite collisions in the same plane, or you may want sprite-to-tile collisions across planes, or a combination thereof.
+
+[api:SpritePlane] objects handle the collision logic.  These are the objects that "move" points, lines or sprites.  Without any setup, these objects only check their own sprites for collisions.  For example, if you want to move a point, you ask the Sprite Plane to move it, and it checks its own sprites to see if the point hit any of them.  If you also want to check for tile collisions, you have to "link" the two planes by calling [api:SpritePlane.linkTilePlane()].  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	var tplane = Effect.Port.getPlane('tiles');
+	splane.linkTilePlane( tplane );
+
+The Sprite Plane is now ready for dual-plane collision detection (checking collisions with both sprites on its own plane, and tiles on the "{tiles}" plane).  You only have to call this once.
+
+Finally, you have to "enable" collision detection on your sprite and tile classes, so the engine knows which objects should be checked.  It is highly advantageous to only enable this on key classes, for performance reasons.  For example, you typically don't need collision detection on particle effects, explosions, smoke, sparkles, environmental effects, clouds, stars, etc.  Keeping this disabled will increase performance, because objects of those types do not need to be "considered" for collisions, and the engine can skip over them.
+
+In your sprite classes just set the [api:Sprite.collisions] property to {true}, and in your tile classes set the [api:Tile.collisions] property to {true}, and you're ready to go.  Example:
+
+=syntax js
+	Sprite.extend( 'MySprite', {
+		collisions: true,
+		logic: function(clock) {
+			...
+		}
+	} );
+
+=section #.#. Moving Sprites
+
+As you know, moving sprites in the simplest sense just involves setting the [api:Sprite.x] and [api:Sprite.y] properties, and the sprite's position is updated onscreen.  However, this doesn't account for collisions.  While you could update your sprite's position then check various points around the border using [api:SpritePlane.lookupSpriteFromGlobal()], this would be rather complicated.  Also, what if your sprite moved completely |through| another one?  The Effect Engine provides a much better way to handle this.
+
+This technique involves two steps.  In your {logic()} method, first set the [api:Sprite.xd] and/or [api:Sprite.yd] properties to the horizontal and vertical |delta| of the sprite.  For example, if your sprite is moving to the right, set the [api:Sprite.xd] property to a positive number.  If your sprite is moving upward, set the [api:Sprite.yd] property to a negative number.  Once you have your direction and velocity set, call [api:Sprite.move()] which handles everything else.
+
+=syntax js
+	MyPlayerSprite.add({
+		logic: function(clock) {
+			// change xd and yd depending on keyboard keys down
+			if (Effect.Game.isKeyDown('right')) this.xd++;
+			else if (Effect.Game.isKeyDown('left')) this.xd--;
+			if (Effect.Game.isKeyDown('down')) this.yd++;
+			else if (Effect.Game.isKeyDown('up')) this.yd--;
+			
+			// now move the sprite
+			var hit = this.move();
+			if (hit) {
+				// we hit something!
+			}
+		}
+	});
+
+So here we are setting the [api:Sprite.xd] and [api:Sprite.yd] properties based on which keys are being held down.  This would work for a top-view game, where the character could move in any direction.  Then we call [api:Sprite.move()] which handles moving the sprite in any direction and checking for collisions.  If something was hit, the function returns an object with several properties (see [The Hit Object] below).  You can then decide what to do, based on the type of object that was hit.  Example:
+
+=syntax js
+	var hit = this.move();
+	if (hit) {
+		// we hit something!
+		if (hit.target.type == 'Enemy') this.die();
+		else if (hit.target.type == 'PowerUp') this.powerup();
+	}
+
+If you are creating a side-scroller game, you may want to split up your horizontal and vertical movement into two separate calls.  For example, if your character is running, you want to check to see if he ran into a wall, and act accordingly.  Then afterward, you want to check if there is still ground under him, and if not, start falling.  These cannot easily be done with a single call to [api:Sprite.move()], because if the function returns a hit object, you won't know if it was a horiztonal or vertical hit.  So to handle this, you can actually pass a custom "x delta" and/or "y delta" to the [api:Sprite.move()] function, which override the [api:Sprite.xd] and [api:Sprite.yd] properties.  Example:
+
+=syntax js
+	MyPlayerSprite.add({
+		setup: function() {
+			// set our initial state
+			this.state = 'running';
+		},
+		
+		logic: function(clock) {
+			// call method based on our state
+			switch (this.state) {
+				case 'running': this.running(clock); break;
+				case 'falling': this.falling(clock); break;
+			}
+		},
+		
+		running: function(clock) {
+			// horiz movement first
+			if (Effect.Game.isKeyDown('right')) this.xd++;
+			else (Effect.Game.isKeyDown('left')) this.xd--;
+			else this.xd /= 2;
+			
+			var hit = this.move( this.xd, 0 ); // horiz move only
+			if (hit) {
+				if (hit.target.type == 'Enemy') this.die();
+				else if (hit.target.type == 'PowerUp') this.powerup();
+			}
+			
+			// now check under our feet
+			hit = this.move( 0, 1 ); // move 1px down only
+			if (!hit || !hit.target.solid) {
+				// nothing under our feet!  start falling!
+				this.state = 'falling';
+				this.yd = 1;
+			}
+		},
+		
+		falling: function(clock) {
+			// falling, but allow horiz movement in air
+			if (Effect.Game.isKeyDown('right')) this.xd++;
+			else (Effect.Game.isKeyDown('left')) this.xd--;
+			else this.xd /= 2;
+			
+			var hit = this.move( this.xd, 0 ); // horiz move only
+			if (hit) {
+				if (hit.target.type == 'Enemy') this.die();
+				else if (hit.target.type == 'PowerUp') this.powerup();
+			}
+			
+			// now deal with gravity
+			this.yd++;
+			hit = this.move( 0, this.yd ); // vert move only
+			if (hit) {
+				if (hit.target.solid) {
+					// we landed on solid ground!  switch state back to running.
+					this.state = 'running';
+					this.yd = 0;
+				}
+				else if (hit.target.type == 'Enemy') this.die();
+				else if (hit.target.type == 'PowerUp') this.powerup();
+			}
+		}
+	});
+
+So the first thing to notice here is we are using a [wikipedia:Finite-state machine] to handle the sprite's "state" (i.e. behavior).  It can be either "running" or "falling".  In the "running" state, we first handle horizontal movement, then perform a quick check under our feet.  If the feet check fails (nothing under us), then we switch to the "falling" state.  In that state, still allow horizontal movement, but afterward we move downward faster and faster, until something solid is hit.  Then we switch back to the "running" state.
+
+Note that if a solid object is hit (see [Solid and Ground] below), your sprite's position is automatically corrected.
+
+=section #.#.#. Hitting Multiple Objects
+
+If your sprite collides with |multiple| objects from the same call to [api:Sprite.move()], the engine tries to pick the most "appropriate" object to return in [The Hit Object], and this typically works fine for most games.  However, for advanced games you may want to see a list of all the objects that were hit.  To do this, check the "{events}" property of the response object.  If set, this will contain an array of all the objects that collided with the sprite.  Example:
+
+=syntax js
+	var hit = this.move();
+	if (hit) {
+		// we hit something!
+		if (hit.events) {
+			// we hit multiple somethings!
+			for (var idx = 0, len = hit.events.length; idx < len; idx++) {
+				var obj = hit.events[idx];
+				// for each thing we hit, perform some action
+			}
+		}
+	}
+
+This is an advanced technique, and probably not necessary for most games.
+
+=section #.#. Moving Points
+
+Instead of moving your entire sprite, you can use a low-level call to move a single point.  This is typically a much faster operation, and can be used for smaller sprites such as projectiles (bullets, lasers, etc.), artificial intelligence, or path finding.
+
+To move a point, call either [api:SpritePlane.movePointX()] to move it horizontally or [api:SpritePlane.movePointY()] to move it vertically.  The arguments are the {x} and {y} positions of the point to be moved, and the delta (along the X or Y axis depending on which function is called).  The return will be an object describing what was hit (see [The Hit Object] below), or {null} if nothing was hit.  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	
+	// move point at 50,50 horizontally by +5 pixels
+	var hit = splane.movePointX( 50, 50, 5 );
+	if (hit) {
+		// we hit something!
+	}
+
+Alternatively, you can pass in an actual [api:Point] object instead of the individual {x} and {y} coordinates.
+
+A more real-world example would be to move a point in a sprite {logic()} method.  Example:
+
+=syntax js
+	MySprite.add({
+		logic: function(clock) {
+			if (Effect.Game.isKeyDown('right')) this.xd++;
+			else if (Effect.Game.isKeyDown('left')) this.xd--;
+			
+			if (this.xd > 0) {
+				// we're moving to the right
+				var hit = this.plane.movePointX( this.x + this.width - 1, this.y + (this.height / 2), this.xd );
+				if (hit) {
+					// we hit something!
+				}
+			}
+			else if (this.xd < 0) {
+				// we're moving to the left
+				var hit = this.plane.movePointX( this.x, this.y + (this.height / 2), this.xd );
+				if (hit) {
+					// we hit something!
+				}
+			}
+		}
+	});
+
+This moves a single point on the right or left side of the sprite (depending on which way it is moving), half-way down on the Y axis.  Of course, if something was hit, and it was solid (see [The Hit Object] below), then the sprite's position would need to be corrected.  This is done by using the {correctedX} and {correctedY} properties of the returned object.
+
+=section #.#. Moving Lines
+
+If you want to move an entire line, call [api:SpritePlane.moveLineX()] or [api:SpritePlane.moveLineY()].  This is similar to [Moving Points], but it checks for collisions along an entire horiztontal or vertical line.  This is useful for larger sprites, where moving a single point would not "catch" enough hits.  The return value is the same (see previous section).  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	
+	// move vertical line from 0,0 to 0,10 to the right by 5 pixels
+	var hit = splane.moveLineX( 0, 0, 10, 5 );
+	if (hit) {
+		// we hit something!
+	}
+	
+	// move horizontal line from 0,0 to 20,0 downward by 50 pixels
+	var hit = splane.moveLineY( 0, 0, 20, 50 );
+	if (hit) {
+		// we hit something!
+	}
+
+The arguments vary slightly between the horiztontal and vertical function:
+
+=deflist
+	moveLineX | (xpos, top, bottom, delta)
+	moveLineY | (ypos, left, right, delta)
+
+Note that moving lines is quite a bit more computationally intensive compared to moving single points.  For performance reasons it is recommended you move points instead of lines whenever possible.
+
+=section #.#. The Hit Object
+
+If any movement function returns an object, it will have the following properties:
+
+=deflist
+	targetType | A string containing either "{sprite}" or "{tile}", depending on what was hit.
+	target | A reference to the actual object that was hit (so you can interact with it).
+	correctedX | The new "{x}" coordinate of the point, corrected for the collision (see below).
+	correctedY | The new "{y}" coordinate of the point, corrected for the collision (see below).
+
+So given this, you can make some decisions about what should happen next.  For example, if the target object (sprite or tile) is marked as "solid", you can use the "{correctedX}" and "{correctedY}" properties to adjust the position of the object being moved.  The coordinates will be moved backward so that they fall just outside the boundary of the target object.  Note that this is only needed for the low-level point and line moving calls.  If you are calling [api:Sprite.move()], then you do not need to manually correct your sprite's position -- it is handled automatically for you.
+
+This is also a good time to take action on the source or target objects.  For example, if you are moving your player sprite and the target is an enemy sprite, you can decrease your player's life.  If the target is a power-up, you can initiate an animation and play a sound effect.  If the source is a projectile weapon, and it collided with an enemy sprite, you can destroy the enemy (you have a reference to the object that was hit via the "{target}" property, so you can call methods on it).
+
+=section #.#. Solid and Ground
+
+Sprite and Tile classes may be marked as {solid}, which means that the {correctedX} and {correctedY} properties of [The Hit Object] are backed out from the collision.  Or, if you are using the [api:Sprite.move()] method, the entire sprite is automatically corrected so it never penetrates the boundaries of the solid object.  In your sprite classes just set the [api:Sprite.solid] property to {true}, and in your tile classes set the [api:Tile.solid] property to {true}.
+
+For side-scrolling games, objects may be marked as "ground" but not "solid".  This means that vertical collisions |from the top| are considered solid, but all other directions pass through.  Some games use this technique to allow the player to jump and otherwise pass through the ground, but if he lands on top of it, the object is solid.  To activate this, set the [api:Sprite.ground] or [api:Tile.ground] property to {true} in your classes.
+
+=section #.#. Minimum Sprite Size
+
+The built-in collision detection algorithms work by moving points, lines and sprites in "chunks".  This way, if you request that something be moved a large distance, and a small object is in the way, the collision will still be detected properly, and the object won't appear to "jump over" the barrier.  However, the engine needs to know the smallest sprite/tile size for this to work effectively -- this is the "chunk size" for moving objects.  The default size is "{16}" pixels, but you can change it by calling [api:SpritePlane.setMinSpriteSize()].  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	splane.setMinSpriteSize( 32 );
+
+Note that this is directly tied to performance, because smaller values here mean more calculations are necessary to move objects.  Larger values will be faster, but should not be larger than your smallest |collision-enabled| sprite.
+
+=section #.#. Rolling Your Own
+
+You are free to "roll your own" collision detection system for your games.  To do this, you have a number of options.  First, you can always lookup sprites and tiles by specifying a set of global coordinates.  This is done by using [api:SpritePlane.lookupSpriteFromGlobal()] and/or [api:TilePlane.lookupTileFromGlobal()].  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	var sprite = splane.lookupSpriteFromGlobal( 50, 50 );
+	if (sprite) {
+		// sprite intersects with point 50,50
+	}
+	
+	var tplane = Effect.Port.getPlane('tiles');
+	var tile = tplane.lookupTileFromGlobal( 50, 50 );
+	if (tile) {
+		// tile intersects with point 50,50
+	}
+
+Looking up tiles based on coordinates is a very fast operation, because tiles are stored in a 2-dimensional array.  Sprites are a different story.  To lookup a sprite based on a position, all the active sprites have to be considered.  This is an expensive operation, so you don't want to do this multiple times per loop iteration.  Another technique is to use [api:SpritePlane.findSprites()].  This function can return |all| active sprites, or a set of sprites that match a set of criteria.  Then you can choose how to check them for collisions.  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	var sprites = splane.findSprites();
+	for (var idx = 0, len = sprites.length; idx < len; idx++) {
+		var sprite = sprites[idx];
+		// check sprite for collisions
+	}
+
+Here is an example of specifying multiple criteria to [api:SpritePlane.findSprites()], so only certain sprites are considered.  This can greatly increase performance, because the fewer sprites checked the better.
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	var sprites = splane.findSprites({
+		collisions: true,
+		type: 'Enemy'
+	});
+	for (var idx = 0, len = sprites.length; idx < len; idx++) {
+		var sprite = sprites[idx];
+		// check sprite for collisions
+	}
+
+This would only return sprites that have [api:Sprite.collisions] set to {true}, *and* have [api:Sprite.type] set to "{Enemy}".
+
+=section #.#. Intersecting Spheres
+
+Here is a detailed example of writing a custom collision detection system.  This system will handle sprite vs. sprite collisions, but use spheres instead of rectangles.  This is actually very simple, because 2D spheres collide only when the distance between their center points is less than their combined radii.
+
+So we simply need to add a {radius} property to our spherical sprites, and calculate distances using [api:Sprite.centerPoint()] and [api:Point.getDistance()].  Example:
+
+=syntax js
+	Sprite.extend( 'MySphereSprite', {
+		sphere: true,
+		radius: 25,
+		
+		logic: function(clock) {
+			// update position (assumes xd and yd set elsewhere)
+			this.x += this.xd;
+			this.y += this.yd;
+			
+			// now, check for collisions with other spheres
+			var centerPt = this.centerPoint();
+			var sprites = this.plane.findSprites({ sphere: true });
+			
+			for (var idx = 0, len = sprites.length; idx < len; idx++) {
+				var sprite = sprites[idx];
+				var dist = centerPt.getDistance( sprite.centerPoint() );
+				
+				if (dist < this.radius + sprite.radius) {
+					// collision with sphere!  let's destroy the smallest one
+					if (this.radius > sprite.radius) sprite.destroy();
+					else this.destroy();
+					
+					// play a pop noise too
+					Effect.Audio.playSound( 'pop.mp3' );
+				}
+			}
+		}
+	} );
+
+So for every active sphere sprite in the world, we are detecting collisions by grabbing a list of all active sprites that have a "{sphere}" property set to {true}.  Then, for each sprite that matches, we calculate the distance between the center point vs. our center point, and check that distance against the combined radii of both spheres.  If the distance is less than the two radii, then the two spheres are "intersecting", and we pop one of them.
+
+=section #. Examples
+
+Here are some examples of using collision detection:
+
+=list
+	[/effect/example.psp.html?rev=col_basic Basic Collision Demo]
+	[/effect/example.psp.html?rev=col_sphere Custom Intersecting Sphere Demo]

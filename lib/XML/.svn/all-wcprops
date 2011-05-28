@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/xmlapi/!svn/ver/2/trunk/lib/XML
+END
+API.pm
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/xmlapi/!svn/ver/4/trunk/lib/XML/API.pm
+END
+Lite.pm
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/xmlapi/!svn/ver/4/trunk/lib/XML/Lite.pm
+END
+Cache.pm
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/xmlapi/!svn/ver/2/trunk/lib/XML/Cache.pm
+END

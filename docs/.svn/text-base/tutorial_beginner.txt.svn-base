@@ -1,0 +1,500 @@
+=article_title Beginner Tutorial
+=article_path /tutorials
+=article_tags tutorial, beginner
+=article_stags sidebar_tutorials
+=article_comments 1
+=section_numbers 1
+=toc 1
+=toc_max 3
+
+=section #. Overview
+
+This tutorial is designed to get you started creating a very simple space shooter game, with a ship that you can move with the keyboard, and shoot photons at enemies.  The idea here is not to create a complete game, but rather to get you familiar with the Effect Games tools and API, so you can easily get started creating your own games.
+
+You can download all the source code and assets for this tutorial here:
+
+[button:compress.png /effect/images/docs/tutorials/beginner/effect-beginner-tutorial.zip Download Tutorial]
+
+=section #.#. Topics
+
+The following topics are covered in this tutorial:
+
+=list
+	*Starting new game projects.*
+	*Uploading game assets.*
+	*Creating sprite classes.*
+	*Writing game code:*
+		Simple collision detection.
+		Keyboard control handling.
+		Adding sound effects.
+	*Publishing*
+
+=section #.#. Assets
+
+For our game we'll need the following graphical assets:
+
+=image /effect/api/view/games/tutorial2/assets/images/backgrounds/stars.jpg
+=caption *stars.jpg* - 512x512 pixels
+=caption A starry background, can be seamlessly tiled.
+
+=image /effect/api/view/games/tutorial2/assets/images/sprites/ship.png
+=caption *ship.png* - 64x64 pixels
+=caption Our player ship sprite.
+
+=image /effect/api/view/games/tutorial2/assets/images/sprites/photon.png
+=caption *photon.png* - 16x16 pixels
+=caption The ship's photon projectile.
+
+=image /effect/api/view/games/tutorial2/assets/images/sprites/enemy.png
+=caption *enemy.png* - 64x64 pixels
+=caption The enemy sprite.
+
+And we'll need a couple of sound effects too:
+
+=deflist
+	[/effect/api/view/games/tutorial2/assets/audio/effects/shoot.mp3 shoot.mp3] | Shooting a photon.
+	[/effect/api/view/games/tutorial2/assets/audio/effects/explosion.mp3 explosion.mp3] | A enemy exploding.
+	[/effect/api/view/games/tutorial2/assets/audio/effects/win.mp3 win.mp3] | Level complete!
+
+=section #. Tutorial
+
+=section #.#. Creating a Game Project
+
+First, start a new game project by clicking on the [#GameEdit Create New Game] link on your home screen.  Give your game a unique ID and a title.  You can leave all the other fields at their default values (you can always change them later).
+
+=image /effect/images/docs/tutorials/beginner/new_game_form.png style="border:0"
+
+At the bottom of the page, click the "*Create Game*" button.  This will create the game project and take you to the main game screen.  This is the main hub for designing and adding content to your game:
+
+=image /effect/images/docs/tutorials/beginner/game_tab.png style="border:0"
+
+If you get lost, you can always get back to this screen by clicking on the [#Home My Home] link which is available on every page (in the header and in the sidebar), and then clicking on your game's title.
+
+=note When you create new game projects, you become the owner and administrator of the project.  That means you have the power to invite others to become project members, and help you create your game.  This is done by clicking on the "Administer..." button.
+
+=section #.#. Display Settings
+
+Click on the "*Display*" tab to adjust the game's display settings.  For our purposes, the default values are fine, except for the frame rate.  The default is 30 frames per second, but let's crank this up to 60, since we aren't doing anything complex in this game.  Leave the "Frame Skip" checkbox on.
+
+=image /effect/images/docs/tutorials/beginner/fps.png
+
+When you are done, click the "*Save Changes*" button on the bottom of the page.
+
+=section #.#. Uploading Our Assets
+
+The next thing we need to do is upload all our assets.  Click on the "*Assets*" tab, and you'll see a default folder layout created for your game:
+
+=image /effect/images/docs/tutorials/beginner/assets_empty.png style="border:0"
+
+We'll upload the sound effects to the "{audio/effects/}" folder, the starry background to the "{images/backgrounds/}" folder, and the sprite graphics to the "{images/sprites/}" folder.  You can do this by selecting each target folder, then clicking on the "Upload Files..." button.
+
+=note You are actually free to create your own folder layout, and upload your files anywhere you want -- the provided folder names are only for convenience.  The only folders with "special" meanings are the "{src/}" folder, and the "{text/}" folder, because in those you can create new text files online, and edit them in your browser.  More on this later.
+
+Here is how it looks after everything is uploaded:
+
+=image /effect/images/docs/tutorials/beginner/assets_filled.png style="border:0"
+
+You can always replace, rename, delete, or move files around at any time. See the [article:docs/Asset Manager Guide] for details.
+
+=section #.#. Defining Sprite Classes
+
+Now that we have our assets uploaded, we can define some sprite classes.  Each sprite type has a "class" which defines its name, look and behavior.  You first define the class in the web interface, giving it a name and assigning resources.  Then, when you write the code for that sprite (see [Writing Code] below), you match up the class name, and all the right resources are loaded and made available for your game.
+
+First, click on the "*Objects*" tab, which is where you define sprites, tiles, tilesets and fonts:
+
+=image /effect/images/docs/tutorials/beginner/objects_empty.png style="border:0"
+
+Then, click on the "*Add Sprite Class*" link, and define our first sprite by giving it a name:
+
+=image /effect/images/docs/tutorials/beginner/sprite_def_ship_a.png
+
+This is going to be our player sprite, so we've named it "{Ship}".  Make sure the "*Preload*" checkbox is checked, which loads everything needed for this sprite automatically at startup.  We aren't using the level editor for this game, so you can leave the "*Place*" checkbox unchecked.  You can also ignore the "Sprite Dependencies" box.  See the [article:docs/Sprites and Tiles Guide] for details on these.
+
+Next, we need to assign resources to this sprite.  Meaning, we tell the engine which assets will be used by the sprite, and should be loaded along with it.  In this case, we are assigning our *ship.png* image, and the *shoot.mp3* sound effect.  To do this, click the "Add Resources..." button, and select the assets you want to assign:
+
+=image /effect/images/docs/tutorials/beginner/sprite_def_ship_b.png style="border:0"
+
+As you can see, when you add an image resource, there are additional options you can select (a "Transform" and a "Filter").  You can ignore these, and just leave everything set at the defaults.  For details on these features, see the [article:docs/Sprites and Tiles Guide].
+
+Finally, click the "*Create Sprite Class*" button, which creates the class.  Now we'll repeat this process for our other two sprites:
+
+We'll call the ship's photon "{Photon}", and mark it for preload just like the ship sprite:
+
+=image /effect/images/docs/tutorials/beginner/sprite_def_photon_a.png
+
+For resources used by the photon sprite, we only need the *photon.png* image:
+
+=image /effect/images/docs/tutorials/beginner/sprite_def_photon_b.png style="border:0"
+
+We'll call the enemy sprite "{Enemy}", and mark it for preload as well:
+
+=image /effect/images/docs/tutorials/beginner/sprite_def_enemy_a.png
+
+For resources used by the enemy sprite, we need the *enemy.png* image, and the *explosion.mp3* sound effect:
+
+=image /effect/images/docs/tutorials/beginner/sprite_def_enemy_b.png style="border:0"
+
+Finally, here is what our sprite list looks like on the "*Objects*" tab, after we have added our three sprite classes:
+
+=image /effect/images/docs/tutorials/beginner/sprite_list_filled.png
+
+It should be noted that there are several different ways to specify which resources need to be loaded in your game.  The technique shown here is only one of them.  For example, you can add resources to the master game preload list, add them to a level if you are using the Level Editor, or even load them in code.  However, attaching resources to sprite classes is a nice way to keep things organized, so you (and your team) can see which sprites require which resources.
+
+=section #.#. Keyboard Control Setup
+
+We are going to use keyboard controls in our game, so let's visit the "*Keyboard*" tab and define these.  A default set of standard controls are included in new game projects, which you can see here:
+
+=image /effect/images/docs/tutorials/beginner/keyboard_tab.png style="border:0"
+
+For our game we only need *left* and *right* movement controls, as the ship cannot move vertically, and we also need *shoot*.  However, we can remove the rest of these, as they will not be used.  Just click "*Delete*" next to the controls you don't want.  Here is how it looks afterward:
+
+=image /effect/images/docs/tutorials/beginner/keys_before.png
+
+So far so good, but it would be nice if the space bar also made the ship shoot.  As you can see, you can assign multiple keys to a single control, and right now the "*Shoot*" control has the "*Z*" and "*Comma*" keys assigned to it.  Let's add a third.  Click on the "*Edit*" link (or on the name of the control):
+
+=image /effect/images/docs/tutorials/beginner/edit_key_shoot_before.png
+
+Here we can edit the control, and assign keys.  We can leave the title and ID as they are, but click on the "Set Keys..." button, which pops up the following dialog:
+
+=image /effect/images/docs/tutorials/beginner/edit_key_dialog.png
+
+Just hit the space bar on your keyboard, and it should be added to the list of keys for this control.  Then click the "*Select*" button, and you should see your new key added on the underlying page once the dialog disappears:
+
+=image /effect/images/docs/tutorials/beginner/edit_key_after.png
+
+Now, click the "*Save Changes*" button, which saves the key definition, and returns you to the control list:
+
+=image /effect/images/docs/tutorials/beginner/keys_after.png
+
+Notice that our "*Shoot*" control now lists "*Z, Comma, Space*" as the key list.
+
+=note Users can customize their own keyboard controls in-game.  These key assignments are only the default or "recommended" values you set for your game.
+
+=section #.#. Audio Settings
+
+Click on the "*Audio*" tab to adjust the audio settings for the game.  In our case, all the default settings are fine, except for a slight volume adjustment on one of our tracks.  Our *shoot.mp3* sound effect runs a little hot (loud) compared to the explosion, so let's turn it down.  Find the volume menu next to the track, and select "50%" (half volume).
+
+=image /effect/images/docs/tutorials/beginner/audio_settings.png
+
+That's all for this tab. These settings auto-save themselves as soon as you change them.
+
+=section #.#. Preload Game Resources
+
+So is that it?  Can we start writing code now?  Almost!  One last little thing we have to do.  For those keeping track, we took care of loading all our assets, except for the *stars.jpg* image, and the *win.mp3* sound effect.  These assets aren't really connected to any particular sprite, as they are more part of the level itself.  But since we aren't using the Level Editor (where we could specify a background image and add resources like sound effects), we have to add them to the Game's preload list.
+
+To do this, go back to the main "*Game*" tab, and click on the "*Game Settings...*" button.  There you will see a "*Preload Resources*" section, and inside that an "*Add Resources...*" button.  Click that, and select the *stars.jpg* image and the *win.mp3* sound effect, and add them to the list.  Here is how it should look after adding:
+
+=image /effect/images/docs/tutorials/beginner/add_game_res.png style="border:0"
+
+Finally, click "*Save Changes*" at the bottom of the page, and you're all set.  These two resoures will now be automatically loaded with the game.
+
+=section #.#. Writing Code
+
+Now we can finally write the game code!  The next few sections describe how this is done.  You will need to be familiar with [wikipedia:JavaScript] and [wikipedia:object oriented programming] to understand the code presented in this tutorial.  See the [article:docs/Getting Started Guide] for details.
+
+=section #.#.#. Local or Online Development
+
+With Effect Games you have the choice of developing your game locally on your Mac or PC (i.e. writing the code in your favorite text editor and saving it to your hard disk), or developing it entirely online (writing the code in our web-based editor).  For the purposes of this tutorial, we will be writing the code online.  However, please see the [article:docs/Local Development Guide] for details on how you can develop your game locally.
+
+Go to the "*Assets*" tab, and click on the "{src/}" folder.  This is a special folder that is designed to hold your game's source code, if you choose to develop online.  With the folder selected, you should then see a "*New File...*" button appear in the floating toolbar on the right.  Click that button, which will create a new, blank JavaScript file:
+
+=image /effect/images/docs/tutorials/beginner/assets_js_new.png style="border:0"
+
+As you can see we have a new "{untitled1.js}" file in the "{src/}" folder, which we can now rename.  Feel free to name this file to whatever you like, as all JS files found in this folder are loaded as source code, in alphabetical order.  Once you accept the filename you can double-click on the file to edit it, or select it and click the "*Edit...*" button.  This pops up our web-based text editor:
+
+=image /effect/images/docs/tutorials/beginner/assets_js_edit.png
+
+Now you can begin entering your game's source code.  Click the "*Save*" button to save changes and continue editing, or click the "*Save & Close*" button to save changes and close the window.  Beware, if you close the window or exit your browser without saving, your changes will be lost!
+
+=section #.#.#. Object Oriented Programming
+
+To build a game with the Effect Engine, you need to know a little [wikipedia:object oriented programming].  We will be defining some sprite classes that inherit from a base class, so it is good to know what these concepts mean.  We'll be using the built-in Effect [article:docs/Object Oriented Framework], but you are free to use your own framework in your games if you prefer.
+
+=section #.#.#. Player Ship Code
+
+Let's start with the player ship sprite class:
+
+=syntax js
+	Sprite.extend( 'Ship', {
+		width: 64,
+		height: 64,
+		url: '/images/sprites/ship.png'
+	} );
+
+Here we are extending the built-in [api:Sprite] class, and naming our new subclass "{Ship}".  Note that this name exactly matches the "{Ship}" sprite class we created on the website.  These names must match exactly (case-sensitive), so the right resources are made available to your sprite code.
+
+Next we are setting the size of the sprite, 64x64 pixels, and assigning the "{url}" property to the *ship.png* asset.  Note that we are are including the parent folder names, with a leading slash: "{/images/sprites/ship.png}".
+
+Next let's add a method to our class.  We'll need a [api:Sprite.logic()] method that handles animating the sprite, and responding to keypresses.  Here it is:
+
+=syntax js
+	Ship.add({
+		logic: function(clock) {
+			if (Effect.Game.isKeyDown('right')) this.xd += 0.3;
+			else if (Effect.Game.isKeyDown('left')) this.xd -= 0.3;
+			else this.xd *= 0.9;
+			
+			// now move the sprite
+			this.move();
+			
+			// keep ship inside screen bounds
+			if (this.x < 0) { this.x = 0; this.xd = 0; }
+			else if (this.x > 640 - 64) { this.x = 640 - 64; this.xd = 0; }
+		}
+	} );
+
+This function is executed once per iteration through the main logic loop (60 times per second).  First we are checking to see if the "{right}" or "{left}" keys are being held down, and if so, incrementing or decrementing the [api:Sprite.xd] property respectively.  If neither key is held down, we multiply the value by 0.9, effectively moving it towards zero.
+
+You may wonder why we aren't simply adjusting the [api:Sprite.x] property directly, thereby moving the sprite.  That would work, but the reason for doing it this way is we want  smooth acceleration and deceleration, so we are instead changing a "delta" value -- the number of pixels by which the sprite moves per frame.  If we increase or decrease this value, the sprite will appear to "ease in" and "ease out" as it moves.
+
+To actually move the sprite by the delta amount, we call [api:Sprite.move()].  This is usually accompanied by collision detection (i.e. the function returns an object if something was hit), but in this case our ship only moves left and right along the bottom of the screen, and there is nothing to hit directly (the enemies always stay above it).
+
+The last thing we are doing here is constraining the sprite's position to stay inside the screen bounds.  If the [api:Sprite.x] value strays below zero (off the left side of the screen), or greater than the screen width minus our sprite width (off the right side of the screen), then we correct the position, and set the delta to 0.
+
+=section #.#.#. Shooting Photons
+
+So we want our ship to be able to shoot photons, when the "{shoot}" key is hit.  This action is a little more complcated than checking for the "{left}" and "{right}" keys as we are doing above, because we want to catch the "action" of pressing the shoot key down, not just check if it is currently down.  To do this, we first have to register the sprite as a listener object for "{shoot}" key events:
+
+=syntax js
+	Ship.add({
+		setup: function() {
+			// this is called once when our sprite is created
+			// setup our key listener for shoot
+			Effect.Game.setKeyHandler( 'shoot', this );
+		}
+	} );
+
+Here we are defining a [api:Sprite.setup()] method, which is called only once when the instances of the sprite are first created.  In this method we are calling [api:Effect.Game.setKeyHandler()] to register the sprite as a listener object for "{shoot}" key events (you could call it multiple times to listen for other key controls as well, but in our case all we care about is shooting).
+
+Now we can include an "{onKeyDown}" method in our sprite class, which will automatically be called right when the "{shoot}" key is pressed:
+
+=syntax js
+	Ship.add({
+		onKeyDown: function(id) {
+			// a key was pressed, let's see which one
+			switch (id) {
+				case 'shoot':
+					// fire a photon!
+					this.plane.createSprite( 'Photon', {
+						x: this.centerPointX() - 8,
+						y: this.y - 16
+					} );
+					Effect.Audio.playSound( 'shoot.mp3' );
+					break;
+			}
+		}
+	} );
+
+Here we are checking to see which key was pressed (actually, we're only listening for one key control, so we actually don't have to check), and if it was the "{shoot}" key, then we can fire our photon.
+
+To do this, we call [api:SpritePlane.createSprite()], which allows us to create sprites on the fly.  All we have to do is specify the sprite class name (in our case "{Photon}"), and the desired [api:Sprite.x] and [api:Sprite.y] position (you can specify additional properties here, if you want).  For the horizontal position, we are centering the photon right in the middle of our ship, and for the vertical, we are positioning it just above our ship.
+
+Finally, we are playing our *shoot.mp3* sound effect by calling [api:Effect.Audio.playSound()].  See the [article:docs/Audio Guide] for more details on playing sounds.
+
+The idea here is that each time the "{shoot}" key is pressed down, we fire a photon.  Holding down the key has no effect -- the user must press it multiple times to fire multiple shots.  For more details on keyboard events, see the [article:docs/Keyboard and Mouse Guide].
+
+=section #.#.#. Photon Sprite Code
+
+Here is the sprite class definition for the ship's photon:
+
+=syntax js
+	Sprite.extend( 'Photon', {
+		width: 16,
+		height: 16,
+		url: '/images/sprites/photon.png',
+		collisions: true,
+		dieOffscreen: true
+	} );
+
+Here you'll notice two additional properties that weren't included in our ship class: "{collisions}", which enables collision detection for this sprite, and "{dieOffscreen}", which automatically destroys the sprite when it leaves the screen bounds.
+
+Now let's take a look at the photon's [api:Sprite.logic()] method, which is called once per each iteration through the main logic loop (60 times per second):
+
+=syntax js
+	Photon.add({
+		logic: function(clock) {
+			// move photon upward, checking for collisions
+			this.yd = -8;
+			
+			var hit = this.move();
+			if (hit) {
+				// we hit something!  let's see what it was...
+				switch (hit.target.type) {
+					case 'Enemy':
+						// we hit an enemy!  destroy it!
+						hit.target.explode();
+						
+						// and destroy ourselves as well
+						this.destroy();
+						break;
+				}
+			}
+		}
+	} );
+
+Here we are hard-coding the [api:Sprite.yd] property to "{-8}", which means the sprite will continually move upward at a fast rate.  Then we call [api:Sprite.move()] to handle moving the sprite by its delta, and check for collisions.  This function will return an object describing a collision event, if one occurred.
+
+If something was hit, we examine the "{target}" property of the returned object, which is a reference to whatever was hit (a sprite, a tile, etc.).  All sprites have a [api:Sprite.type] property, which is automatically set to the name of the class, so we check that for "{Enemy}" sprites (of course, an enemy is the only thing the photon can hit in our little game, but this is a good exercise for when you add new sprite types of your own).
+
+If an enemy is hit, we call "{explode()}" on the target object (which is defined below in the "{Enemy}" sprite class), and then we immediately destroy ourselves by calling [api:Sprite.destroy()].  This is to the photon doesn't continue travelling through the enemy, but "self destructs" the moment it hits one.
+
+For more details on collision detection, please see the [article:docs/Geometry and Collision Guide].
+
+=section #.#.#. Enemy Sprite Code
+
+Here is the sprite class definition for the enemy object:
+
+=syntax js
+	Sprite.extend( 'Enemy', {
+		width: 64,
+		height: 64,
+		hitRect: new Rect( 8, 8, 56, 56 ),
+		url: '/images/sprites/enemy.png',
+		collisions: true,
+		screenLoop: true
+	} );
+
+Notice that we have the [api:Sprite.collisions] property set here, because we need this on all objects that are involved in collisions (both the photons and the objects they hit).  We also have a [api:Sprite.hitRect] property set, which defines a "hit area" inside the object for the purposes of collisions.
+
+In this case we are defining an 8 pixel "margin" inside the boundary of the sprite, so photons only register a hit if they are |inside| the inner hit rectangle.  The reason for this is, the enemy sprite image itself doesn't quite fill up its 64x64 size.  Feel free to adjust this to taste.
+
+You may notice the addition of a [api:Sprite.screenLoop] property in this class.  This feature automatically "wraps" the sprite around the edges of the screen, so if it leaves the right side, it reappears on the left, and visa-versa (think classic "Asteroids" game play).
+
+Here is the enemy [api:Sprite.logic()] method, which is very simple:
+
+=syntax js
+	Enemy.add({
+		logic: function(clock) {
+			// move horizontally
+			this.x += this.xd;
+		}
+	} );
+
+"But wait!" you ask, "Why aren't you calling move()?".  The answer is simple: These enemies just float around the screen moving left and right, and don't need to react if they run into one another.  So we can get away with just incrementing or decrementing [api:Sprite.x] ourselves here.  We only need to |respond| to incoming collisions by our ship's photons:
+
+If you recall, when photons hit an enemy sprite, they are calling an "{explode()}" method.  So all we need to do is define that method to respond to a hit:
+
+=syntax js
+	Enemy.add({
+		explode: function() {
+			// this is called when a photon hits us
+			// play explosion sound, and destroy ourselves
+			Effect.Audio.playSound( 'explosion.mp3' );
+			this.destroy();
+		}
+	} );
+
+So here we are simply playing our *explosion.mp3* sound effect, and destroying ourself.  One might consider creating an "explosion" sprite here, with an animated set of frames illustrating an explosion, plus maybe some particles, but those are enhancements for a later time.  For now, we just need our photons to destroy the enemies.
+
+But what happens when we destroy all the enemies?  Well, let's handle that case here.  We need to keep things simple for this tutorial, but let's give the player some hint that he or she cleared the level.  Let's make one little change to the {explode()} function we just defined above:
+
+=syntax js
+	Enemy.add({
+		explode: function() {
+			// this is called when a photon hits us
+			// play explosion sound, and destroy ourselves
+			Effect.Audio.playSound( 'explosion.mp3' );
+			this.destroy();
+			
+			// check if any enemies are left
+			if (!this.plane.findSprites({ type:'Enemy' }).length) {
+				// none left!  level complete!
+				Effect.Audio.playSound( 'win.mp3' );
+				this.plane.getSprite('player').destroy();
+			}
+		}
+	} );
+
+Here we are using [api:SpritePlane.findSprites()] to locate any sprites that have a type of "{Enemy}".  These are returned in an array, so we are checking the "{length}" property.  If this is "{0}", then there are no more enemies, and the level is complete!  If so, we play our *win.mp3* sound effect, and destroy the player sprite, to let the user know the game demo is over.
+
+=section #.#.#. Game Setup
+
+We're almost at the end!  All we need now is to setup the game.  Meaning, when the engine first loads, we have to setup our display, set our background image, and create our sprites.  Here is how this is done:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		// custom port background
+		Effect.Port.setBackground({
+			color: 'black',
+			url: '/images/backgrounds/stars.jpg'
+		});
+		
+		// create our sprite plane
+		var splane = new SpritePlane( 'sprites' );
+		Effect.Port.attach( splane );
+		
+		// create our player sprite, centered on the bottom
+		splane.createSprite( 'Ship', {
+			id: 'player',
+			x: 320 - (64 / 2),
+			y: 480 - 64
+		} );
+		
+		// create some targets at random positions
+		for (var idx = 0; idx < 10; idx++) {
+			splane.createSprite( 'Enemy', {
+				x: Math.random() * (640 - 64),
+				y: Math.random() * 240,
+				xd: probably(0.5) ? 1 : -1
+			} );
+		}
+	} );
+
+So here we're using [api:Effect.Game.addEventListener()] to hook the [api:Effect.Game.onLoadGame] event, and then execute our code only when everything is loaded and ready.  This is because everything in JavaScript happens asynchronously, so we have to register event listeners for actions we want to hook.
+
+Our anonymous function (also called a [wikipedia:Closure_(computer_science), Closure]) sets up our game world.  First, we setup the background by calling [api:Effect.Port.setBackground()] and specifying our *stars.jpg* image.  The image will automatically repeat horizontally and vertically as needed.  Note that if you are creating and loading levels via the Level Editor, this step is usually not required, as you can just specify your background image in the user interface.
+
+Next we are creating a [api:SpritePlane] object and attaching it to the display via [api:Effect.Port.attach()].  This is the plane in which we will create and animate our sprites.  Again, please note that if you are using the Level Editor, you'll likely be defining your planes (also called layers) in the user interface, and they'll be automatically created for you when you load the level.
+
+Once we have our sprite plane created, we can add sprites to it.  First, we add our ship sprite (our player).  All we have to do here is call [api:SpritePlane.createSprite()], specify the class name ("{Ship}"), and its [api:Sprite.x] and [api:Sprite.y] coordinates.  We're centering it along the bottom of the screen (remember, our game display is 640x480 pixels).  You may also notice that we are assigning this sprite an ID, so we can easily look it up it later.
+
+Lastly, we have to create some enemies!  We're creating 10 here, at random positions around the top half of the screen.  Again, we're just calling [api:SpritePlane.createSprite()], specifying the class name ("{Enemy}" this time), and randomizing the position and direction of each.
+
+Please see the [article:docs/Sprites and Tiles Guide] for details on all the techniques shown here.
+
+=section #.#. Playing The Game
+
+That's it!  The game should be playable now.  If you have been entering your code online, simply hit the "*Save & Close*" button, then click back on the "*Game*" tab, then on the "*Quick Play...*" button.  Quick Play is a feature that allows you to quickly play your game, without having to publish a release.  This only works if you typed (or uploaded) your code to the "{src/}" folder, like we did here.  Feel free to leave both windows open (your source code, and the Quick Play window), for making quick changes.  You only need to refresh the Quick Play window to see immediate changes made to the code, assets or objects.
+
+Alternatively, if you are developing your game locally on your Mac or PC (see the [article:docs/Local Development Guide]), you can just save your code and refresh your local browser window to play instantly.
+
+=section #.#. Publishing
+
+So you want to share your game with your friends and post it on your blog?  Absolutely no problem!  But don't send them the Quick Play URL -- that is for your use only (it requires a user account and membership to your game project).  Instead, proceed straight to the "*Publish*" tab.  This is where you can publish releases of your game, for all to see (you can also publish private releases for a select audience).  Each release has its own unique URL for sharing, and, if you so choose, the ability to "embed" the game into blogs and web pages, for a true "viral" game.
+
+=image /effect/images/docs/tutorials/beginner/publish_tab_empty.png style="border:0"
+
+Click the "*Publish New Revision*" link to start a new revision, and fill out the form:
+
+=image /effect/images/docs/tutorials/beginner/publish_rev_edit.png
+
+Each revision needs a unique "revision number" for identification.  The rest of the form fields are optional, but pay close attention to the "*Release Type*" menu.  This controls who has access to the game, so choose carefully.  If you want sharing options (the ability for people to share the game on Facebook, Twitter, and embed it into their own blogs), select a release type other than "Internal".
+
+Please Note: If you entered your source code using the online editor, or uploaded it to the "{src/}" folder, you do *not* have to upload the code again for the purposes of publishing the release.  Just ignore the "Upload Code" section.  That is only for games that were developed locally.
+
+When you are finished selecting your options, click the "*Publish Revision*" button at the bottom of the page.  When the operation is complete, you can play the revision by clicking the "*Play*" link (opens a new browser window), and copy and share the URL.
+
+For more details on publishing game revisions, see the [article:docs/Publishing Guide].
+
+=section #. Summary
+
+Here you can play the game we built in this tutorial:
+
+[button:controller.png /effect/games/tutorial2/1.0b Play Game Now...]
+
+You can download all the source code and assets for this tutorial here:
+
+[button:compress.png /effect/images/docs/tutorials/beginner/effect-beginner-tutorial.zip Download Tutorial]
+
+=section #. Further Reading
+
+Several topics in this tutorial are covered in depth in the following documents:
+
+=list
+	[article:docs/Getting Started Guide]
+	[article:docs/Sprites and Tiles Guide]
+	[article:docs/Keyboard and Mouse Guide]
+	[article:docs/Geometry and Collision Guide]
+	[article:docs/Local Development Guide]
+	[article:docs/Audio Guide]
+	[article:docs/Publishing Guide]

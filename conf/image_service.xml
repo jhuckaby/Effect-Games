@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ImageServiceConfig>
+	<DebugLevel>5</DebugLevel>
+	<Server>
+		<Port>6201</Port>
+		<MaxChildren>4</MaxChildren>
+		<MaxRequestsPerChild>300</MaxRequestsPerChild>
+		<User>www</User>
+	</Server>
+	<EchoLog>0</EchoLog>
+	<LogTemplate>[hires_epoch][yyyy-mm-dd hh:mi:ss][hostname][pid][component][package][category][code] msg</LogTemplate>
+	<Paths>
+		<LogFile>/logs/effect/imageservice.log</LogFile>
+		<PidFile>/logs/effect/pid_imageserviced.pid</PidFile>
+		<QueueDir>/data/effect/queue</QueueDir>
+		<TempDir>/var/tmp</TempDir>
+	</Paths>
+	<FileProxy>1</FileProxy>
+</ImageServiceConfig>

@@ -1,0 +1,594 @@
+<?xml version="1.0"?>
+<EffectConfig>
+	<DebugLevel>5</DebugLevel>
+	<BaseDir>/effect</BaseDir>
+	<BaseURI>/effect/</BaseURI>
+	<EchoLog>0</EchoLog>
+	<EchoMaintLog>0</EchoMaintLog>
+	<LogTemplate>[hires_epoch][yyyy-mm-dd hh:mi:ss][hostname][pid][package][client_info][category][code] msg</LogTemplate>
+	<FreeAccounts>1</FreeAccounts>
+	<ImageServiceURL>http://127.0.0.1:6201/api</ImageServiceURL>
+	<ContactEmail>admin@yourdomain.com</ContactEmail>
+	<GoogAnalID></GoogAnalID>
+	<Paths>
+		<LogDir>/logs/effect</LogDir>
+		<LogBackupDir>/backup/effect/logs</LogBackupDir>
+		<LogFile>/logs/effect/[category].log</LogFile>
+		<MaintLogFile>/logs/effect/maint.log</MaintLogFile>
+		<MonitorLogFile>/logs/effect/monitor.log</MonitorLogFile>
+		<WebDir>htdocs</WebDir>
+		<ImageDir>htdocs/images</ImageDir>
+		<DatabaseDir>/data/effect/db</DatabaseDir>
+		<ImageMagickConvert>/opt/local/bin/convert</ImageMagickConvert>
+		<TempDir>/var/tmp</TempDir>
+		<EngineDir>htdocs/engine</EngineDir>
+		<ConfDir>conf</ConfDir>
+		<QueueDir>/data/effect/queue</QueueDir>
+	</Paths>
+	<Handlers>
+		<Handler Match="^/effect/api/(\w+)" Method="api_$1"/>
+		<Handler Match="^/effect/.+\.psp" Method="api_psp"/>
+		<Handler Match="^/effect/$" Method="api_psp"/>
+		<Handler Match="^/effect/games/.+" Method="api_rewrite_play"/>
+	</Handlers>
+	<StorageConfig>
+		<ViewTTL>5 minutes</ViewTTL>
+		<StaticTTL>24 hours</StaticTTL>
+		<Mount>/data/effect/storage</Mount>
+		<CleanupBaseDir>/data/effect/cleanup</CleanupBaseDir>
+		<SaltString>d2e323c76516e8363d738fc1938c7dce</SaltString>
+		<Permacache>
+			<Precache>
+				<Path>/admin/game_genres</Path>
+				<Path>/admin/article_categories</Path>
+				<Path>/admin/engine_versions</Path>
+				<Path>/admin/engine_plugins</Path>
+				<Path>/admin/ip_block_list</Path>
+				<Path>/admin/ticket_systems</Path>
+			</Precache>
+		</Permacache>
+		<ListItemsPerPage>50</ListItemsPerPage>
+	</StorageConfig>
+	<Session>
+		<Timeout>7 days</Timeout>
+	</Session>
+	<ImageManager>
+		<ThumbSize Width="160" Height="120"/>
+	</ImageManager>
+	<RegExpShortcuts>
+		<GameID>^[a-z0-9][a-z0-9\-]*[a-z0-9]$</GameID>
+		<GameObjectType>^(sprite|tile|tileset|font|key|level|rev|env)$</GameObjectType>
+		<GameObjectID>^[a-zA-Z0-9][\w\-\.]*[A-Za-z0-9]$</GameObjectID>
+		<GameRevision>^[\w\.\-]+$</GameRevision>
+		<StoragePath>^[\w\-\.\/]+$</StoragePath>
+		<AssetFilename>^[\w\-\.]+$</AssetFilename>
+		<Alphanumeric>^\w+$</Alphanumeric>
+		<IntBoolean>^(1|0)$</IntBoolean>
+		<PositiveFloat>^\d+(\.\d+)?$</PositiveFloat>
+		<Float>^\-?\d+(\.\d+)?$</Float>
+		<PositiveInteger>^\d+$</PositiveInteger>
+		<Integer>^\-?\d+$</Integer>
+		<XPath>^[\w\-\.\[\]\=\@\'\/]+$</XPath>
+		<EmailAddress>^[\w\-\.]+\@[\w\-\.]+$</EmailAddress>
+	</RegExpShortcuts>
+	<Pages>
+		<Page ID="Main"             File="main.js"/>
+		<Page ID="PublicGameList"   File="main.js"/>
+		<Page ID="Admin"            File="admin.js"/>
+		<Page ID="AdminUser"        File="admin.js"/>
+		<Page ID="AdminReport"      File="admin.js"/>
+		<Page ID="Home"             File="user.js"/>
+		<Page ID="CreateAccount"    File="user.js"/>
+		<Page ID="MyAccount"        File="user.js"/>
+		<Page ID="User"             File="user.js"/>
+		<Page ID="UserLog"          File="user.js"/>
+		<Page ID="Login"            File="user.js"/>
+		<Page ID="Article"          File="article.js"/>
+		<Page ID="ArticleCategory"  File="article.js"/>
+		<Page ID="ArticleEdit"      File="article.js"/>
+		<Page ID="Tag"              File="article.js"/>
+		<Page ID="STag"             File="article.js"/>
+		<Page ID="Search"           File="search.js"/>
+		<Page ID="GameEdit"         File="game.js" Requires="tools/res_editor.js, tools/asset_dialog.js"/>
+		<Page ID="Game"             File="game.js" Requires="tools/res_editor.js, tools/asset_dialog.js"/>
+		<Page ID="GameAssets"       File="assets.js" Load="assets/api.js, assets/delete.js, assets/new_folder.js, assets/new_file.js, assets/transfer.js, assets/rename.js, assets/upload.js, assets/clip.js, assets/copy.js, assets/main.js"/>
+		<Page ID="GameLog"          File="game.js" Requires="tools/res_editor.js, tools/asset_dialog.js"/>
+		<Page ID="GameClone"        File="game.js" Requires="tools/res_editor.js, tools/asset_dialog.js"/>
+		<Page ID="GameObjects"      File="objects.js"/>
+		<Page ID="GameEditSprite"   File="objects/sprites.js" Requires="tools/prop_editor.js, tools/res_editor.js, tools/asset_dialog.js, tools/sprite_req_editor.js"/>
+		<Page ID="GameEditTile"     File="objects/tiles.js" Requires="tools/prop_editor.js, tools/asset_dialog.js, tools/sprite_req_editor.js, tools/res_editor.js"/>
+		<Page ID="GameEditTileset"  File="objects/tilesets.js" Requires="tools/asset_dialog.js"/>
+		<Page ID="GameEditFont"     File="objects/fonts.js" Requires="tools/asset_dialog.js, tools/color_picker.js"/>
+		<Page ID="GameAdmin"        File="game.js" Requires="tools/res_editor.js, tools/asset_dialog.js"/>
+		<Page ID="GameAudio"        File="audio.js" Requires="tools/sound.js"/>
+		<Page ID="GameKeys"         File="keyboard.js"/>
+		<Page ID="GameEditKey"      File="keyboard.js"/>
+		<Page ID="Contact"          File="contact.js"/>
+		<Page ID="SubmitBug"        File="contact.js"/>
+		<Page ID="GameDevelop"      File="develop.js"/>
+		<Page ID="GameDisplay"      File="display.js" Requires="tools/color_picker.js, tools/asset_dialog.js"/>
+		<Page ID="GameLevels"       File="levels.js" Requires="tools/prop_editor.js"/>
+		<Page ID="GameLevelEdit"    File="levels/edit_info.js" Requires="tools/res_editor.js, tools/asset_dialog.js, tools/sprite_req_editor.js, tools/color_picker.js, tools/prop_editor.js"/>
+		<Page ID="GameLevelMapEdit" File="levels/edit_map.js" Load="levels/scrollbar.js, levels/toolbar.js, levels/palettes.js, levels/layers.js, levels/undo.js, levels/palettes/*.js, levels/toolbar/*.js, levels/conflict.js" Requires="tools/asset_dialog.js"/>
+		<Page ID="GameEnvEdit"      File="levels/env.js" Requires="tools/color_picker.js, tools/asset_dialog.js, tools/res_editor.js, tools/slider.js"/>
+		<Page ID="PlaceholderGen"   File="placeholder_gen.js" Requires="tools/color_picker.js, tools/asset_dialog.js"/>
+		<Page ID="GamePublisher"    File="publish.js"/>
+		<Page ID="GameEditRevision" File="publish.js" Requires="tools/asset_dialog.js"/>
+		<Page ID="Ticket"           File="ticket.js" Requires="tools/asset_dialog.js"/>
+		<Page ID="TicketSearch"     File="ticket.js" Requires="tools/asset_dialog.js"/>
+	</Pages>
+	<GameProjectStates>
+		<State>New</State>
+		<State>In Development</State>
+		<State>Alpha</State>
+		<State>Private Beta</State>
+		<State>Public Beta</State>
+		<State>Release Candidate</State>
+		<State>Released</State>
+	</GameProjectStates>
+	<ContactReasons>
+		<Reason>General question</Reason>
+		<Reason>Suggestion</Reason>
+		<Reason>Praise</Reason>
+		<Reason>Problem with yourdomain.com website</Reason>
+		<Reason>Problem with my account</Reason>
+		<Reason>Problem with game development tools</Reason>
+		<Reason>Game engine JavaScript error</Reason>
+		<Reason>Game performance issue</Reason>
+		<Reason>Business</Reason>
+		<Reason>Other</Reason>
+	</ContactReasons>
+	<ClientInfo>
+		<OS>Mac OS X</OS>
+		<OS>Windows Vista</OS>
+		<OS>Windows 7</OS>
+		<OS>Windows XP</OS>
+		<OS>Linux</OS>
+		<Browser>Safari 3</Browser>
+		<Browser>Safari 4</Browser>
+		<Browser>Safari 5</Browser>
+		<Browser>Firefox 3.0</Browser>
+		<Browser>Firefox 3.5</Browser>
+		<Browser>Firefox 4.0</Browser>
+		<Browser>Chrome 2</Browser>
+		<Browser>Chrome 3</Browser>
+		<Browser>Chrome 4</Browser>
+		<Browser>Chrome 5</Browser>
+		<Browser>Internet Explorer 6</Browser>
+		<Browser>Internet Explorer 7</Browser>
+		<Browser>Internet Explorer 8</Browser>
+		<Browser>Internet Explorer 9</Browser>
+		<Browser>Opera 9</Browser>
+		<Browser>Opera 10</Browser>
+	</ClientInfo>
+	<Emails>
+		<ResetPassword>
+			<Subject>Forgot Your Effect Games Password?</Subject>
+			<Body>Hey [/Username],
+
+You recently requested to have your password reset on yourdomain.com.  To make sure this is really you, this message was sent to the e-mail address we have on file for your account.  If you really want to reset your password, please click the link below.  If you cannot click the link, copy and paste it into your browser.
+
+http://www.yourdomain.com/effect/#Login?u=[/Username]&amp;h=[/Hash]
+
+A temporary password will be assigned to you once you click the link.  You can then login using the temp password and change it to something you will remember.</Body>
+		</ResetPassword>
+		<NewAccount>
+			<Subject>Welcome to yourdomain.com!</Subject>
+			<Body>Your new developer account has been created.  Please keep this e-mail for your records, as it contains your account information:
+
+Username: [/Username]
+Full Name: [/FullName]
+Email Address: [/Email]
+
+You can login anytime at http://www.yourdomain.com/
+
+Come on in and start creating your first game!</Body>
+		</NewAccount>
+		<TicketNotify>
+			<Subject>yourdomain.com [/CatTitle]: [/Action]: [/summary] ([/TicketIDDisp])</Subject>
+			<Body>yourdomain.com [/CatTitle]
+[/Action]: [/ActionDetail]
+
+CHANGES:
+[/ChangesDisp]
+
+Ticket ID: [/TicketIDDisp]
+Ticket URL: [/TicketURL]
+Submitted By: [/Author]
+Created: [/NiceCreated]
+Modified: [/NiceModified]
+
+[FieldsDisp]
+Tags: [/TagsDisp]
+
+LATEST COMMENT:
+[/LatestMessageDisp]
+
+ATTACHMENTS:
+[/FilesDisp]</Body>
+		</TicketNotify>
+		<StandalonePublish>
+			<Subject>[GameTitle] Standalone Version Ready For Download</Subject>
+			<Body>Hey [/UserFullName],
+
+Your standalone version of "[GameTitle]" revision "[RevID]" is now ready for download.  The package is delivered as a ZIP file.  You may need third party software to decompress and extract the files from the archive.  Please click the followng link (or copy &amp; paste it into your browser) to begin the download:
+
+[URL]
+
+File Size: [FileSize] (compressed)
+Game ID: [GameID]
+Revision: [RevID]
+Username: [Username]
+
+[Errors]This URL will expire in 7 days, and the file will be removed from our servers.  If you do not download the file in time, please go back to the "Publish" tab in your game and click "Export" again, to create a new URL for download.
+
+Please note: By downloading this file, you agree to all the terms and conditions in the "Standalone Publish License Agreement":
+http://www.yourdomain.com/effect/#Article/Standalone_Publish_Agreement</Body>
+		</StandalonePublish>
+		<Custom>
+			<Subject>[/Subject]</Subject>
+			<Body>[/Body]</Body>
+		</Custom>
+		<Signature>- The Effect Team
+yourdomain.com</Signature>
+		<From>Effect Support &lt;support@yourdomain.com&gt;</From>
+		<UserToUserSignature>This message was sent using yourdomain.com user-to-user e-mail.  If you do not want to receive e-mail from users, go to the Edit Account page and adjust your preferences.</UserToUserSignature>
+		<GameFeedbackSignature>This message was sent using yourdomain.com game feedback form.  If you do not want to receive feedback for this game, edit the revision and deselect the "Allow user feedback" checkbox.</GameFeedbackSignature>
+		<GameAdminToUserSignature>This message was sent by game administrator "[username]" from the game "[title]".  You received this message because you are a member of the game.  If you no longer want to receive game e-mails, please remove yourself from the game.  You can do this on the "Edit Account" page.</GameAdminToUserSignature>
+		<CommentReplySignature>If you do not want to receive these e-mails, please disable the user preference on the "Edit Account" page: http://www.yourdomain.com/effect/#MyAccount</CommentReplySignature>
+	</Emails>
+	<DefaultPrivileges>
+		<create_users>0</create_users>
+		<update_users>0</update_users>
+		<delete_users>0</delete_users>
+		<admin>0</admin>
+		<article_post_categories>
+			<community>1</community>
+		</article_post_categories>
+		<create_games>1</create_games>
+	</DefaultPrivileges>
+	<PrivateUserData>
+		<Password/>
+		<Privileges/>
+		<AuthorClientInfo/>
+		<LastClientInfo/>
+		<LastLogin/>
+		<Stats/>
+		<TempResetPasswordHash/>
+	</PrivateUserData>
+	<PreferenceConfig>
+		<Pref ID="public_profile" Label="Show my real name on my posts and profile"/>
+		<Pref ID="allow_user_emails" Label="Allow users to contact me"/>
+		<Pref ID="notify_game_comments" Label="Notify me when people comment on my games"/>
+		<Pref ID="notify_article_comments" Label="Notify me when people comment on my articles"/>
+		<Pref ID="notify_comment_replies" Label="Notify me when people reply to my comments"/>
+		<Pref ID="effect_email" Label="Allow Effect Games to send me occasional e-mail updates"/>
+	</PreferenceConfig>
+	<DefaultUser>
+		<Preferences>
+			<public_profile>1</public_profile>
+			<allow_user_emails>1</allow_user_emails>
+			<notify_game_comments>1</notify_game_comments>
+			<notify_article_comments>1</notify_article_comments>
+			<notify_comment_replies>1</notify_comment_replies>
+			<effect_email>1</effect_email>
+		</Preferences>
+		<StockAvatar>default.png</StockAvatar>
+		<AccountType>Basic</AccountType>
+		<Status>Active</Status>
+	</DefaultUser>
+	<RSSConfig>
+		<link_base>/effect/article.psp.html</link_base>
+		<search>
+			<offset>0</offset>
+			<limit>100</limit>
+		</search>
+		<channel>
+		    <title></title>
+		    <link>http://www.yourdomain.com/</link>
+		    <description>Articles from the yourdomain.com website</description>
+		    <language>en-us</language>
+		    <pubDate></pubDate>
+		    <lastBuildDate></lastBuildDate>
+		    <generator>Effect Engine</generator>
+		    <managingEditor>support@yourdomain.com</managingEditor>
+		    <webMaster>support@yourdomain.com</webMaster>
+			<ttl>60</ttl>
+			<image>
+				<url>http://www.yourdomain.com/images/logo_80.gif</url>
+				<title>yourdomain.com</title>
+				<link>http://www.yourdomain.com</link>
+				<width>80</width>
+				<height>68</height>
+			</image>
+		  </channel>
+	</RSSConfig>
+	<StockAvatars>
+		<Filename>default.png</Filename>
+	</StockAvatars>
+	<FileMagic>
+		<HeaderBytes>270</HeaderBytes>
+		<Format Name="gif" Category="Image" Signature="^GIF8[7,9]a" Offset="0" />
+		<Format Name="jpeg" Category="Image" Signature="^\xFF\xD8" Offset="0" />
+		<Format Name="png" Category="Image" Signature="^\x89PNG\x0d\x0a\x1a\x0a" Offset="0" />
+		<Format Name="tiff" Category="Image" Signature="^MM\x00\x2a" Offset="0" />
+		<Format Name="tiff" Category="Image" Signature="^II\x2a\x00" Offset="0" />
+		<Format Name="bmp" Category="Image" Signature="^BM" Offset="0" />
+		<Format Name="psd" Category="Other" Signature="^8BPS" Offset="0" />
+		<Format Name="jp2" Category="Image" Signature="^jP" Offset="4" />
+		<Format Name="zip" Category="Archive" Signature="^PK\003\004" Offset="0" />
+		<Format Name="tar" Category="Archive" Signature="^ustar" Offset="257" />
+		<Format Name="gzip" Category="Archive" Signature="^\037\213" Offset="0" />
+		<Format Name="mbin" Category="Archive" Signature="^mBIN" Offset="102" />
+		<Format Name="xml" Category="Text" Signature="^\s*\x3C\?\s*[xX][mM][lL]" Offset="0" />
+		<Format Name="pcx" Category="Image" Signature="^\012(\000|\002|\003|\004|\005)(\000|\001)(\001|\002|\003|\004|\005|\006|\007|\010)" Offset="0" />
+	</FileMagic>
+	<Strings>
+		<Main>
+			<Blurb>
+				&lt;b&gt;Welcome guest!&lt;/b&gt;  Please feel free to explore the site and &lt;a href="#ArticleCategory/docs"&gt;documentation&lt;/a&gt;.&lt;br/&gt;
+				You can also &lt;a href="#CreateAccount"&gt;&lt;b&gt;create a free developer account&lt;/b&gt;&lt;/a&gt; to get started making games!
+			</Blurb>
+		</Main>
+		<AssetManager>
+			<Blurb>Here you can upload and manage all the assets for your game.  Feel free to create any directory and file structure you like.  For more information see the &lt;a href="#Article/docs/Asset_Manager_Guide" target="_blank"&gt;Asset Manager Guide&lt;/a&gt;.</Blurb>
+			<OutOfSpace>You have run out of disk space for this game.  Please contact us to upgrade your quota.</OutOfSpace>
+		</AssetManager>
+		<GameObjects>
+			<Blurb>Here you can create and manage Sprite, Tile, and Font objects for your game.  Registering Sprites and Tiles allows you to place them into levels in the Level Editor, and configure how and when they load inside your game.  For details, see the &lt;a href="#Article/docs/Sprites_and_Tiles_Guide" target="_blank"&gt;Sprites and Tiles Guide&lt;/a&gt;, and the &lt;a href="#Article/docs/Font_Guide" target="_blank"&gt;Font Guide&lt;/a&gt;.</Blurb>
+		</GameObjects>
+		<GameAudio>
+			<Blurb>Here you can assign categories and properties to your audio assets.  This list is automatically populated from Asset Manager, so to add sounds simply upload MP3 files to the audio directory, then revisit this tab.  Changes to the controls below take effect immediately.  For more information see the &lt;a href="#Article/docs/Audio_Guide" target="_blank"&gt;Audio Guide&lt;/a&gt;.</Blurb>
+		</GameAudio>
+		<GameEditSprite>
+			<Blurb>Sprites are movable objects in your game, which you can create dynamically in code and/or place into levels using the Level Editor.  Here you can define your sprite class and parameters.  For details see the &lt;a href="#Article/docs/Sprites_and_Tiles_Guide" target="_blank"&gt;Sprites and Tiles Guide&lt;/a&gt;.</Blurb>
+		</GameEditSprite>
+		<GameEditTile>
+			<Blurb>A Tile Class is simply a behavior which you can attach to tiles in the Level Editor.  Meaning, using tile classes you can define behaviors such as solid ground, or activate events when sprites interact with the tiles.  For details see the &lt;a href="#Article/docs/Sprites_and_Tiles_Guide" target="_blank"&gt;Sprites and Tiles Guide&lt;/a&gt;.</Blurb>
+		</GameEditTile>
+		<GameEditTileset>
+			<Blurb>A Tile Set is simply a visual grouping of tiles for use in the Level Editor.  Select a folder containing images, and they all become members of the tile set.  For details see the &lt;a href="#Article/docs/Sprites_and_Tiles_Guide" target="_blank"&gt;Sprites and Tiles Guide&lt;/a&gt;.</Blurb>
+		</GameEditTileset>
+		<GameEditFont>
+			<Blurb>Bitmap Fonts are rasterized into tiles so they can be used to display dynamic text in your game (such as a heads-up display for the player's score, lives, or items).  Please note that these fonts are always monospace.  You can also use variable width vector fonts for rendering static text in your game, which is handled outside of Bitmap Fonts.  For details see the &lt;a href="#Article/docs/Font_Guide" target="_blank"&gt;Font Guide&lt;/a&gt;.</Blurb>
+		</GameEditFont>
+		<GameAdmin>
+			<Blurb>Here you can manage the game members, grant or remoke administrator privileges, remove members from the game, manage invitations, or delete the entire game project from the Effect website.</Blurb>
+			<ChangeOwnerText>Select a new game owner from the menu below.</ChangeOwnerText>
+		</GameAdmin>
+		<GameKeys>
+			<Blurb>If your game uses keyboard controls, you can define them all here, plus assign default keys for each control.  The player may customize these from inside the game.  For more details, see the &lt;a href="#Article/docs/Keyboard_and_Mouse_Guide" target="_blank"&gt;Keyboard and Mouse Guide&lt;/a&gt;.</Blurb>
+		</GameKeys>
+		<GameCreateForm>
+			<Blurb>Use this form to start a new game project.  If you haven't already done so, please read the &lt;a href="#Article/docs/Getting_Started_Guide" target="_blank"&gt;Getting Started Guide&lt;/a&gt;.</Blurb>
+		</GameCreateForm>
+		<GameCloneForm>
+			<Blurb>Use this form to clone (duplicate) an existing game.  This means all the game assets, sprites, tiles, tilesets, fonts, keys, audio settings, levels, and environments will be copied to a brand new game project, with you as the owner and administrator.  Please note that the game log, game members, and published game revisions, are not copied over.</Blurb>
+		</GameCloneForm>
+		<GameDevelop>
+			<Blurb>To develop your game locally, just copy this script tag and paste it into your HTML page, which should also contain your game's JavaScript code.  The engine will load your most recent assets and objects (not tied to a release).  For detailed instructions, see the &lt;a href="#Article/docs/Local_Development_Guide" target="_blank"&gt;Local Development Guide&lt;/a&gt;.</Blurb>
+			<Notes>
+				<Header>Some things to keep in mind when developing locally:</Header>
+				<Note>This is not intended for any sort of distribution; it is for your own local use only.  To distribute a game revision, see the "Publish" tab.  You can publish private alpha and beta releases.</Note>
+				<Note>You must be currently logged in to yourdomain.com and be a member of the game to use this embed code.  If your session expires, come back to this page to get a new URL.</Note>
+				<Note>It is recommended you host your HTML page on a local web server, as opposed to launching your HTML file locally from disk.</Note>
+				<Note>Place the script tag inside your document BODY, not the HEAD, and make sure all your code is below it.</Note>
+				<Note>Any changes to your game assets or objects take effect immediately.  Simply refresh your local browser and you'll see the latest changes.</Note>
+			</Notes>
+		</GameDevelop>
+		<GameDisplay>
+			<Blurb>Here you can adjust your game display settings, including the size of your display, background color / image, and frame rate.  For details, please read the &lt;a href="#Article/docs/Getting_Started_Guide" target="_blank"&gt;Getting Started Guide&lt;/a&gt;.</Blurb>
+		</GameDisplay>
+		<GameLevels>
+			<Blurb>Here are all the levels in your game.  A level is simply a collection of saved layers, sprites and/or tiles that are loaded and placed into the game world for your convenience.  Environments are filters you can apply to some or all the images in your level, creating an atmospheric or special effect.  For details on levels and environments, see the &lt;a href="#Article/docs/Level_Editor_Guide" target="_blank"&gt;Level Editor Guide&lt;/a&gt;.</Blurb>
+			<PropBlurb>Properties are custom fields you can define for your levels.  Each level can then fill in the properties with values, and those are saved with the level data.  Then, in your game code, you can easily access the properties once the level is loaded.  Examples of properties include background music selection, player starting position, or custom level behavior.</PropBlurb>
+		</GameLevels>
+		<MainSlideshow>
+			<Slide>
+				<Photo>title/slideshow/main.png</Photo>
+				<Text>
+					&lt;b&gt;Effect Games provides free, online tools for building, sharing and playing your own browser based games.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					Your games may include sound effects, music, and multiple layers of parallax-scrolling tiles and sprites.&lt;br/&gt;&lt;br/&gt;
+					
+					Users can play your games right in their browsers, without needing any new plugins or extensions.  Publish your games on your website or blog, share on social networking sites, and submit them to our featured games section!&lt;br/&gt;&lt;br/&gt;
+					
+					Build your games using JavaScript and our custom browser game engine, level editor, and suite of developer tools.  The Effect Engine supports Mac OS X, Windows, Linux and all modern browsers including IE, Firefox, Chrome, Opera and Safari.
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/game.png</Photo>
+				<Text>
+					&lt;b&gt;Manage every aspect of your game online.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					From general settings such as screen size and frame rate, to defining sprites and tiles, creating and editing levels, adding/removing members, testing, and finally releasing and publishing your game.&lt;br/&gt;&lt;br/&gt;
+					Your game project can be made public (all users can access and view your progress), or private (only users you invite to the project can view it).  You can also publish internal private releases of your game (i.e. alpha or beta versions), before you release a public version.
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/assets.png</Photo>
+				<Text>
+					&lt;b&gt;Upload all your game assets using our web based Asset Manager.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					Create any number of nested folders, move/copy/rename files, edit text or XML files right in your browser, and download ZIP archives of any folder for local backup.&lt;br/&gt;&lt;br/&gt;
+					You don't need to upload any code until you publish your game.  Keep all your code on your local machine, and Effect will provide you with a special development script tag to place in your page.  This way you can easily test, make code changes locally, and simply refresh your browser to re-test.
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/tileset.png</Photo>
+				<Text>
+					&lt;b&gt;Create tilesets for use in the level editor, by simply specifying a folder containing images.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					You can also define Sprite and Tile classes which match classes you create in your JavaScript code, for controlling object behaviors in your game.&lt;br/&gt;&lt;br/&gt;
+					Tiles can be any size, and you can have multiple tile layers in a level, potentially scrolling at different speeds (i.e. parallax scrolling).
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/font.png</Photo>
+				<Text>
+					&lt;b&gt;Create custom bitmap fonts from TrueType or OpenType source files.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					Adjust both the point size and glyph size, and even download the font's glyph map image to add effects (shadow, glow, etc.) yourself.&lt;br/&gt;&lt;br/&gt;
+					You can also render variable width strings and paragraphs using the same TypeType/OpenType font files and a server API, which returns sprite images containing the rendered text for use in your game.
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/audio.png</Photo>
+				<Text>
+					&lt;b&gt;Upload MP3 files for instant stereo sound effects and background game music.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					Configure your game's audio settings, including looping, assigning tracks to categories, adjusting volume and balance per category or track (which can also be done in code via the API), multiplexing sounds (allowing multiple to play at once), and previewing sounds and music right in your browser.&lt;br/&gt;&lt;br/&gt;
+					The Effect multichannel audio system works using in-browser technologies where available, and only falls back to using Plugins when absolutley necessary.  Of course, this all happens transparently in the background, so your code doesn't have to worry about it.
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/level.png</Photo>
+				<Text>
+					&lt;b&gt;Create custom levels for your game using our web based Level Editor.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					Define any number of sprite and tile layers, each potentially scrolling at different speeds.  Then simply draw tiles and sprites onto the level, using familiar tools such as the pencil, eraser, paint bucket and eye dropper.
+					&lt;br/&gt;&lt;br/&gt;
+					Assign custom parameters to sprite and tile classes, which automatically show up as object properties in JavaScript.  The level editor has 100 levels of undo, a real-time preview thumbnail, a grid overlay with snap-to-grid, and much more.
+				</Text>
+			</Slide>
+			<Slide>
+				<Photo>title/slideshow/env.png</Photo>
+				<Text>
+					&lt;b&gt;Design your own environments, for special atmospheric effects in your levels.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+					
+					Environments are sets of custom image filters, including adjusting the hue, saturation, brightness, contrast, and more exotic transforms like posterize, engrave, colorize, monochrome, and even simulating an oil painting.  An environment may contain multiple different filters for cumulative effects.&lt;br/&gt;&lt;br/&gt;
+					Your environments can then be applied to individual levels, to create themes such as a nighttime level, sepia tone level, grayscale or monochrome level, posterized level, or colorized level.  You can also apply environments to individual images attached to sprites!
+				</Text>
+			</Slide>
+		</MainSlideshow>
+		<PlaceholderGen>
+			<Blurb>Don't have graphics for your game yet?  Use this tool to create placeholder images, which can take the place of your actual graphics until they are ready.  These images can be saved as assets into your game, and are also useful for debugging.</Blurb>
+		</PlaceholderGen>
+		<GamePublisher>
+			<Blurb>Use the game publisher to release revisions of your game.  This process copies all the game settings, assets and objects, and assigns a revision number.  You can publish internal releases for your development team only, beta releases for a select crowd, and final public releases of your game.  Each release has its own unique URL.  For details see the &lt;a href="#Article/docs/Publishing_Guide" target="_blank"&gt;Publishing Guide&lt;/a&gt;.</Blurb>
+		</GamePublisher>
+		<GameEditRevision>
+			<NewBlurb>Use this form to create and publish a new game revision.  This makes a copy of all your current game settings, assets and objects, allowing you to continue development without affecting releases.  For details see the &lt;a href="#Article/docs/Publishing_Guide" target="_blank"&gt;Publishing Guide&lt;/a&gt;.</NewBlurb>
+			<EditBlurb>Make changes to your revision below.  Please note that saving changes to a revision causes it to be completely regenerated using your lastest game settings, assets and objects.  Also, some media may be cached for up to 5 minutes.  For details see the &lt;a href="#Article/docs/Publishing_Guide" target="_blank"&gt;Publishing Guide&lt;/a&gt;.</EditBlurb>
+		</GameEditRevision>
+		<Contact>
+			<Blurb>Use this form to contact us for all your questions, issues, suggestions, ideas or praise.  This will create a new ticket in our help desk system, and you will be sent an e-mail with a link to view your ticket's current status.  We try to respond to all tickets within 1 business day.  Please be patient and do not repeat your submission.</Blurb>
+		</Contact>
+		<SubmitBug>
+			<Blurb>So, think you have found a bug with our software?  Use this form to submit a bug report to our developers.  Include as much detail as you can, and please read our &lt;a href="#Article/docs/Frequently_Asked_Questions"&gt;FAQ&lt;/a&gt; to make sure we haven't already addressed your issue.  You will be sent an e-mail with a link to view your bug's current status, and add comments and attachments.  We will evaluate the bug as soon as we can, and get back to you if we need any additional information.</Blurb>
+		</SubmitBug>
+		<Engine>
+			<Header>// Effect Game Engine
+// Copyright (c) 2005 - 2011 Effect Games and Joseph Huckaby.</Header>
+			<Footer>// The following code is not part of the Effect Game Engine.
+// Please observe the copyright notices in the code below, if applicable.</Footer>
+		</Engine>
+		<GameEnvEdit>
+			<Blurb>Here you can set the image filters for your environment.  Each environment may include one or more filters, which alter the color, brightness, or many other image aspects.  Once your environment is applied to a level, your images are automatically transformed using the selected filters.  For details, see the &lt;a href="#Article/docs/Level_Editor_Guide" target="_blank"&gt;Level Editor Guide&lt;/a&gt;.</Blurb>
+		</GameEnvEdit>
+	</Strings>
+	<BitmapFontGlyphs>!"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</BitmapFontGlyphs>
+	<ResourceRegExp>\.(jpe|jpeg|jpg|png|gif|mp3|xml|flv|mp4|mp4v|mov|3gp|3g2)$</ResourceRegExp>
+	<LevelEditor>
+		<EngineVersion>0.1i</EngineVersion>
+	</LevelEditor>
+	<EnvTransformShortcuts>
+		<Name>na</Name>
+		<Enabled>en</Enabled>
+		<Modulate>mo</Modulate>
+		<Hue>hu</Hue>
+		<Saturation>sa</Saturation>
+		<Brightness>br</Brightness>
+		<Level>le</Level>
+		<Contrast>co</Contrast>
+		<Channel>ch</Channel>
+		<RGB>rgb</RGB>
+		<Red>r</Red>
+		<Green>g</Green>
+		<Blue>b</Blue>
+		<Gamma>ga</Gamma>
+		<OrderedDither>or</OrderedDither>
+		<Threshold>th</Threshold>
+		<Gray>gr</Gray>
+		<Pattern>pa</Pattern>
+		<Tint>ti</Tint>
+		<Fill>fi</Fill>
+		<Colorize>cl</Colorize>
+		<Opacity>op</Opacity>
+		<Color>cr</Color>
+		<Palette>pl</Palette>
+		<Image>im</Image>
+		<Mode>md</Mode>
+		<Posterize>po</Posterize>
+		<Levels>ls</Levels>
+		<AddNoise>ad</AddNoise>
+		<Noise>no</Noise>
+		<Blur>bl</Blur>
+		<Radius>ra</Radius>
+		<Alpha>al</Alpha>
+		<Edge>ed</Edge>
+		<Negate>ne</Negate>
+		<Invert>in</Invert>
+		<OilPaint>oi</OilPaint>
+		<Shade>sh</Shade>
+		<Geometry>ge</Geometry>
+		<Mosaic>ms</Mosaic>
+		<Amount>am</Amount>
+	</EnvTransformShortcuts>
+	<EnvTransformDefs>
+		<Transform Title="Levels" Plugin="Modulate">
+			<Param Name="Hue" Title="Hue" Control="Slider" Default="0" High="100" Low="-100" Constrain="Integer"/> <!-- Range: 0 - 100 - 200 -->
+			<Param Name="Saturation" Title="Saturation" Control="Slider" Default="0" High="100" Low="-100" Constrain="Integer"/> <!-- Range: 0 - 100 - 500 -->
+			<Param Name="Brightness" Title="Brightness" Control="Slider" Default="0" High="100" Low="-100" Constrain="Integer"/> <!-- Range: 0 - 100 - 1000 -->
+		</Transform>
+		<Transform Title="Contrast" Plugin="Level">
+			<Param Name="Levels" Title="Amount" Control="Slider" Default="0" High="100" Low="-100" Constrain="Integer"/> <!-- Range: -50 - 0 - 50 -->
+			<Param Name="Channel" Title="Channels" Control="Menu" Default="RGB" Items="RGB, Red, Green, Blue"/>
+		</Transform>
+		<Transform Title="Gamma" Plugin="Gamma">
+			<Param Name="Gamma" Title="Gamma" Control="Slider" Default="1.0" High="5.0" Low="0.0"/>
+			<Param Name="Channel" Title="Channels" Control="Menu" Default="RGB" Items="RGB, Red, Green, Blue"/>
+		</Transform>
+		<Transform Title="Monochrome" Plugin="OrderedDither">
+			<Param Name="Threshold" Title="Dither" Control="Menu" Default="Threshold" Items="Threshold, Gray, Pattern"/>
+			<Param Name="Alpha" Title="Include Alpha Channels" Control="Checkbox" Default="0"/> <!-- channel: 'All' -->
+		</Transform>
+		<Transform Title="Tint" Plugin="Tint">
+			<Param Name="Fill" Title="Color" Control="ColorPicker" Default="#ff0000"/>
+			<Param Name="Opacity" Title="Amount" Control="Slider" Default="50" High="100" Low="0" Constrain="Integer"/>
+		</Transform>
+		<Transform Title="Color Fade" Plugin="Colorize">
+			<Param Name="Fill" Title="Color" Control="ColorPicker" Default="#ff0000"/>
+			<Param Name="Opacity" Title="Amount" Control="Slider" Default="50" High="100" Low="0" Constrain="Integer"/>
+		</Transform>
+		<Transform Title="Palette" Plugin="Palette">
+			<Param Name="Image" Title="Image" Control="AssetPicker" />
+			<Param Name="Mode" Title="Mode" Control="Menu" Default="Adaptive" Items="Direct, Adaptive"/>
+		</Transform>
+		<Transform Title="Posterize" Plugin="Posterize">
+			<Param Name="Levels" Title="Levels" Control="Slider" Default="4" High="10" Low="2" Constrain="Integer"/>
+		</Transform>
+		<Transform Title="Noise" Plugin="AddNoise">
+			<Param Name="Noise" Title="Type" Control="Menu" Default="Laplacian" Items="Laplacian, Gaussian, Multiplicative"/>
+		</Transform>
+		<Transform Title="Blur" Plugin="Blur">
+			<Param Name="Radius" Title="Radius" Control="Slider" Default="1" High="10" Low="1"/> <!-- also copy to sigma -->
+			<Param Name="Alpha" Title="Blur Alpha Channels" Control="Checkbox" Default="0"/> <!-- channel: 'All' -->
+		</Transform>
+		<Transform Title="Find Edges" Plugin="Edge">
+			<Param Name="Radius" Title="Radius" Control="Slider" Default="1" High="8" Low="1" Constrain="Integer"/>
+		</Transform>
+		<Transform Title="Invert" Plugin="Negate">
+			<Param Name="Channel" Title="Channels" Control="Menu" Default="RGB" Items="RGB, Red, Green, Blue"/>
+		</Transform>
+		<Transform Title="Oil Paint" Plugin="OilPaint">
+			<Param Name="Radius" Title="Radius" Control="Slider" Default="2" High="10" Low="1" Constrain="Integer"/>
+		</Transform>
+		<Transform Title="Engrave" Plugin="Shade">
+			<Param Name="Geometry" Title="Brightness" Control="Slider" Default="30" High="100" Low="0" Constrain="Integer"/>
+		</Transform>
+		<Transform Title="Mosaic" Plugin="Mosaic">
+			<Param Name="Amount" Title="Amount" Control="Slider" Default="4" High="20" Low="2" Constrain="Integer"/>
+		</Transform>
+	</EnvTransformDefs>
+</EffectConfig>

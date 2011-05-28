@@ -1,0 +1,1328 @@
+/*
+	JavaScript XML Library
+	Plus a bunch of object utility functions
+	
+	Usage:
+		var myxml = '<?xml version="1.0"?><Document>' + 
+			'<Simple>Hello</Simple>' + 
+			'<Node Key="Value">Content</Node>' + 
+			'</Document>';
+		var parser = new XML({ text: myxml, preserveAttributes: true });
+		var tree = parser.getTree();
+		tree.Simple = "Hello2";
+		tree.Node._Attribs.Key = "Value2";
+		tree.Node._Data = "Content2";
+		tree.New = "I added this";
+		alert( parser.compose() );
+	
+	Copyright (c) 2004 - 2007 Joseph Huckaby
+*/
+
+function XML(_args) {
+	// class constructor for XML parser class
+	// pass in args hash or text to parse
+	if (!_args) _args = '';
+	if (_isa_hash(_args)) {
+		for (var _key in _args) this[_key] = _args[_key];
+	}
+	else this.text = args || '';
+	
+	this.tree = {};
+	this.errors = [];
+	this._piNodeList = [];
+	this._dtdNodeList = [];
+	this._documentNodeName = '';
+	
+	this.patTag.lastIndex = 0;
+	if (this.text) this.parse();
+}
+
+XML._indent_string = "\t";
+XML._xml_header = '<?xml version="1.0"?>';
+XML._re_valid_tag_name = /^\w[\w\-\:]*$/;
+
+XML.prototype.preserveAttributes = false;
+
+XML.prototype.patTag = /([^<]*?)<([^>]+)>/g;
+XML.prototype.patSpecialTag = /^\s*([\!\?])/;
+XML.prototype.patPITag = /^\s*\?/;
+XML.prototype.patCommentTag = /^\s*\!--/;
+XML.prototype.patDTDTag = /^\s*\!DOCTYPE/;
+XML.prototype.patCDATATag = /^\s*\!\s*\[\s*CDATA/;
+XML.prototype.patStandardTag = /^\s*(\/?)([\w\-\:\.]+)\s*(.*)$/;
+XML.prototype.patSelfClosing = /\/\s*$/;
+XML.prototype.patAttrib = new RegExp("([\\w\\-\\:\\.]+)\\s*=\\s*([\\\"\\'])([^\\2]*?)\\2", "g");
+XML.prototype.patPINode = /^\s*\?\s*([\w\-\:]+)\s*(.*)$/;
+XML.prototype.patEndComment = /--$/;
+XML.prototype.patNextClose = /([^>]*?)>/g;
+XML.prototype.patExternalDTDNode = new RegExp("^\\s*\\!DOCTYPE\\s+([\\w\\-\\:]+)\\s+(SYSTEM|PUBLIC)\\s+\\\"([^\\\"]+)\\\"");
+XML.prototype.patInlineDTDNode = /^\s*\!DOCTYPE\s+([\w\-\:]+)\s+\[/;
+XML.prototype.patEndDTD = /\]$/;
+XML.prototype.patDTDNode = /^\s*\!DOCTYPE\s+([\w\-\:]+)\s+\[(.*)\]/;
+XML.prototype.patEndCDATA = /\]\]$/;
+XML.prototype.patCDATANode = /^\s*\!\s*\[\s*CDATA\s*\[(.*)\]\]/;
+
+XML.prototype.attribsKey = '_Attribs';
+XML.prototype.dataKey = '_Data';
+
+XML.prototype.parse = function(branch, name) {
+	// parse text into XML tree, recurse for nested nodes
+	if (!branch) branch = this.tree;
+	if (!name) name = null;
+	var foundClosing = false;
+	var matches = null;
+	
+	// match each tag, plus preceding text
+	while ( matches = this.patTag.exec(this.text) ) {
+		var before = matches[1];
+		var tag = matches[2];
+		
+		// text leading up to tag = content of parent node
+		if (before.match(/\S/)) {
+			if (typeof(branch[this.dataKey]) != 'undefined') branch[this.dataKey] += ' '; else branch[this.dataKey] = '';
+			branch[this.dataKey] += _trim(_decode_entities(before));
+		}
+		
+		// parse based on tag type
+		if (tag.match(this.patSpecialTag)) {
+			// special tag
+			if (tag.match(this.patPITag)) tag = this.parsePINode(tag);
+			else if (tag.match(this.patCommentTag)) tag = this.parseCommentNode(tag);
+			else if (tag.match(this.patDTDTag)) tag = this.parseDTDNode(tag);
+			else if (tag.match(this.patCDATATag)) {
+				tag = this.parseCDATANode(tag);
+				if (typeof(branch[this.dataKey]) != 'undefined') branch[this.dataKey] += ' '; else branch[this.dataKey] = '';
+				branch[this.dataKey] += _trim(_decode_entities(tag));
+			} // cdata
+			else {
+				this.throwParseError( "Malformed special tag", tag );
+				break;
+			} // error
+			
+			if (tag == null) break;
+			continue;
+		} // special tag
+		else {
+			// Tag is standard, so parse name and attributes (if any)
+			var matches = tag.match(this.patStandardTag);
+			if (!matches) {
+				this.throwParseError( "Malformed tag", tag );
+				break;
+			}
+			
+			var closing = matches[1];
+			var nodeName = matches[2];
+			var attribsRaw = matches[3];
+			
+			// If this is a closing tag, make sure it matches its opening tag
+			if (closing) {
+				if (nodeName == (name || '')) {
+					foundClosing = 1;
+					break;
+				}
+				else {
+					this.throwParseError( "Mismatched closing tag (expected </" + name + ">)", tag );
+					break;
+				}
+			} // closing tag
+			else {
+				// Not a closing tag, so parse attributes into hash.  If tag
+				// is self-closing, no recursive parsing is needed.
+				var selfClosing = !!attribsRaw.match(this.patSelfClosing);
+				var leaf = {};
+				var attribs = leaf;
+				
+				// preserve attributes means they go into a sub-hash named "_Attribs"
+				// the XML composer honors this for restoring the tree back into XML
+				if (this.preserveAttributes) {
+					leaf[this.attribsKey] = {};
+					attribs = leaf[this.attribsKey];
+				}
+				
+				// parse attributes
+				this.patAttrib.lastIndex = 0;
+				while ( matches = this.patAttrib.exec(attribsRaw) ) {
+					attribs[ matches[1] ] = _decode_entities( matches[3] );
+				} // foreach attrib
+				
+				// if no attribs found, but we created the _Attribs subhash, clean it up now
+				if (this.preserveAttributes && !_num_keys(attribs)) {
+					delete leaf[this.attribsKey];
+				}
+				
+				// Recurse for nested nodes
+				if (!selfClosing) {
+					this.parse( leaf, nodeName );
+					if (this.error()) break;
+				}
+				
+				// Compress into simple node if text only
+				var num_leaf_keys = _num_keys(leaf);
+				if ((typeof(leaf[this.dataKey]) != 'undefined') && (num_leaf_keys == 1)) {
+					leaf = leaf[this.dataKey];
+				}
+				else if (!num_leaf_keys) {
+					leaf = '';
+				}
+				
+				// Add leaf to parent branch
+				if (typeof(branch[nodeName]) != 'undefined') {
+					if (_isa_array(branch[nodeName])) {
+						_array_push( branch[nodeName], leaf );
+					}
+					else {
+						var temp = branch[nodeName];
+						branch[nodeName] = [ temp, leaf ];
+					}
+				}
+				else {
+					branch[nodeName] = leaf;
+				}
+				
+				if (this.error() || (branch == this.tree)) break;
+			} // not closing
+		} // standard tag
+	} // main reg exp
+	
+	// Make sure we found the closing tag
+	if (name && !foundClosing) {
+		this.throwParseError( "Missing closing tag (expected </" + name + ">)", name );
+	}
+	
+	// If we are the master node, finish parsing and setup our doc node
+	if (branch == this.tree) {
+		if (typeof(this.tree[this.dataKey]) != 'undefined') delete this.tree[this.dataKey];
+		
+		if (_num_keys(this.tree) > 1) {
+			this.throwParseError( 'Only one top-level node is allowed in document', _first_key(this.tree) );
+			return;
+		}
+
+		this._documentNodeName = _first_key(this.tree);
+		if (this._documentNodeName) {
+			this.tree = this.tree[this._documentNodeName];
+		}
+	}
+};
+
+XML.prototype.throwParseError = function(key, tag) {
+	// log error and locate current line number in source XML document
+	var parsedSource = this.text.substring(0, this.patTag.lastIndex);
+	var eolMatch = parsedSource.match(/\n/g);
+	var lineNum = (eolMatch ? eolMatch.length : 0) + 1;
+	lineNum -= tag.match(/\n/) ? tag.match(/\n/g).length : 0;
+	
+	_array_push(this.errors, {
+		type: 'Parse',
+		key: key,
+		text: '<' + tag + '>',
+		line: lineNum
+	});
+};
+
+XML.prototype.error = function() {
+	// return number of errors
+	return this.errors.length;
+};
+
+XML.prototype.getError = function(error) {
+	// get formatted error
+	var text = '';
+	if (!error) return '';
+
+	text = (error.type || 'General') + ' Error';
+	if (error.code) text += ' ' + error.code;
+	text += ': ' + error.key;
+	
+	if (error.line) text += ' on line ' + error.line;
+	if (error.text) text += ': ' + error.text;
+
+	return text;
+};
+
+XML.prototype.getLastError = function() {
+	// Get most recently thrown error in plain text format
+	if (!this.error()) return '';
+	return this.getError( this.errors[this.errors.length - 1] );
+};
+
+XML.prototype.parsePINode = function(tag) {
+	// Parse Processor Instruction Node, e.g. <?xml version="1.0"?>
+	if (!tag.match(this.patPINode)) {
+		this.throwParseError( "Malformed processor instruction", tag );
+		return null;
+	}
+	
+	_array_push( this._piNodeList, tag );
+	return tag;
+};
+
+XML.prototype.parseCommentNode = function(tag) {
+	// Parse Comment Node, e.g. <!-- hello -->
+	var matches = null;
+	this.patNextClose.lastIndex = this.patTag.lastIndex;
+	
+	while (!tag.match(this.patEndComment)) {
+		if (matches = this.patNextClose.exec(this.text)) {
+			tag += '>' + matches[1];
+		}
+		else {
+			this.throwParseError( "Unclosed comment tag", tag );
+			return null;
+		}
+	}
+	
+	this.patTag.lastIndex = this.patNextClose.lastIndex;
+	return tag;
+};
+
+XML.prototype.parseDTDNode = function(tag) {
+	// Parse Document Type Descriptor Node, e.g. <!DOCTYPE ... >
+	var matches = null;
+	
+	if (tag.match(this.patExternalDTDNode)) {
+		// tag is external, and thus self-closing
+		_array_push( this._dtdNodeList, tag );
+	}
+	else if (tag.match(this.patInlineDTDNode)) {
+		// Tag is inline, so check for nested nodes.
+		this.patNextClose.lastIndex = this.patTag.lastIndex;
+		
+		while (!tag.match(this.patEndDTD)) {
+			if (matches = this.patNextClose.exec(this.text)) {
+				tag += '>' + matches[1];
+			}
+			else {
+				this.throwParseError( "Unclosed DTD tag", tag );
+				return null;
+			}
+		}
+		
+		this.patTag.lastIndex = this.patNextClose.lastIndex;
+		
+		// Make sure complete tag is well-formed, and push onto DTD stack.
+		if (tag.match(this.patDTDNode)) {
+			_array_push( this._dtdNodeList, tag );
+		}
+		else {
+			this.throwParseError( "Malformed DTD tag", tag );
+			return null;
+		}
+	}
+	else {
+		this.throwParseError( "Malformed DTD tag", tag );
+		return null;
+	}
+	
+	return tag;
+};
+
+XML.prototype.parseCDATANode = function(tag) {
+	// Parse CDATA Node, e.g. <![CDATA[Brooks & Shields]]>
+	var matches = null;
+	this.patNextClose.lastIndex = this.patTag.lastIndex;
+	
+	while (!tag.match(this.patEndCDATA)) {
+		if (matches = this.patNextClose.exec(this.text)) {
+			tag += '>' + matches[1];
+		}
+		else {
+			this.throwParseError( "Unclosed CDATA tag", tag );
+			return null;
+		}
+	}
+	
+	this.patTag.lastIndex = this.patNextClose.lastIndex;
+	
+	if (matches = tag.match(this.patCDATANode)) {
+		return matches[1];
+	}
+	else {
+		this.throwParseError( "Malformed CDATA tag", tag );
+		return null;
+	}
+};
+
+XML.prototype.getTree = function() {
+	// get reference to parsed XML tree
+	return this.tree;
+};
+
+XML.prototype.compose = function() {
+	// compose tree back into XML
+	var raw = _compose_xml( this._documentNodeName, this.tree );
+	var body = raw.substring( raw.indexOf("\n") + 1, raw.length );
+	var xml = '';
+	
+	if (this._piNodeList.length) {
+		for (var idx = 0, len = this._piNodeList.length; idx < len; idx++) {
+			xml += '<' + this._piNodeList[idx] + '>' + "\n";
+		}
+	}
+	else {
+		xml += XML._xml_header + "\n";
+	}
+	
+	if (this._dtdNodeList.length) {
+		for (var idx = 0, len = this._dtdNodeList.length; idx < len; idx++) {
+			xml += '<' + this._dtdNodeList[idx] + '>' + "\n";
+		}
+	}
+	
+	xml += body;
+	return xml;
+};
+
+//
+// Static Utility Functions:
+//
+
+function _parse_xml(text) {
+	// turn text into XML tree quickly
+	var parser = new XML(text);
+	return parser.error() ? parser.getLastError() : parser.getTree();
+}
+
+function _trim(text) {
+	// strip whitespace from beginning and end of string
+	if (text == null) return '';
+	
+	if (text && text.replace) {
+		text = text.replace(/^\s+/, "");
+		text = text.replace(/\s+$/, "");
+	}
+	
+	return text;
+}
+
+function _encode_entities(text) {
+	// Simple entitize function for composing XML
+	if (text == null) return '';
+
+	if (text && text.replace) {
+		text = text.replace(/\&/g, "&amp;"); // MUST BE FIRST
+		text = text.replace(/</g, "&lt;");
+		text = text.replace(/>/g, "&gt;");
+	}
+
+	return text;
+}
+
+function _encode_attrib_entities(text) {
+	// Simple entitize function for composing XML attributes
+	if (text == null) return '';
+
+	if (text && text.replace) {
+		text = text.replace(/\&/g, "&amp;"); // MUST BE FIRST
+		text = text.replace(/</g, "&lt;");
+		text = text.replace(/>/g, "&gt;");
+		text = text.replace(/\"/g, "&quot;");
+		text = text.replace(/\'/g, "&apos;");
+	}
+
+	return text;
+}
+
+function _decode_entities(text) {
+	// Decode XML entities into raw ASCII
+	if (text == null) return '';
+
+	if (text && text.replace) {
+		text = text.replace(/\&lt\;/g, "<");
+		text = text.replace(/\&gt\;/g, ">");
+		text = text.replace(/\&quot\;/g, '"');
+		text = text.replace(/\&apos\;/g, "'");
+		text = text.replace(/\&amp\;/g, "&"); // MUST BE LAST
+	}
+
+	return text;
+}
+
+function _compose_xml(name, node, indent) {
+	// Compose node into XML including attributes
+	// Recurse for child nodes
+	var xml = "";
+	
+	// If this is the root node, set the indent to 0
+	// and setup the XML header (PI node)
+	if (!indent) {
+		indent = 0;
+		xml = XML._xml_header + "\n";
+	}
+	
+	// Setup the indent text
+	var indent_text = "";
+	for (var k = 0; k < indent; k++) indent_text += XML._indent_string;
+
+	if ((typeof(node) == 'object') && (node != null)) {
+		// node is object -- now see if it is an array or hash
+		if (!node.length) { // what about zero-length array?
+			// node is hash
+			xml += indent_text + "<" + name;
+
+			var _num_keys = 0;
+			var has_attribs = 0;
+			for (var key in node) _num_keys++; // there must be a better way...
+
+			if (node["_Attribs"]) {
+				has_attribs = 1;
+				var sorted_keys = _hash_keys_to_array(node["_Attribs"]).sort();
+				for (var idx = 0, len = sorted_keys.length; idx < len; idx++) {
+					var key = sorted_keys[idx];
+					xml += " " + key + "=\"" + _encode_attrib_entities(node["_Attribs"][key]) + "\"";
+				}
+			} // has attribs
+
+			if (_num_keys > has_attribs) {
+				// has child elements
+				xml += ">";
+
+				if (node["_Data"]) {
+					// simple text child node
+					xml += _encode_entities(node["_Data"]) + "</" + name + ">\n";
+				} // just text
+				else {
+					xml += "\n";
+					
+					var sorted_keys = _hash_keys_to_array(node).sort();
+					for (var idx = 0, len = sorted_keys.length; idx < len; idx++) {
+						var key = sorted_keys[idx];					
+						if ((key != "_Attribs") && key.match(XML._re_valid_tag_name)) {
+							// recurse for node, with incremented indent value
+							xml += _compose_xml( key, node[key], indent + 1 );
+						} // not _Attribs key
+					} // foreach key
+
+					xml += indent_text + "</" + name + ">\n";
+				} // real children
+			}
+			else {
+				// no child elements, so self-close
+				xml += "/>\n";
+			}
+		} // standard node
+		else {
+			// node is array
+			for (var idx = 0; idx < node.length; idx++) {
+				// recurse for node in array with same indent
+				xml += _compose_xml( name, node[idx], indent );
+			}
+		} // array of nodes
+	} // complex node
+	else {
+		// node is simple string
+		xml += indent_text + "<" + name + ">" + _encode_entities(node) + "</" + name + ">\n";
+	} // simple text node
+
+	return xml;
+}
+
+function _find_object(_obj, _criteria) {
+	// walk array looking for nested object matching _criteria object
+	
+	var _criteria_length = 0;
+	for (var _a in _criteria) _criteria_length++;
+	_obj = _always_array(_obj);
+	
+	for (var _a = 0, _len = _obj.length; _a < _len; _a++) {
+		var _matches = 0;
+		
+		for (var _b in _criteria) {
+			if (_obj[_a][_b] && (_obj[_a][_b] == _criteria[_b])) _matches++;
+			else if (_obj[_a]["_Attribs"] && _obj[_a]["_Attribs"][_b] && (_obj[_a]["_Attribs"][_b] == _criteria[_b])) _matches++;
+		}
+		if (_matches >= _criteria_length) return _obj[_a];
+	}
+	return null;
+}
+
+function _find_objects(_obj, _criteria) {
+	// walk array gathering all nested objects that match _criteria object
+	var _objs = [];
+	var _criteria_length = 0;
+	for (var _a in _criteria) _criteria_length++;
+	_obj = _always_array(_obj);
+	
+	for (var _a = 0, _len = _obj.length; _a < _len; _a++) {
+		var _matches = 0;
+		for (var _b in _criteria) {
+			if (_obj[_a][_b] && _obj[_a][_b] == _criteria[_b]) _matches++;
+			else if (_obj[_a]["_Attribs"] && _obj[_a]["_Attribs"][_b] && (_obj[_a]["_Attribs"][_b] == _criteria[_b])) _matches++;
+		}
+		if (_matches >= _criteria_length) _array_push( _objs, _obj[_a] );
+	}
+	
+	return _objs;
+}
+
+function _find_object_idx(_obj, _criteria) {
+	// walk array looking for nested object matching _criteria object
+	// return index in outer array, not object itself
+	
+	var _criteria_length = 0;
+	for (var _a in _criteria) _criteria_length++;
+	_obj = _always_array(_obj);
+	
+	for (var _idx = 0, _len = _obj.length; _idx < _len; _idx++) {
+		var _matches = 0;
+		
+		for (var _b in _criteria) {
+			if (_obj[_idx][_b] && (_obj[_idx][_b] == _criteria[_b])) _matches++;
+			else if (_obj[_idx]["_Attribs"] && _obj[_idx]["_Attribs"][_b] && (_obj[_idx]["_Attribs"][_b] == _criteria[_b])) _matches++;
+		}
+		if (_matches >= _criteria_length) return _idx;
+	}
+	return -1;
+}
+
+/* function _delete_object(obj, _criteria) {
+	// walk array looking for nested object matching _criteria object
+	// delete first object found
+	var idx = _find_object_idx(obj, _criteria);
+
+	if (idx > -1) {
+		_array_splice( obj, idx, 1 );
+		return true;
+	}
+	return false;
+} */
+
+/* function _delete_objects(obj, _criteria) {
+	// delete all objects in obj array matching _criteria
+	while (_delete_object(obj, _criteria)) ;
+} */
+
+/* function insert_object_before(obj, _criteria, insert) {
+	// insert object in array before element found via _criteria
+	var idx = _find_object_idx(obj, _criteria);
+
+	if (idx > -1) {
+		_array_splice( obj, idx, 0, insert );
+		return true;
+	}
+	return false;
+} */
+
+function _always_array(_obj, _key) {
+	// if object is not array, return array containing object
+	// if key is passed, work like XMLalwaysarray() instead
+	// apparently MSIE has weird issues with obj = _always_array(obj);
+	
+	if (_key) {
+		if ((typeof(_obj[_key]) != 'object') || (typeof(_obj[_key].length) == 'undefined')) {
+			var _temp = _obj[_key];
+			delete _obj[_key];
+			_obj[_key] = [];
+			_obj[_key][0] = _temp;
+		}
+		return null;
+	}
+	else {
+		if ((typeof(_obj) != 'object') || (typeof(_obj.length) == 'undefined')) { return [ _obj ]; }
+		else return _obj;
+	}
+}
+
+function _hash_keys_to_array(_hash) {
+	// convert hash keys to array (discard values)
+	var _array = [];
+
+	for (var _key in _hash) _array.push(_key);
+
+	return _array;
+}
+
+function _array_to_hash_keys(_arr) {
+	// convert array elements to hash keys
+	var _hash = {};
+	for (var _idx = 0, _len = _arr.length; _idx < _len; _idx++) {
+		_hash[ _arr[_idx] ] = 1;
+	}
+	return _hash;
+}
+
+/* function encode_object(obj) {
+	// serialize and encode object for transport in HTML attribute (i.e. a href or onclick)
+	
+	// dynamic arguments: allow multiple objects to be passed in, and merge all together
+	// before serialization
+	for (var idx = 1; idx < arguments.length; idx++) obj = merge_objects(obj, arguments[idx]);
+	
+	var stream = serialize(obj);
+	return "decode_object('" + escape(stream) + "')";
+} */
+
+/* function decode_object(stream) {
+	// decode object stream and return object tree
+	var a;
+	return eval( 'a=' + unescape(stream) );
+} */
+
+function serialize(_thingy, _glue) {
+	// serialize anything into json
+	// or perl object notation (just set glue to '=>')
+	if (!_glue) _glue = ':'; // default to json
+	var _stream = '';
+	
+	if (typeof(_thingy) == 'number') {
+		_stream += _thingy;
+	}
+	else if (typeof(_thingy) == 'string') {
+		_stream += '"' + _thingy.replace(/([\"\\])/g, '\\$1').replace(/\r/g, "\\r").replace(/\n/g, "\\n") + '"';
+	}
+	else if (_isa_hash(_thingy)) {
+		var _num = 0;
+		var _buffer = [];
+		for (var _key in _thingy) {
+			_buffer[_num] = (_key.match(/^\w+$/) ? _key : ('"'+_key+'"')) + _glue + serialize(_thingy[_key], _glue);
+			_num++;
+		}
+		_stream += '{' + _buffer.join(',') + '}';
+	}
+	else if (_isa_array(_thingy)) {
+		var _buffer = [];
+		for (var _idx = 0, _len = _thingy.length; _idx < _len; _idx++) {
+			_buffer[_idx] = serialize(_thingy[_idx], _glue);
+		}
+		_stream += '[' + _buffer.join(',') + ']';
+	}
+	else {
+		// unknown type, just return 0
+		_stream += '0';
+	}
+	
+	return _stream;
+}
+
+/* function ue(str) {
+	// shorthand for unescape()
+	// used in object streams to save space
+	return unescape(str);
+} */
+
+/* function sort_array(obj, sort_args) {
+	// sort array based on args object:
+	//    sort_by: element or attribute name to sort by
+	//    sort_dir: >0 for ascending, <0 for descending
+	var list = _always_array(obj);
+
+	return list.sort( function(a, b) {
+		var value_a = a[ sort_args.sort_by ];
+		if (!value_a && a["_Attribs"]) value_a = a["_Attribs"][ sort_args.sort_by ];
+
+		var value_b = b[ sort_args.sort_by ];
+		if (!value_b && b["_Attribs"]) value_b = b["_Attribs"][ sort_args.sort_by ];
+
+		var cmp = (value_b < value_a) ? 1 : -1;
+		return cmp * sort_args.sort_dir;
+	} );
+} */
+
+function merge_objects(_a, _b) {
+	// merge keys from a and b into c and return c
+	// b has precedence over a
+	if (!_a) _a = {};
+	if (!_b) _b = {};
+	var _c = {};
+
+	// also handle serialized objects for a and b
+	if (typeof(_a) != 'object') eval( "_a = " + _a );
+	if (typeof(_b) != 'object') eval( "_b = " + _b );
+
+	for (var _key in _a) _c[_key] = _a[_key];
+	for (var _key in _b) _c[_key] = _b[_key];
+
+	return _c;
+}
+
+function _copy_object(_obj) {
+	// return copy of object (NOT DEEP)
+	var _new_obj = {};
+
+	for (var _key in _obj) _new_obj[_key] = _obj[_key];
+
+	return _new_obj;
+}
+
+function _deep_copy_object(_obj) {
+	// recursively copy object and nested objects
+	// return new object
+	if (_isa_hash(_obj)) {
+		var _new_obj = {};
+		for (var _key in _obj) {
+			if (_isa_hash(_obj[_key]) || _isa_array(_obj[_key]))
+				_new_obj[_key] = _deep_copy_object(_obj[_key]);
+			else
+				_new_obj[_key] = _obj[_key];
+		}
+		return _new_obj;
+	}
+	else if (_isa_array(_obj)) {
+		var _new_obj = [];
+		for (var _idx = 0, _len = _obj.length; _idx < _len; _idx++) {
+			if (_isa_hash(_obj[_idx]) || _isa_array(_obj[_idx]))
+				_new_obj[_idx] = _deep_copy_object(_obj[_idx]);
+			else
+				_new_obj[_idx] = _obj[_idx];
+		}
+		return _new_obj;
+	}
+	
+	return null;
+}
+
+function _deep_copy_object_lc_keys(_obj) {
+	// recursively copy object and nested objects
+	// lower-case all keys, return new object
+	var _new_obj = {};
+	if (_obj.length) _new_obj = [];
+
+	for (var _key in _obj) {
+		var _lc_key = _key.toLowerCase ? _key.toLowerCase() : _key;
+		if (typeof(_obj[_key]) == 'object') _new_obj[_lc_key] = _deep_copy_object_lc_keys( _obj[_key] );
+		else _new_obj[_lc_key] = _obj[_key];
+	}
+
+	return _new_obj;
+}
+
+/* function copy_into_object(a, b) {
+	// copy b in to a (NOT DEEP)
+	// no return value
+
+	for (var key in b) a[key] = b[key];
+} */
+
+/* function deep_copy_into_object(a, b) {
+	// recursively copy b into a
+	// no return value
+
+	for (var key in b) {
+		if (typeof(b[key]) == 'object') {
+			if (typeof(a[key]) == 'undefined') {
+				if (b[key].length) a[key] = []; else a[key] = {};
+			}
+			deep_copy_into_object( a[key], b[key] );
+		}
+		else a[key] = b[key];
+	}
+} */
+
+function _num_keys(_hash) {
+	// count the number of keys in a hash
+	var _count = 0;
+	for (var _a in _hash) _count++;
+	return _count;
+}
+
+/* function deep_diff_object(a, b) {
+	// resursive diff in objects
+	// if objects are different in any way, return 1
+	// otherwise return 0
+
+	if ((typeof(a) != 'object') && (typeof(a) != 'array')) {
+		// vars are not hashes or arrays -- compare directly
+		if (typeof(a) == 'string') {
+			a = a.replace(/\r\n/g, "\n");
+			a = a.replace(/\r/g, "\n");
+		}
+		if (typeof(b) == 'string') {
+			b = b.replace(/\r\n/g, "\n");
+			b = b.replace(/\r/g, "\n");
+		}
+		if (a != b) return 1; // vars differ
+		else return 0;
+	}
+
+	if (typeof(a) != typeof(b)) return 1; // objects must match types
+
+	if (typeof(a.length) == 'undefined') {
+		// objs are hashes
+		if (_num_keys(a) != _num_keys(b)) return 1; // different number of hash keys
+		for (var akey in a) {
+			if (typeof(b[akey]) == 'undefined') return 1; // b missing key that a has
+			if (deep_diff_object( a[akey], b[akey] )) return 1; // recurse for nested objs
+		}
+		for (var bkey in b) {
+			if (typeof(a[bkey]) == 'undefined') return 1; // a missing key that b has
+		}
+	}
+	else {
+		// objs are arrays
+		if (a.length != b.length) return 1; // arrays of different length
+		for (var idx = 0; idx < a.length; idx++) {
+			if (deep_diff_object( a[idx], b[idx] )) return 1; // recurse for nested objs
+		}
+	}
+
+	return 0;
+} */
+
+/* function lookup_path(path, obj) {
+	// walk through object tree, psuedo-XPath-style
+	// supports arrays as well as objects
+	// return final object or value
+	// always start query with a slash, i.e. /something/or/other
+	path = path.replace(/\/$/, ""); // strip trailing slash
+	
+	while (/\/[^\/]+/.test(path) && (typeof(obj) == 'object')) {
+		// find first slash and strip everything up to and including it
+		var slash = path.indexOf('/');
+		path = path.substring( slash + 1 );
+		
+		// find next slash (or end of string) and get branch name
+		slash = path.indexOf('/');
+		if (slash == -1) slash = path.length;
+		var name = path.substring(0, slash);
+
+		// advance obj using branch
+		if (typeof(obj.length) == 'undefined') {
+			// obj is hash
+			if (typeof(obj[name]) != 'undefined') obj = obj[name];
+			else return null;
+		}
+		else {
+			// obj is array
+			var idx = parseInt(name, 10);
+			if (isNaN(idx)) return null;
+			if (typeof(obj[idx]) != 'undefined') obj = obj[idx];
+			else return null;
+		}
+
+	} // while path contains branch
+
+	return obj;
+} */
+
+/* function set_path_value(path, obj, value) {
+	// walk through object tree creating nodes as necessary
+	// set value at final node (end of path)
+	// no return value
+	path = path.replace(/\/$/, ""); // strip trailing slash
+
+	// get final node name and strip off
+	var final_slash = path.lastIndexOf('/');
+	var final_name = path.substring( final_slash + 1, path.length );
+	path = path.substring( 0, final_slash );
+
+	while (/\/[^\/]+/.test(path)) {
+		// find first slash and strip everything up to and including it
+		var slash = path.indexOf('/');
+		path = path.substring( slash + 1 );
+		
+		// find next slash (or end of string) and get branch name
+		slash = path.indexOf('/');
+		if (slash == -1) slash = path.length;
+		var name = path.substring(0, slash);
+
+		// advance obj using branch
+		if (typeof(obj.length) == 'undefined') {
+			// obj is hash
+			// if (typeof(obj[name]) == 'undefined') obj[name] = {}; // create new node 
+			if (!_isa_hash(obj[name])) obj[name] = {}; // force subnode to hash
+			obj = obj[name];
+		}
+		else {
+			// obj is array
+			var idx = parseInt(name, 10);
+			if (isNaN(idx)) return null;
+			if (typeof(obj[idx]) != 'undefined') obj[idx] = {}; // create new node
+			obj = obj[idx];
+		}
+
+	} // while path contains branch
+
+	obj[final_name] = value;
+} */
+
+/* function delete_path_value(path, obj) {
+	// walk through object tree, deleting final node
+	// returns true on success, false if cannot find node
+	path = path.replace(/\/$/, ""); // strip trailing slash
+
+	// get final node name and strip off
+	var final_slash = path.lastIndexOf('/');
+	var final_name = path.substring( final_slash + 1, path.length );
+	path = path.substring( 0, final_slash );
+
+	while (/\/[^\/]+/.test(path) && (typeof(obj) == 'object')) {
+		// find first slash and strip everything up to and including it
+		var slash = path.indexOf('/');
+		path = path.substring( slash + 1 );
+		
+		// find next slash (or end of string) and get branch name
+		slash = path.indexOf('/');
+		if (slash == -1) slash = path.length;
+		var name = path.substring(0, slash);
+
+		// advance obj using branch
+		if (typeof(obj.length) == 'undefined') {
+			// obj is hash
+			if (typeof(obj[name]) != 'undefined') obj = obj[name];
+			else return null;
+		}
+		else {
+			// obj is array
+			var idx = parseInt(name, 10);
+			if (isNaN(idx)) return null;
+			if (typeof(obj[idx]) != 'undefined') obj = obj[idx];
+			else return null;
+		}
+
+	} // while path contains branch
+
+	delete obj[final_name];
+	return true;
+} */
+
+/* function set_all(obj, args) {
+	// set all args key/values in all elements of obj
+	
+	for (var idx = 0; idx < obj.length; idx++) {
+		for (var a in args) {
+			obj[idx][a] = args[a];
+		} // a in args
+	} // idx in obj
+} */
+
+/* function delete_all(obj, key) {
+	// delete all keys in obj[*] matching key
+	
+	for (var idx = 0; idx < obj.length; idx++) {
+		if (typeof(obj[idx][key]) != 'undefined') delete obj[idx][key];
+	}
+} */
+
+function _compose_attribs(_attribs) {
+	// compose Key="Value" style attributes for HTML elements
+	var _html = '';
+	
+	if (_attribs) {
+		for (var _key in _attribs) {
+			_html += " " + _key + "=\"" + _attribs[_key] + "\"";
+		}
+	}
+
+	return _html;
+}
+
+/* function compose_style(attribs) {
+	// compose key:value; pairs for style (CSS) elements
+	var html = '';
+	
+	if (attribs) {
+		for (var key in attribs) {
+			html += " " + key + ":" + attribs[key] + ";";
+		}
+	}
+
+	return html;
+} */
+
+function _isa_hash(_arg) {
+	// determine if arg is a hash
+	return( !!_arg && (typeof(_arg) == 'object') && (typeof(_arg.length) == 'undefined') );
+}
+
+function _isa_array(_arg) {
+	// determine if arg is an array or is array-like
+	if (typeof(_arg) == 'array') return true;
+	return( !!_arg && (typeof(_arg) == 'object') && (typeof(_arg.length) != 'undefined') );
+}
+
+function _first_key(_hash) {
+	// return first key from hash (unordered)
+	for (var _key in _hash) return _key;
+	return null; // no keys in hash
+}
+
+/* function _xml_index_by( xml, element, key, recursive, compress ) {
+	// index arrays by named keys
+	if (!xml || !key || !element) return 0;
+	
+	if (_isa_hash(xml) && _isa_hash(xml[element]) && xml[element][key])
+		_always_array( xml, element );
+	
+	if (_isa_hash(xml) && _isa_array(xml[element])) {
+		var reindex = 0;
+
+		for (var idx = xml[element].length - 1; idx >= 0; idx--) {
+			var elem = xml[element][idx];
+			if (elem[key]) {
+				reindex = 1;
+				var new_name = elem[key];
+				delete elem[key];
+
+				if (compress && (_num_keys(elem) == 1) && (typeof(elem[ _first_key(elem) ]) != 'object')) {
+					elem = elem[ _first_key(elem) ];
+				} // compress
+
+				if (typeof(xml[new_name]) != 'undefined') {
+					// element already exists at new location
+					// convert or append to array
+					_always_array( xml, new_name );
+					_array_unshift( xml[new_name], elem );
+				}
+				else {
+					// first use of new_name
+					xml[new_name] = elem;
+				}
+			} // elem has key
+		} // i loop
+
+		if (reindex) {
+			// delete entire array after reindexing is complete
+			delete xml[element];
+		}
+	} // xml is hash and contains element array
+
+	if (recursive) {
+		if (xml && (typeof(xml) == 'object')) { // hash or array
+			if (typeof(xml.length) != 'undefined') {
+				for (var idx = 0; idx < xml.length; idx++) {
+					_xml_index_by( xml[idx], element, key, recursive, compress );
+				} // foreach key/element
+			}
+			else {
+				for (var key in xml) {
+					_xml_index_by( xml[key], element, key, recursive, compress );
+				} // foreach key/element
+			}
+		} // is object
+	} // recurse
+} */
+
+/* function expand_parameter_nodes(tree) {
+	// expand <Parameter> and <ParameterGroup> nodes into
+	// a standard hash tree
+	_xml_index_by( tree, 'ParameterGroup', 'Name', true, false );
+	_xml_index_by( tree, 'Parameter', 'Name', true, true );
+} */
+
+/* function make_parameter_nodes(tree, max_levels) {
+	// Given hash tree, convert to <Parameter Name="" Value=""> style for XML composing.
+	// Do this safely, non-destructively, and support arrays
+	var out = {};
+
+	if (typeof(max_levels) == 'undefined') { max_levels = -1; } // infinite
+	if (!max_levels) { return {}; } // out of levels
+	
+	for (var key in tree) {
+		// next if ($key eq 'Parameter') || ($key eq 'ParameterGroup');
+		
+		if (_isa_hash(tree[key])) {
+			var node_group = merge_objects({ "_Attribs": { Name: key } },
+				make_parameter_nodes(tree[key], max_levels - 1) );
+			
+			if (out['ParameterGroup']) {
+				if (_isa_array(out['ParameterGroup'])) {
+					_array_push( out['ParameterGroup'], node_group );
+				}
+				else {
+					out['ParameterGroup'] = [ out['ParameterGroup'], node_group ];
+				}
+			}
+			else {
+				out['ParameterGroup'] = node_group;
+			}
+		}
+		else if (_isa_array(tree[key])) {
+			for (var idx = 0; idx < tree[key].length; idx++) {
+				var elem = tree[key][idx];
+				if (_isa_hash(elem)) {
+					var node_group = merge_objects({ "_Attribs": { Name: key } },
+						make_parameter_nodes(elem, max_levels - 1) );
+					
+					if (out['ParameterGroup']) {
+						if (_isa_array(out['ParameterGroup'])) {
+							_array_push( out['ParameterGroup'], node_group );
+						}
+						else {
+							out['ParameterGroup'] = [ out['ParameterGroup'], node_group ];
+						}
+					}
+					else {
+						out['ParameterGroup'] = node_group;
+					}
+				} // hash in array
+				else {
+					var node = { "_Attribs": { Name: key } };
+					
+					if (/[\n\"]/.test(elem)) {
+						node['content'] = elem;
+					}
+					else {
+						node['_Attribs']['Value'] = elem;
+					}
+
+					if (out['Parameter']) {
+						if (_isa_array(out['Parameter'])) {
+							_array_push( out['Parameter'], node );
+						}
+						else {
+							out['Parameter'] = [ out['Parameter'], node ];
+						}
+					}
+					else {
+						out['Parameter'] = node;
+					}
+				} // scalar in array
+			} // foreach elem
+		}
+		else {
+			var node = { "_Attribs": { Name: key } };
+
+			if (/[\n\"]/.test(tree[key])) {
+				node['content'] = tree[key];
+			}
+			else {
+				node['_Attribs']['Value'] = tree[key];
+			}
+
+			if (out['Parameter']) {
+				if (_isa_array(out['Parameter'])) {
+					_array_push( out['Parameter'], node );
+				}
+				else {
+					out['Parameter'] = [ out['Parameter'], node ];
+				}
+			}
+			else {
+				out['Parameter'] = node;
+			}
+		}
+		// delete $tree->{$key};
+	}
+
+	return out;
+} */
+
+/* function xpath_summary(xml, base_path) {
+	// summarize all xpaths that point to scalar text values, recursively
+	// return single level hash with xpaths as keys and the actual scalar values
+	if (!base_path) base_path = '/';
+	var paths = {};
+	
+	if (_isa_hash(xml)) {
+		for (var key in xml) {
+			if (typeof(xml[key]) == 'object') paths = merge_objects(paths, xpath_summary(xml[key], base_path + key + '/'));
+			else paths[base_path + key] = xml[key];
+		}
+	}
+	else if (_isa_array(xml)) {
+		for (var idx = 0, len = xml.length; idx < len; idx++) {
+			if (typeof(xml[idx]) == 'object') paths = merge_objects(paths, xpath_summary(xml[idx], base_path.replace(/\/$/, '') + '[' + idx + ']/'));
+			else paths[ base_path.replace(/\/$/, '') + '[' + idx + ']'] = xml[idx];
+		}
+	}
+	
+	return paths;
+} */
+
+////
+// replacement array functions
+// included because IE 5.01 and below do not support
+// standard array functions (nice work, microsoft)
+////
+
+function _array_push(_array, _item) {
+	// push item onto end of array
+	_array[ _array.length ] = _item;
+}
+
+/* function _array_pop(array) {
+	// pop last item off array
+	if (array.length > 0) {
+		var temp = array[ array.length - 1 ];
+		delete array[ array.length - 1 ];
+		array.length--;
+		return temp;
+	}
+	else return null;
+} */
+
+/* function _array_unshift(array, item) {
+	// insert item at beginning of array, shift contents over
+	if (array.length > 0) {
+		for (var idx = array.length - 1; idx >= 0; idx--) {
+			array[idx + 1] = array[idx];
+		}
+	}
+	array[0] = item;
+} */
+
+/* function _array_shift(array) {
+	// fetch and return first item in array, shift contents over
+	if (array.length > 0) {
+		var temp = array[0];
+		if (array.length > 1) {
+			for (var idx = 0; idx < array.length - 1; idx++) {
+				array[idx] = array[idx + 1];
+			}
+		}
+		_array_pop(array);
+		return temp;
+	}
+	else return null;
+} */
+
+/* function _array_splice(array, pos, del_count, item) {
+	// splice array (only supports adding one new element)
+	var spliced = [];
+
+	while (del_count) {
+		_array_push(spliced, array[pos]);
+		if (array.length > pos + 1) {
+			for (var idx = pos; idx < array.length - 1; idx++) {
+				array[idx] = array[idx + 1];
+			}
+		}
+		_array_pop(array);
+		del_count--;
+	}
+
+	// add new item
+	if (typeof(item) != 'undefined') {
+		for (var idx = array.length - 1; idx >= pos; idx--) {
+			array[idx + 1] = array[idx];
+		}
+		array[pos] = item;
+	}
+
+	return spliced;
+} */
+
+function _array_slice(_array, _start, _end) {
+	// return an excerpt from the array, leaving original array intact
+	if (!_end) _end = _array.length;
+	var _slice = [];
+	
+	for (var _idx = _start; _idx < _end; _idx++) {
+		if (_idx < _array.length) _array_push( _slice, _array[_idx] );
+	}
+	
+	return _slice;
+}
+
+function _array_combine(_a, _b) {
+	// concatenate two arrays together, return combined array
+	var _c = [];
+	for (var _idx = 0; _idx < _a.length; _idx++) _array_push( _c, _a[_idx] );
+	for (var _idx = 0; _idx < _b.length; _idx++) _array_push( _c, _b[_idx] );
+	return _c;
+}
+
+function _array_cat(_a, _b) {
+	// push elements of b onto a
+	for (var _idx = 0; _idx < _b.length; _idx++) _array_push( _a, _b[_idx] );
+}
+
+/* function array_join(arr, glue) {
+	// join array into string using glue
+	var str = '';
+	for (var idx = 0, len = arr.length; idx < len; idx++) {
+		if (idx > 0) str += glue;
+		str += arr[idx];
+	}
+	return str;
+} */

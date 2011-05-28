@@ -1,0 +1,228 @@
+=article_title Object Oriented Framework
+=article_path /docs
+=article_tags docs, javascript, oop
+=article_comments 1
+=section_numbers 1
+=toc 1
+
+=section #. Overview
+
+The [wikipedia:JavaScript] language already supports [wikipedia:object orientated programming], but the syntax is strange and inheritance is wonky.  This library is provided as a means to create classes in a cleaner sort of way, including support for static class members, constructors, invoking superclass methods, plus the addition of namespaces.
+
+There are plenty of other object oriented programming frameworks available for JavaScript (the most popular being [http://www.prototypejs.org/, Prototype], and [http://mootools.net/, Mootools]), but all of them are usually part of a much larger [wikipedia:DHTML] library that alters the DOM in tricky ways, and offers tons of features we don't need.  I wanted something much simpler -- just a class framework without all the bells and whistles.
+
+=section #. Usage
+
+This section describes how to use the framework.
+
+=section #.#. Creating Classes
+
+Here is how you create a class using the framework.  You'll notice this is dramatically different than the traditional JavaScript class syntax.
+
+=syntax js
+	Class.create( 'Animal', {
+		
+		// class member variables
+		nickname: '',
+		color: '',
+		
+		// class constructor
+		__construct: function(new_name, new_color) {
+			this.nickname = new_name;
+			this.color = new_color;
+		},
+		
+		// methods
+		getInfo: function() {
+			return("Nickname: " + this.nickname + "\nColor: " + this.color);
+		}
+		
+	} );
+
+This defines a class called "{Animal}", with two member variables, "{nickname}" and "{color}", a constructor and a "{getInfo()}" method which returns the nickname and color.  You'll notice that to define the constructor method you use the keyword "{__construct}".  The "{__}" prefix is to avoid any possible collision with other function names.
+
+Usage of this class is exactly what you would expect:
+
+=syntax js
+	var dog = new Animal('Spot', 'Green');
+	alert( dog.getInfo() );
+
+Of course, you can also access the class member variables, as all members are public.
+
+=syntax js
+	dog.nickname = 'Skippy';
+	dog.color = 'Blue';
+	alert( dog.getInfo() );
+
+=section #.#. Creating Subclasses
+
+To create a subclass that inherits from a base class, use the following syntax:
+
+=syntax js
+	Animal.subclass( 'Bear', {
+		
+		// define a new member variable
+		wants: 'Honey',
+		
+		// and a new method
+		roar: function() {
+			alert("Roar!  Give me " + this.wants + "!");
+		}
+		
+	} );
+
+This defines a "{Bear}" class which inherits from the base "{Animal}" class, including the constructor. What we did is extend the base class by introducing a new member variable "{wants}", and a new method "{roar()}".  Everything else from the base class will be present in subclass instances:
+
+=syntax js
+	var grizzly = new Bear('Fred', 'Brown');
+	alert( grizzly.getInfo() );
+	
+	grizzly.wants = 'blood';
+	grizzly.roar();
+
+You can also substitute {extend} for {subclass}, as in {Animal.extend(...)} -- they both perform the same function.
+
+=section #.#. Inheritance
+
+The framework provides an easy way to override methods defined in a base class.  Simply redeclare them in the subclass:
+
+=syntax js
+	Bear.add( {
+		
+		// override base class method
+		getInfo: function() {
+			return "Bear has overridden this!";
+		}
+		
+	} );
+
+This also demonstrates "{add()}" (a method which is added to your class constructor) which allows you to add/replace methods or member variables in a class after it is defined.  Alternatively you could just have defined the method to be overridden in the original subclass definition.
+
+=section #.#.#. Calling Superclass methods
+
+You can also explicitly invoke the superclass method, in order to extend its functionality:
+
+=syntax js
+	Bear.add( {
+		
+		// override base class method
+		getInfo: function() {
+			// first, get info from base class
+			var info = this.__parent.getInfo.call(this);
+			
+			// append bear info and return combined info
+			info += "\nWants: " + this.wants;
+			return info;
+		}
+		
+	} );
+
+So here we are overriding the base class "{getInfo()}" method, but the first thing we do is call the superclass method of the same name.  This is done with the "{__parent}" keyword (two underscores there), which points to the parent class prototype object.  The JavaScript "{call()}" method allows you to call a function in object context (hence we are passing in the "{this}" keyword to it).
+
+Invoking a superclass constructor is just as easy:
+
+=syntax js
+	Animal.subclass( 'Bear', {
+		
+		// define a new member variable
+		wants: 'Honey',
+		
+		// override base class constructor
+		__construct: function(new_name, new_color, new_wants) {
+			// invoke superclass constructor to set name and color
+			this.__parent.__construct.call(this, new_name, new_color);
+			this.wants = new_wants;
+		}
+		
+		// and a new method
+		roar: function() {
+			alert("Roar!  Give me " + this.wants + "!");
+		}
+		
+	} );
+
+=note You cannot use "{add()}" to redeclare a class constructor.
+
+=section #.#. Static Class Members
+
+You can define static class members (variables or methods) by using the "{__static}" keyword.  These members do not become part of class instances, but instead live inside the class reference object, and must be accessed that way too.  Example class definition:
+
+=syntax js
+	Class.create( 'Beer', {
+		
+		// static members
+		__static: {
+			types: ['Lager', 'Ale', 'Stout', 'Barleywine']
+		},
+		
+		// class member variables
+		nickname: '',
+		type: '',
+		
+		// class constructor
+		__construct: function(new_name, new_type) {
+			this.nickname = new_name;
+			
+			if (!Beer.types[new_type]) alert("TYPE NOT KNOWN: " + new_type);
+			this.type = new_type;
+		},
+		
+		// methods
+		getInfo: function() {
+			return("Nickname: " + this.nickname + "\nType: " + this.type);
+		}
+		
+	} );
+
+Here we define a "{Beer}" class which has a static member defined in the "{__static}" element.  Anything placed there will *not* be propagated to class instances, and must be accessed using the class reference instead.  As you can see in the constructor, we are checking the new type against the "{types}" array which is declared static, so we are getting to the list by using the syntax: "{Beer.types}" rather than "{this.types}".
+
+If you were to change "{Beer.types}" later on, then ALL classes would see the changes instantly.  The content is effectively shared.
+
+=section #.#. Namespaces
+
+The framework also offers "namespaces".  That is, named containers for your classes to live in, to prevent name collision with built-in classes or 3rd party libraries.  You declare namespaces simply by adding periods (.) to your class name as passed to "{Class.create()}" and "{Class.subclass()}":
+
+=syntax js
+	Class.create( 'Beverage.Beer', {
+		
+	} );
+
+You can nest namespaces any number of levels deep -- the library will automatically create any parent namespaces as needed.  Now you can create instances of the class using "{Beverage.Beer}" instead of just "{Beer}":
+
+=syntax js
+	var mybeer = new Beverage.Beer();
+
+You can explicity create namespaces (without creating classes) using the "{Namespace.create()}" function.  Example:
+
+=syntax js
+	Namespace.create( 'Beverage' );
+
+All this does is create empty objects, ready to receive classes (although creating classes automatically creates the parent namespaces, so this is typically not required).
+
+=note DO NOT use a class name as a namespace, or visa-versa.  For example, if you create a class named "{Beverage.Beer}", do not also use it as a namespace for a subclass, like "{Beverage.Beer.Stout}".  The results are undefined.
+
+=section #.#. Require Classes
+
+If your class requires other classes (possibly those defined in other include files), you can use the "{Class.require()}" function to make sure they are available.  This is sort of like a class "assert" (see below), which will throw an alert if the required classes are not defined.  Example:
+
+=syntax js
+	Class.require( 'Animal' );
+
+This would throw an alert if the "{Animal}" class was not defined.  You can also specify multiple classes on the same call:
+
+=syntax js
+	Class.require( 'Animal', 'Bear' );
+
+=section #.#. Assert Macro
+
+The framework comes with a simple "{assert()}" macro for testing that things you know should be true, are in fact true.  You can pass it an optional message to be displayed if the assert fails, so you can tell them apart.  Example:
+
+=syntax js
+	assert( 1 + 1 == 2, "Math doesn't work" );
+
+If the fact turns out to be false, then the text is displayed in an alert so you can immediately see it and respond.  This is a good way to check for objects that should exist in a parent container:
+
+=syntax js
+	assert( !!window.something, "window.something does not exist");
+
+This is a nice, simple way to check for existence of an object.

@@ -1,0 +1,1064 @@
+=article_title Getting Started Guide
+=article_path /docs
+=article_tags docs, beginner, javascript, assets
+=article_stags sidebar_docs
+=article_comments 1
+=section_numbers 1
+=toc 1
+=toc_max 2
+
+=section #. Introduction
+
+The *Effect Game Engine* provides a means for you to create your own web-based [wikipedia:video games] with minimal effort.  Your games will run inside the web browser, requiring no software download for the player.  This document helps you get started creating a game using Effect's [wikipedia:API].  The engine handles everything from displaying graphics, animation, scrolling, handling keyboard/mouse controls, loading and playing audio / music, collision detection, and much more.  The API is how you (the programmer) can access the engine and do all the heavy lifting for you.
+
+=section #.#. Game Types
+
+The Effect engine allows you to create any genre of game, be it action, adventure, role-playing, puzzle, etc.  The only limit is your imagination, and to some extent, the web browser.  Since your game runs inside the browser using built-in technologies, you are technically limited to its feature set.  Meaning, you won't be able to create a full 3D game (at least, not yet).  The Effect engine is designed more for [wikipedia:Sprite_(video_game), 2D sprite]- and [wikipedia:Tile-based_game#Video_games, tile-based games], which are extremely popular on the web.  And don't think that you are limited to games from old [wikipedia:Game_consoles#Third_generation, 8-bit or 16-bit game consoles].  Effect's engine allows you to use [wikipedia:Truecolor, full 32-bit color graphics], [wikipedia:alpha transparency], high quality [wikipedia:MP3]-based stereo sound effects and music, and [wikipedia:MPEG-4] video for an awesome gaming experience.
+
+=section #.# Prerequisites
+
+The Effect Game Engine is designed for programmers looking to create web games.  You should have a working knowledge of [wikipedia:JavaScript] and [wikipedia:object oriented programming], a text editor, a supported browser, and the desire to create great games!
+
+If you don't know JavaScript, here are some book recommendations:
+
+<center><table><tr><td><iframe src="http://rcm.amazon.com/e/cm?lt1=_blank&bc1=000000&IS2=1&bg1=FFFFFF&fc1=000000&lc1=0000FF&t=effegame-20&o=1&p=8&l=as1&m=amazon&f=ifr&md=10FE9736YVPPT7A0FBG2&asins=0596521871" style="width:120px;height:240px;padding:0 20px 0 20px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
+</td><td><iframe src="http://rcm.amazon.com/e/cm?lt1=_blank&bc1=000000&IS2=1&bg1=FFFFFF&fc1=000000&lc1=0000FF&t=effegame-20&o=1&p=8&l=as1&m=amazon&f=ifr&md=10FE9736YVPPT7A0FBG2&asins=0596517742" style="width:120px;height:240px;padding:0 20px 0 20px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
+</td><td><iframe src="http://rcm.amazon.com/e/cm?lt1=_blank&bc1=000000&IS2=1&bg1=FFFFFF&fc1=000000&lc1=0000FF&t=effegame-20&o=1&p=8&l=as1&m=amazon&f=ifr&md=10FE9736YVPPT7A0FBG2&asins=0596101996" style="width:120px;height:240px;padding:0 20px 0 20px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
+</td><td><iframe src="http://rcm.amazon.com/e/cm?lt1=_blank&bc1=000000&IS2=1&bg1=FFFFFF&fc1=000000&lc1=0000FF&t=effegame-20&o=1&p=8&l=as1&m=amazon&f=ifr&md=10FE9736YVPPT7A0FBG2&asins=1590597273" style="width:120px;height:240px;padding:0 20px 0 20px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
+</td></tr></table></center>
+
+=section #.# Technologies
+
+The Effect engine uses [wikipedia:JavaScript] and [wikipedia:DHTML] technologies already built into all modern browsers.  No external Plugins or libraries are needed, with the possible exception of audio and video.  Audio and Video in the browser are achieved using [wikipedia:HTML 5], and falling back to available extensions if needed.  Only some browsers support native audio and video as of this writing, but nearly all users have a supported media playing extension.  If the user's browser simply cannot support audio or video (which is extremely rare now-a-days), the rest of the engine will still work fine.
+
+=section #. Browser / OS Support
+
+The following browsers / operating systems are officially supported by the Effect engine:
+
+=list
+	[http://www.microsoft.com/windows/ie/ Internet Explorer] 6.0+, 7.0+ and 8.0+ with [http://www.microsoft.com/windows/ Windows] 7, Vista, XP
+	[http://www.mozilla.com/firefox/ Firefox] 3.0+ and 3.5+ with [http://www.apple.com/macosx/ Mac OS X] and Windows 7, Vista, XP
+	[http://www.apple.com/safari/ Safari] 3.2+ and 4.0+ with Mac OS X and Windows 7, Vista, XP
+	[http://www.google.com/chrome/ Google Chrome] 1.0+, 2.0+ and 3.0+ with Windows 7, Vista, XP
+	[http://www.opera.com/ Opera] 9.0+ with Mac OS X and Windows 7, Vista, XP
+
+Other browsers / operating systems may also work, and more may be added in the future.  We reserve the right to modify this list at any time, for any reason.
+
+=section #. What You'll Need
+
+To start things off, make sure you have everything on this checklist.
+
+=deflist Checklist
+	Text Editor | Since you will be coding in [wikipedia:JavaScript], make sure you have a good [wikipedia:text editor] with [wikipedia:syntax highlighting].  Here is a [wikipedia:list of text editors] to choose from.
+	Graphic Editor | Whether you are designing graphics yourself, or having graphics sent to you, it is important to have a good [wikipedia:Image_editing, graphic editor].  Here is a [wikipedia:list of raster graphics editors, list of graphics editors].
+	Sound Editor | All sound effects and music must be in [wikipedia:MP3] format, so make sure you have good [wikipedia:audio software, sound editor].  Here is a [wikipedia:audio software, list of audio software].
+	Script Debugger | For Internet Explorer, make sure you have the [wikipedia:Microsoft Script Debugger] or equivalent.  For Firefox, make sure you have [http://getfirebug.com/ Firebug] or equivalent.  For Safari, make sure you enable the [http://developer.apple.com/internet/safari/faq.html Debugging Menu].
+	Knowledge | You should have a working knowlege of [wikipedia:JavaScript] and [wikipedia:object oriented programming].
+	Game Assets | Make sure you have game assets ([wikipedia:Sprite_(computer_graphics), graphics], [wikipedia:sound effects], [wikipedia:video game music, music], etc.) for use in your game.
+	Developer Account | Sign up for a free developer account at [#CreateAccount EffectGames.com].
+
+=section #. Assets
+
+Game assets are the "things" that go into your game, including graphics, sounds, music and text.  Since your game will be running in a web browser, it is important that your assets are in the proper format.  The following subsections describe different types of assets, and the formats they should be in.
+
+=section #.#. Graphic Assets
+
+Graphic assets are things like [wikipedia:Sprite_(computer_graphics), sprites] (characters, enemies, objects), and background art.  The formats can be either [wikipedia:GIF], [wikipedia:PNG] or [wikipedia:JPEG] depending on the type of asset.  For example, sprites are typically [wikipedia:GIF] or [wikipedia:PNG] because they can have [wikipedia:Transparency_(graphic), transparency].  Background art is usually much larger and opaque, so is typically in [wikipedia:JPEG] format.
+
+It is important to have a good graphic pixel editor, even if you have the graphic assets delivered to you.  You may need to fine-tune the assets, resize them, add transparency, fix up animation frames, convert to the proper formats, etc.  Here is a [wikipedia:list of raster graphics editors, list of graphics editors] for you to choose from.  A popular free one is [wikipedia:GIMP, The GIMP].
+
+=section #.#.#. Transparency
+
+Both [wikipedia:GIF] and [wikipedia:PNG] images allow [wikipedia:Transparency_(graphic), transparency], however they are still quite a bit different from each other.  [wikipedia:GIF] images are limited to 256 colors, and can only achieve [wikipedia:Transparency_(graphic), transparency] by designating one of the colors in the [wikipedia:Palette_(computing), palette] as transparent.  [wikipedia:PNG] images, on the other hand, support [wikipedia:Truecolor, full 24-bit color], and can have a alpha channel for true [wikipedia:alpha transparency].
+
+While it may seem that [wikipedia:PNG] images are the way to go, please note that they do take considerably more computing power to render.  If you were to design a game made up entirely of 24-bit alpha-transparent PNGs, it may only run smoothly on high-end systems (depending on the complexity).  [wikipedia:GIF] images will generally work better on lower-end systems, and also have much more of a "retro" look to them.  Also remember that each individual [wikipedia:GIF] image can have its own custom 256 color palette, so you are not limited to 256 colors |in total|, just |per image|.
+
+=section #.#.#. Animated Graphics
+
+For animated sprites, all you have to do is line up the frames horizontally (like a sideways film strip), making sure each "frame" is exactly the same pixel width, and save them as a single, combined image file.  While you can provide a separate file for each frame, this is not recommended, as it slows down the browser having to switch image sources so frequently.  A single image with multiple frames aligned horizontally allows the Effect engine to produce the animation smoothly and efficiently.  Here is an example of a sprite with multiple frames of animation:
+
+=image /effect/images/docs/getting_started/running.png
+=caption A 50x70 animated sprite with 7 frames
+
+The |sprite|, in this case, is only 50x70 pixels in size, but the |source image| is actually 350x70 pixels, because it contains 7 different frames of animation (50 * 7 = 350), all arranged horizontally.  You must make sure that your frames are perfectly aligned so the animation works properly.  Use your graphic editor's "grid" feature to make sure everything is lined up.
+
+=section #.#. Audio Assets
+
+Audio assets are all the sound effects and music for your game.  They should all be in [wikipedia:MP3] format (mono or stereo), and stored as one file per sound effect or music track.  Music tracks may be looped.  In an effort to minimize loading time, it is recommended that you encode your audio files at a bitrate of 64kbps, however all standard MP3 bitrates are technically supported.  Here is a [wikipedia:audio software, list of audio software] programs for editing and saving your audio files.
+
+If you already have audio sound effects or music in another format, you will need to convert them to [wikipedia:MP3] format for use in the Effect engine.  Many audio programs exist for doing this, but two very popular free ones are [http://www.apple.com/itunes/ Apple iTunes] and [wikipedia:Audacity].  See the [#Article/docs/Audio_Guide Audio Guide] for details.
+
+=section #.#. Text Assets
+
+Many games have text assets, which are either configuration settings or localized strings used in the game.  These usually consist of game story, character dialog, and any text that appears on the screen.  While you can simply provide these assets inline along with your source code, it is recommended that you use [wikipedia:XML] files.  [wikipedia:XML] files allow you to store all your game text as a structured file, which can be localized separately, and stored on a server.  The Effect engine can then load the XML file and convert the contents to a [wikipedia:JavaScript] [wikipedia:associative array] tree, otherwise known as [wikipedia:JSON] (JavaScript Object Notation).  This allows the contents of your [wikipedia:XML] files to be available to your game's source code.
+
+See the [XML Resources] section below for more.
+
+=section #.#. Font Assets
+
+The engine supports custom [wikipedia:OpenType] and [wikipedia:TrueType] fonts, which you can upload and use in your game.  This works by having our servers pre-render all the font glyphs into a grid at a particular point size and color, then returning that "glyph map" image to the game for display.  This works very well for in-game heads-up displays (score, lives, level, timer, etc.), as the glyphs are monospace.  For details, please see the [#Article/docs/Font_Guide Font Guide].
+
+You can also render variable-width strings from the same OpenType / TrueFont source font files, including entire paragraphs with word wrap, using the [#Article/plugins/TrueFont TrueFont Plugin].
+
+=section #.#. Video Assets
+
+Not only can you play video clips in your games for introductions and cut scenes, you can also layer sprites and tiles |on top of| playing video, even during game play, for very interesting layered effects.  Simply upload [wikipedia:H.264/MPEG-4_AVC] video files to your game as assets, and you are ready to go.  For playing cut scenes, you can register event handlers for executing functions when a video finishes playing, and for video backgrounds you can loop clips so they continuously play.
+
+For details on using video, please read the [#Article/docs/Video_Guide Video Guide].
+
+=section #. Starting a New Game
+
+With a free Effect Games Developer Account, you can create and publish as many games as you want.  Each game project can be set public or private, and you can manage your own member list.  Invite users to become members of your game, grant administrator privileges to members, send mass e-mails to all members, and more.  All game activity is tracked in a log, so you can see which members are actively working on parts of your game.
+
+To start a new game, simply login and go to your home page (click the [#Home My Home] link, or click on your user icon).  Once there, you'll see a [#GameEdit Create New Game] link.  Click that, and just fill out the form.  We ask for the following information:
+
+=deflist
+	Game ID | *(Required)* A unique ID for your game.  Only alphanumerics and dashes are allowed.  This ID will be visible in URLs to your game's page.  Please note that you cannot change this value once it is set (unless you delete the game and create a new one).
+	Title | *(Required)* Your game's title.  You can use upper- and lower-case characters, spaces and common symbols.  This will be visible on all game pages.
+	Description | Your game's description, if you want to provide one.  This is displayed on your game's page (once published), and can contain rich formatting.
+	Genres | Optionally choose up to three genres that your game fits into (examples include "Action", "Arcade", "Adventure", "Puzzle", etc.).  This information will be used to classify your game into categories, if you choose to publish it on our site.
+	Access | Here you can choose whether to make your game public (all users can view your game project), or private (only game members can view your game project).
+	Logo Image | Optionally select a logo image for your game.  This is displayed next to your game description on category pages (if you choose to publish it on our site).
+	Twitter Sync | Optionally synchronize the Game Log to a [http://twitter.com Twitter] account.  This is a great way to keep your team updated with game project activity.
+	Preload | The Effect Engine can either preload all of your game's resources at startup, or load on-demand at certain times during the game.  For smaller games it is easiest to just preload everything.
+	Plugins | Here you can optionally choose one or more Plugins to use in your game.  Plugins add or enhance engine features, and may be from 3rd party developers.  Check out the [#ArticleCategory/plugins Plugin List] for details.
+
+Besides the Game ID, you can change any of this information at any time.  When you are ready, click the "Create Game" button.  Your game project is now created and ready for you to fill it with content!
+
+=section #.#. Game Project Page
+
+All games have their own project page, which is the central hub for managing your game online.  You can get to your game's project page by logging in and clicking on the game logo or title.  Here is a screenshot of a game project page:
+
+=image /effect/images/docs/getting_started/game_tab.png style="border:0"
+=caption Screenshot of Game tab.
+
+Here are descriptions of the elements on this page:
+
+=section #.#.#. Stats
+
+This little widget tracks the stats of your game project, including members added, assets uploaded, levels created, etc.
+
+=section #.#.#. Members
+
+This is the list of members for your game project.  It starts with just you, but you can invite other users to join at any time.  See the [Administer Button] for more.
+
+=section #.#.#. Articles
+
+Here you can write articles for your team.  They are kept separate from the other EffectGames.com site articles, and are not searchable (unless your project is public and you submit the RSS feed to search engines).  Examples include game documentation, game news, or level design guidelines.
+
+Your articles can include Wiki-style formatting.  For details, see the [article:main/Formatting Guide].
+
+=section #.#.#. Game Settings Button
+
+This button allows you to edit the game settings you entered when you first created the game, such as the title, description and logo.
+
+=section #.#.#. Game Log Button
+
+Every action is recorded in a game activity log, which you can view at any time.  Actions include uploading assets, creating levels, publishing revisions, and more.  Just click the "Game Log" button to see.  Each log entry has a date/time stamp, username, and the IP address and browser of the user.  You can also post your own custom messages to the game log, and synchronize the log to a [http://twitter.com Twitter] account if you desire.
+
+On most game pages you will see a small log widget at the bottom, which displays the latest activity:
+
+=image /effect/images/docs/getting_started/glog.png style="border:0"
+=caption Screenshot of Game Log Widget.
+
+In the Log Widget, you can click "Post Message" to add a custom comment to the game log, or click "View Log" to see the entire log.
+
+=section #.#.#. Local Development Button
+
+The Effect Engine provides an easy way to develop your game locally on your own computer, without having to upload any code to our servers (you only have to do that when you publish).  Just click on the "Develop Locally..." button, and you will be provided with a snippet of HTML to place in your local page, which activates the engine and loads all your recent assets and objects.  Example:
+
+=image /effect/images/docs/getting_started/develop_page.png style="border:0"
+=caption Screenshot of Local Development page.
+
+Then you include your game code (hosted on your own PC's hard disk if you want) and you're good to go.  For more details on this, please see the [article:docs/Local Development Guide].
+
+=section #.#.#. Quick Play Button
+
+The "Quick Play..." button allows you to quickly play the "latest" version of your game online, without having to publish a revision.  This is not part of the Local Development system, but rather relies on your game code being pre-uploaded.  In order for this to work, you must upload all your game code to the "src" folder in the "Assets" tab.  This is an optional feature, and is not required.
+
+This comes in handy when you have a "public" game that you want people to be able to clone (see the [Clone Game Button] below).  If you have your game code already uploaded, people can clone your game, make changes such as swapping graphics or editing levels, and then simply click "Quick Play..." to play their custom version.  Meaning, they do not have to touch any code.
+
+=section #.#.#. Clone Game Button
+
+The "Clone Game..." button allows you to clone (i.e. duplicate) your game, creating a separate copy with its own Game ID.  This can be performed on all the games you are a member of, and on any "public" games.  In either case, you become the owner and administrator of the cloned game.  This feature can be used to create "backups" of your game in progress, or perhaps a "branch" to try something new without damaging your original work.
+
+Also, you can clone any public game to make your own personal version.  For example, if you want to try creating your own Mario level, try cloning the public [#Game/mariodemo Mario Demo] game, and editing a level or two!  Then you can just click the "Quick Play..." button (see the [Quick Play Button] above) to instantly play your modified version.  You can also publish your own revisions of the cloned game, for all to see.
+
+=section #.#.#. Administer Button
+
+When you create a game, you automatically become an administrator.  Administrators can invite users to join the game, promote other members to administrators, and manage members on a special page.  If you are an admin, you will see an extra "Administer..." button on the main game page.  Click this to see the admin page:
+
+=image /effect/images/docs/getting_started/admin_page.png style="border:0"
+=caption Screenshot of Game Administration page.
+
+Here you can invite users to become members of your game project by clicking the "Invite Users" link.  Once they accept your invitation, they can make changes to the game project.  If you want, you can promote users to become game administrators by clicking the checkboxes in the "Administrator" column.  Click the "Remove From Game" links to remove members from the game.
+
+Also, you can click the "Email Everyone..." button to send a bulk e-mail to all your game members (without revealing everyone's e-mail addresses to each other, or to you).
+
+Finally, you can click "Delete Game" to completely delete the game project, and remove it from the Effect Games website.  If you published any game revisions, they are also deleted.
+
+=section #.#. Display Tab
+
+The "Display" tab allows you to configure the display settings for your game, including:
+
+=deflist
+	Display Size | This is the display size of your game, in pixels.  This can be any size from 256x240 upward (there is no upper limit).
+	Background Color | This is the default background color for your game.  You can actually change this at any time in code, and set it per level.
+	Toolbar Color | This is the toolbar "theme" color.  The toolbar floats just below your game port and allows the user to perform various tasks.
+	Splash Image | This is an optional image that is displayed before the game loads, when embedded on 3rd party sites.  See the [article:docs/Publishing Guide] for details.
+	Loading Image | This is an optional image that is displayed while the game is loading (includes the intiial game load, and loading levels later on).
+	Allow Zoom | You can control whether to allow zooming or not in your game.  Zooming doubles, triples or quadriples the game size and scales all your graphics to fit.
+	Zoom Filter | If you allow zooming, this controls the resize algorithm for scaling your graphics.  You can select *Smooth* (blur the images), or *Sharp* (keep sharp edges).
+	Zoom Default | This is the default zoom level to set when the game first loads (and the user has no preference set).
+	Frame Rate | This is the desired frame rate for your game, expressed as frames per second.  The engine will attempt to maintain this frame rate regardless of the complexity of the game.  Typical frame rates are 30 fps and 60 fps.
+	Frame Skip | If the engine cannot maintain the desired frame rate, enabling Frame Skip means that the engine will skip frames, and disabling it means each and every frame will be rendered.  Try both to see which one works best for your game.
+
+=section #.#. Assets Tab
+
+This is where you can upload and manage assets for your game (graphics, fonts, sounds, music, XML files).  You can create folders (and subfolders) and organize your assets however you like.  Here is a screenshot:
+
+=image /effect/images/docs/getting_started/assets_tab.png style="border:0"
+=caption Screenshot of Assets tab.
+
+Here you can upload, move, copy, rename and delete assets and folders.  Just click on a file or folder, and select an action from the floating palette on the right.  You can select multiple files or folders by holding the Shift or Ctrl keys (Command key on Mac).  To upload files, select a destination folder, then click the "Upload Files..." button.
+
+Assets are uploaded from your local machine to the Effect Games servers, and are hosted there for the lifetime of your game.  They are served up for users playing your game, and are automatically scaled and transformed for things like zooming, and special image effects.
+
+See the [article:docs/Asset Manager Guide] for details.
+
+=section #.#. Objects Tab
+
+The "Objects" tab is where you manage the objects in your game.  Game Objects include things like Sprites, Tiles, Tilesets and Bitmap Fonts.  Once these are defined, you can use them in your game code, and place them into levels.  Example screenshot:
+
+=image /effect/images/docs/getting_started/objects_tab.png style="border:0"
+=caption Screenshot of Objects tab.
+
+=section #.#.#. Sprite Classes
+
+Each Sprite in your game needs to have a class (a collection of functions for handling behavior).  This is defined in your code, but you can also register the sprite class as a game object, which has several benefits:
+
+First of all, if you intend to place the sprite into levels using the Level Editor, Effect needs to know how large your sprite is, and how to identify it.  You can also include an icon for display in the level editor.
+
+Secondly, sprites may rely on certain resources being loaded (for example, images and sounds).  You can define these resources and attach them to the sprite, so they are automatically loaded when the sprite loads.  This can happen at game startup, or on demand when a level containing the sprite is loaded.
+
+Also, if you choose to place your sprite into levels, you can define a set of properties for the sprite.  Properties are key/value pairs that are shown in the level editor for the level designer to fill with data.  For example, a sprite can have properties such as direction, behavior, energy (life), strength, and defense rating.  You can define what these are, and how to select a value for each property (text field, menu, checkbox).  These properties, once filled with values, are saved with the level, and made available to your code when instances of your sprite are created.
+
+Finally, you can setup a dependency chain of sprites, so everything loads as needed.  For example, you may have an enemy sprite that you place into levels, but it relies on other sprites such as a projectile and explosion.  These sprites aren't explicitly placed into levels, so they won't be auto-loaded unless a sprite declared them as prerequisites.
+
+For more details, see the [article:docs/Sprites and Tiles Guide].
+
+=section #.#.#. Tile Classes
+
+You may choose to use tile maps in your game, which are layers of equally-sized and spaced tile graphics, applied using the Level Editor.  You can define these by simply including a directory of tile graphics and creating a Tileset (see next section).  However, you can also attach |behaviors| to individual tiles, and those are what "Tile Classes" are.  For example, you may have a tile class called "Ground" which is solid and allows the player to stand on it.
+
+While you have to define tile classes in your code, you must also register the classes, so you can use them in the Level Editor.  Each tile class has a name (which must match your class name), an optional icon for display in the level editor, properties (just like sprites), sprite dependencies, and resources.
+
+For more details, see the [article:docs/Sprites and Tiles Guide].
+
+=section #.#.#. Tilesets
+
+Tilesets are collections of tile graphics for use in the Level Editor.  Simply select a directory from Asset Manager, and all the images found within are used to make up the Tileset.  All the images must be the same size.
+
+You can define as many tilesets as your game needs.  You then assign a tileset to a tile layer in the Level Editor.
+
+See the [article:docs/Sprites and Tiles Guide] and [article:docs/Level Editor Guide] for more on Tilesets.
+
+=section #.#.#. Bitmap Fonts
+
+Bitmap Fonts are created using a [wikipedia:TrueType] or [wikipedia:OpenType] font, then converted to a format which is used by the engine in your game.  Essentially the font glyphs are rendered at a specific size and color, and then the glyph map image is loaded in your game for displaying things like score, level, lives, time remaining, etc.
+
+You can also render variable width text with support for kerning, including paragraph text with word wrap, but still use custom font source files.  Check out the [#Article/plugins/TrueFont TrueFont Plugin] for this.
+
+See the [article:docs/Font Guide] for details on Bitmap Fonts.
+
+=section #.#. Audio Tab
+
+The Audio Tab is where you manage all the audio tracks in your game (this includes both sound effects and music).  Here is what the screen looks like:
+
+=image /effect/images/docs/getting_started/audio_tab.png style="border:0"
+=caption Screenshot of Audio tab.
+
+Each audio file you upload in Asset Manager automatically becomes an audio track on this screen.  You can assign each to categories (sound effects, music), and each category can have its own volume control.  You can also loop specific sounds (useful for music tracks), and enable multiplex (play the sound multiple times simultaneously).
+
+Click the play button next to each audio track to preview it.  Any changes made on this screen are saved immediately.
+
+See the [article:docs/Audio Guide] for more details.
+
+=section #.#. Keyboard Tab
+
+The Keyboard Tab is where you set the key controls for your game (if applicable -- some games don't need the keyboard).  The Effect Engine handles reading the keyboard events, and passing them to your code.  You do not have to worry about providing a user interface for changing keys -- that is all handled automatically.  All you need to do is define all the controls in your game (move left, move right, jump, shoot, etc.), and provide default keys for them.  Example screenshot:
+
+=image /effect/images/docs/getting_started/keyboard_tab.png style="border:0"
+=caption Screenshot of Keyboard tab.
+
+See the [article:docs/Keyboard and Mouse Guide] for more details.
+
+=section #.#. Levels Tab
+
+The Levels Tab is where you create levels for your game.  A Level is just a collection of sprite and/or tile layers that have saved content which is loaded for your game to use.  Please note that not all games have "levels", as content may be created procedurally.  You may also design your own level editor if you wish, and simply include your level data in code, or upload your levels as XML assets.  Example screenshot:
+
+=image /effect/images/docs/getting_started/levels_tab.png style="border:0"
+=caption Screenshot of Levels tab.
+
+=section #.#.#. Environments
+
+Environments are sets of image filters, which you can design, then assign to each level.  The filters can adjust the overall hue, saturation, brightness, contrast, etc., so for example you can have a sepia tone level, a night-time level, a grayscale level, and so on.  These filters are applied in real-time, and done in a "non-destructive" way, so you can make changes without having to upload new assets.  See the [article:docs/Level Editor Guide] for more details on environments.
+
+You can also apply environment filters to individual images.  See the [article:docs/Sprites and Tiles Guide] for details on this.
+
+=section #.#.#. Level Properties
+
+You can also define properties for your levels.  Properties are key/value pairs that you can then populate with values inside each level.  The values are then made available to your code when the level is loaded.  Examples of properties include background music selection, gravity, starting player position, environment effects, etc.
+
+See the [article:docs/Level Editor Guide] for details.
+
+=section #.#. Publish Tab
+
+The Publish Tab is where you publish revisions of your game.  You can publish internal revisions (for your team only), private revisions (for a selected audience) or public revisions (for all to see).  A revision is a complete copy of your entire game settings, assets and objects.  Example screenshot:
+
+=image /effect/images/docs/getting_started/publish_tab.png style="border:0"
+=caption Screenshot of Publish tab.
+
+To publish a release, you need to upload your game's source code, so your entire game is hosted on our servers.  If your code is spread across multiple files, no problem.  Upload them all (you can shift-select to upload multiple files at once), and re-order them if necessary.  We can also strip comments and whitespace from your code, if you want.  However, it is recommended you use a [wikipedia:Obfuscated_code, code obfuscation] utility such as the [http://developer.yahoo.com/yui/compressor/ YUI Compressor].  This not only shrinks your code down to the smallest possible size, but also protects it.
+
+Each game release has its own URL, and can have release notes if you care to write them.  There are actually several different types of releases:
+
+=deflist
+	Internal | This is an internal release only.  Players must be logged in, and be members of the game to access the page.
+	Alpha | This can be an internal or public release, as you see fit.  You can choose to password protect the game page, and remove features such as sharing.
+	Beta | Technically the same as an Alpha release, but is typically later on in the development cycle.
+	Release Candidate | Technically the same as Alpha / Beta releases, but release candidates are usually near the final release, and are typically made public.
+	Public | This is a final public release, which is ready for wide distribution, if you see fit.  You can also choose to submit your game to Effect for inclusion on our upcoming EffectArcade.com website.
+
+On the Alpha, Beta and Release Candidate release types, you can choose to enable or disable sharing, user comments and user feedback.  User comments are displayed on the game page, and user feedback is sent via e-mail to the game owner (your e-mail address is protected, of course).  You can also include your own [http://www.google.com/analytics/ Google Analytics] tracker, if you want.
+
+See the [article:docs/Publishing Guide] for more details.
+
+=section #. Writing Game Code
+
+This section contains instructions for getting started on writing code for your game.  Please note you should be familiar with JavaScript and object oriented programming.  If you aren't, please see the [Prerequisites] section above for some suggested books.
+
+=section #.#. Object Oriented Programming
+
+The Effect Game Engine was built using object oriented programming, so you'll have to use a bit of this in your game code.  For example, you will be creating your own classes that inherit from built-in Effect classes like [api:Sprite] and [api:Tile].
+
+To make this easier, Effect comes with a simple [article:docs/Object Oriented Framework].  In a nutshell, this lets you do things like:
+
+=syntax js
+	Sprite.extend( 'MySprite', {
+		url: 'myspriteimage.png',
+		logic: function(clock) {
+			// animate my sprite here!
+		}
+	} );
+
+This creates a new class called "{MySprite}", which inherits from the Effect [api:Sprite] class, sets the image URL, and defines a {logic()} function.
+
+Feel free to use this framework when creating your classes, but note that you don't actually have to!  You can use any framework you like, write your own, or just use the good ol' JavaScript prototype system.  It is entirely up to you.  For example, you could rewrite the previous example like this:
+
+=syntax js
+	function MySprite() {};
+	MySprite.prototype = new Sprite();
+	MySprite.__name = 'MySprite';
+	MySprite.prototype.url = 'myspriteimage.png';
+	MySprite.prototype.logic = function(clock) {
+		// animate my sprite here
+	};
+
+Note that the "{__name}" property is the one extra little thing you need to add to your subclasses (if you don't use the built-in object framework).  This is what allows the Effect Engine to link your objects with the game class definition (the classes you defined in the web interface), to pull in things like custom properties, load resources, and apply image effects.  The "{__name}" is automatically populated when you use the built-in object oriented framework.
+
+If you would prefer to use a 3rd party framework like [http://jquery.com jQuery], [http://prototypejs.org Prototype] or [http://mootools.net Mootools], you |can| use these in your game.  However, you should try to download a limited version of the library that only provides the features you need.  For example, you should not include any CSS, animation, event or browser DOM utilities provided by the libraries, as these won't help you here.
+
+=section #.#. Initialization
+
+The first thing you want to do is hook the [api:Effect.Game.onLoadGame] event, to execute code when the engine is ready (you shouldn't do anything before this event fires, except define classes).  At this point all the initial loading has occured (everything you have marked for "preload") and you are free to start your game.  Example:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		// your code here
+	} );
+
+See the [Event Handlers] section below, for more details about capturing events.
+
+You don't have to use a closure (inner function) -- you can provide a function reference, or function name, for the second argument to {addEventListener()}.  In your load function you can setup Planes (layers), load levels, create sprites, and generally get everything ready.  As soon as your function returns, the [Main Loop] starts.
+
+=section #.#. Main Port
+
+The [api:Effect.Port] object controls the main display area for your game.  The object is a singleton, created automatically when the engine loads.  Using this object you can control the background color, image, and attach planes (layers) to it.
+
+=section #.#.#. Background Color
+
+To set the background color, you can call the [api:Effect.Port.setBackgroundColor()] function, and pass it any CSS color value (hex, rgb, etc.).  Note that this removes any background image, if you have one set.
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		Effect.Port.setBackground({
+		 	color: '#ff0000' 
+		});
+	} );
+
+You can also set the background color per level, and set a default background color for your game.
+
+=section #.#.#. Background Image
+
+You can also specify a background image for the main game port, which can have specific scrolling behavior (if desired).  To do this, call the {Effect.Port.setBackground()} function and pass the following arguments as an associative array:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		Effect.Port.setBackground({
+			color: '#ff0000',
+			url: 'mybackground.png',
+			xMode: 'infinite',
+			xSpeed: 2,
+			yMode: 'infinite',
+			ySpeed: 2
+		});
+	} );
+
+The "{url}" property should be set to the filename of the image you want for the background.  The image needs to be loaded (either by preloading it, or first loading a level that also loads the image).  As with all image URLs, you can specify a full path to the image in Asset Manager (example: "{/images/backgrounds/mybackground.png}"), or just the filename (as shown above), and Effect will attempt to locate it in its list of loaded images.  The latter only works if you use unique filenames for all your images.  Meaning, if you happen to have the filename "{mybackground.png}" in two different directories (and both are loaded), specifying only the image filename is ambiguous (in which case Effect will use the first one it finds).
+
+The "{xMode}", "{xSpeed}", "{yMode}" and "{ySpeed}" properties control how the background scrolls with the level.  If your background image is meant to "fit" to the level, meaning it is larger than the screen but should scroll to fit exactly inside the level, set the {xMode} and {yMode} properties to "{fit}".  Or, if your background image is a "repeating tile" (seamlessly looped) so it can scroll onto itself, you should set {xMode} and {yMode} properties to "{infinite}", and set the {xSpeed} and {ySpeed} to the desired scrolling speed.
+
+You can alternatively configure the background image, and all the scrolling behavior, per each level in the Effect web interface.  All you have to do then is load the level, and all the settings will be applied automatically.
+
+=section #.#. An Introduction to Planes
+
+A [api:Plane] is a logial layer of game graphics that lives in the main game port.  Examples include a [api:TilePlane] and a [api:SpritePlane], but there are other types as well.  You can even design your own type of custom Plane.  But for now, let's focus on the built-in types.
+
+A [api:TilePlane] is basically a grid of equal-sized tile images that can cover the entire portal area, and even far beyond.  This type of plane is used in many classic games to display graphics.  The tiles can be any size, but some common sizes are 16x16, 32x32 and 64x64 pixels (but they don't necessarily have to be square).  Tile planes can automatically scroll with the level, so the graphics appear to move by as the "camera" follows your character.
+
+A [api:SpritePlane] is a collection of sprites.  That is, a group of game objects where each can move independently.  Sprites can be controlled by the user (e.g. the hero or character), or controlled by the CPU (e.g. enemies, power-ups, main title, etc.).  Anything that can move can be a sprite.  Sprites can also have multiple frames of animation, and have special effects like transparency.
+
+For now, let's create a basic sprite plane so you can get a feel for how they work.  Add this section of code inside your load function.
+
+=syntax js
+	Effect.Game.addEventListener( 'onLoadGame', function() {
+		var splane = new SpritePlane( 'sprites' );
+		splane.setZIndex( 2 );
+		Effect.Port.attach( splane );
+	} );
+
+So what we've done here is created a new {SpritePlane} object and placed it in a local "{splane}" variable, plus given it an ID: "sprites" (the ID can be used to retrieve a reference to the plane at a later time).  Then we set its [wikipedia:Z_order, z-index] value, which controls the draw order for all sprites in the plane (although each sprite can override this).  Finally we "attach" the plane to the main game port ({Effect.Port}).  This registers the plane so it can receive events, and so the plane knows where on the screen to create new sprites.
+
+=section #.#. An Introduction to Sprites
+
+Now we have to actually add *Sprites* to the plane.  A [wikipedia:Sprite_(video_game), Sprite] is a user-defined object, which can move freely around in the sprite plane.  Each sprite type requires its own JavaScript class, to control its size, content and behavior.  Of course, you can have multiple sprites of a particular type.  Sprites inherit from a base Effect [api:Sprite] class which provides many useful functions such as setup, loading assets, animation, collision detection, etc.  Here is a very simple example:
+
+=syntax js
+	Sprite.extend( 'Enemy', {
+		
+		// sprite properies
+		url: '/images/sprites/enemy.png',
+		width: 16,
+		height: 16,
+		
+		// behavior attributes
+		collisions: true,
+		solid: false,
+		dieOffscreen: true,
+		
+		logic: function(clock) {
+			// logic routine here
+		}
+		
+	} );
+
+Here are quick descriptions of the properties we defined:
+
+=deflist
+	url | This should be a URL to the image for the sprite, as located in your Assets.  Optionally you can omit the path and just include the filename, as long as all your filenames are unique.
+	width | This is the pixel width of your sprite.  If your sprite image contains multiple frames of animation, this should only be the width of one single frame.
+	height | This is the pixel height of your sprite.  If your sprite image contains multiple frames of animation, this should only be the height of one single frame.
+	collisions | This flag controls whether this sprite responds to collisions, when using the built-in [Collision Detection] functions.
+	solid | This sets the solidity of your sprite (when other sprites collide with it, they will stay outside its boundary).
+	dieOffscreen | When this flag is set to true, the sprite will automatically destroy itself when it leaves the screen.
+	logic() | This function is called for every iteration through the [Logic Loop], and is meant for the code that controls your sprite's behavior.
+
+This is just a minimal example of a sprite class.  Typically the class would have code to run logic in the main loop (i.e. movement), handle events such as collision, and provide animation.  Those are all explained later, but for now, let's just create an instance of our sprite and put it onscreen.
+
+=syntax js
+	splane.createSprite( 'Enemy', {
+		x: 50,
+		y: 50
+	});
+
+You'll notice that we used our previously-created *SpritePlane* object ("{splane}") to create new instances of sprites.  If your "{splane}" variable fell out of scope, you can always get access to your plane by looking it up:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+
+As you may recall, when we first created our SpritePlane object, we gave it an ID of "{sprites}".  Then, after the plane is attached to the main port, we can look it up at any time by using the [api:Effect.Port.getPlane()] function, and passing in our ID.
+
+The [api:SpritePlane.createSprite()] method creates sprites on a plane, and accepts a sprite class name, and an optional associative array of properties (which can add to the object, or override defaults).  In this case we've set the horizontal ({x}) and vertical ({y}) position of the sprite instance, relative to the top-left corner of the level (these are "global" coordinates, not screen coordinates, so you need to keep in mind where the level is scrolled).
+
+So at this point our sprite will be onscreen and visible to the user.  You can move the sprite around simply by setting the "{x}" and "{y}" properties.  For example:
+
+=syntax js
+	Enemy.add({
+		logic: function(clock) {
+			this.x++;
+			this.y++;
+		}
+	});
+
+Since we created our sprite class using the built-in class framework, we can use the static "{add()}" function on the class constructor to add new methods or properties to our class (you could of course just do: "{Enemy.prototype.logic = function()...}").
+
+In this case we're adding a "{logic()}" method, which is automatically called once per iteration through the [Logic Loop].  We're incrementing both the "{x}" and "{y}" sprite properties, which will make our sprite move to the right and downward until it falls offscreen (at which point it will destroy itself, because the "{dieOffscreen}" flag is set in the class).
+
+There are so many more things you can do with sprites.  For full details, see the [article:docs/Sprites and Tiles Guide].
+
+=section #.#. Loading Levels
+
+To load a level (which is just a saved set of sprites and/or tiles in preset layers), call the [api:Effect.Game.loadLevel()] function, and pass in your Level ID that you entered in the web interface, and a callback function.  Example:
+
+=syntax js
+	Effect.Game.loadLevel( 'MyLevel1', function() {
+		// level is now loaded and activated, set things up
+	}, true );
+
+When you call this function, resources may need to be fetched from the server.  In these cases the [Main Loop] stops, the display dims, and the loading progress bar is displayed.  When everything is ready, your callback function is invoked, and the main loop resumed.  If the level is already loaded (you can set levels to preload), your callback function is invoked instantly.
+
+The {loadLevel()} function takes three arguments: The ID of the level, a callback function, and a boolean indicating whether to activate the level once it is loaded.  Activation means that the appropriate layers and sprites/tiles are all created and placed into the world.  This defaults to {true}.
+
+For more details, see the [article:docs/Level Editor Guide].
+
+=section #.#. Scrolling
+
+To scroll the level, call [api:Effect.Port.setScroll()] and pass in the desired horizontal ("{x}") and vertical ("{y}") amount.  Passing in "{0, 0}" means the top-left corner of the level (which is the default).  Example:
+
+=syntax js
+	Effect.Port.setScroll( 100, 100 );
+
+You can call this during every iteration through the main loop, for example to follow your character.  In fact, to make this easier, you can call [api:Effect.Port.follow()] and pass in a reference to your player sprite.  This will scroll the screen so that your sprite falls right in the center.  A typical place for this is in your character sprite's {logic()} function.  Example (assuming you have created a sprite class named "{MyPlayerSprite}" for your main character):
+
+=syntax js
+	MyPlayerSprite.add({
+		logic: function(clock) {
+			Effect.Port.follow(this);
+		}
+	});
+
+You can also pass in an optional second parameter, which sets the follow speed (to simulate smooth camera lag).  For example, if you pass in "{0.25}", it will take approximately 4 frames for the camera to "catch up" and center the sprite in the middle of the screen.
+
+Note that in order to scroll, the game "world size" must be defined.  If you loaded a level from the Level Editor, this is set automatically for you.  If not, and you are generating your game content dynamically, you can call [api:Effect.Port.setVirtualSize()] to set the world size.  Example:
+
+=syntax js
+	Effect.Port.setVirtualSize( 4096, 4096 );
+
+The arguments are the horizontal and vertical world size, in pixels.
+
+=section #.#. Event Handlers
+
+You have already seen the use of some event handlers in the examples above, but there are actually lots of different events you can listen for.  For the complete list, see the [article:docs/API Reference Guide].  For now, here are some common ones:
+
+=section #.#.#. Keyboard Events
+
+Keyboard Events are fired when the user presses and releases keys on the keyboard (this also covers gamepads, which emulate a keyboard with software).  You can listen for these events and trigger actions in your game, such as moving your character, firing a weapon, etc.
+
+In the web interface you can define any number of "controls" (key assignments), and give them each an ID, a title, and one or more detault keys to trigger the control.  The idea here is, the user can redefine the keys however he/she likes using The Toolbar, but the same ID is sent to your code regardless of the key that was pressed.  So you don't have to worry about mapping key codes to actions -- just remember your own IDs.
+
+For example, say you registered the following key definitions in the web interface for your game:
+
+=table
+	Control ID | Title | Keys
+	left | Move Left | Left Arrow, A
+	right | Move Right | Right Arrow, D
+	jump | Jump | Space Bar
+
+You could then listen for [api:Effect.Game.onKeyDown] and [api:Effect.Game.onKeyUp] events like so:
+
+=syntax js
+	Effect.Game.addEventListener( 'onKeyDown', function(id) {
+		switch (id) {
+			case 'left':
+				// start moving the player left
+				player.left = true;
+				break;
+			case 'right':
+				// start moving the player right
+				player.right = true;
+				break;
+			case 'jump':
+				// make the player jump!
+				player.jump = true;
+				break;
+		}
+	} );
+	
+	Effect.Game.addEventListener( 'onKeyUp', function(id) {
+		switch (id) {
+			case 'left':
+				// stop moving the player left
+				player.left = false;
+				break;
+			case 'right':
+				// stop moving the player right
+				player.right = false;
+				break;
+			case 'jump':
+				// no need to take any action here
+				// flag is reset by sprite logic function
+				break;
+		}
+	} );
+
+So here we are listening for our three key controls, and setting flags on a "{player}" variable (assuming this is a reference to your main character sprite).  The flag names are arbitrary.  The idea is, during the next iteration through the [Logic Loop], your player sprite can detect the flags and act accordingly.  It is wise not to call functions and begin taking action inside the key handler, because the event arrives |between frames| -- it is best to leave the action to the logic function.  Example:
+
+=syntax js
+	MyPlayerSprite.add({
+		logic: function(clock) {
+			if (this.left) {
+				// 'left' key is being held down
+				// move player to the left
+				this.x--;
+			}
+			else if (this.right) {
+				// 'right' key is being held down
+				// move player to the right
+				this.x++;
+			}
+			
+			if (this.jump) {
+				// initiate jump action, and clear flag
+				this.doJump();
+				this.jump = false;
+			}
+		}
+	});
+
+So here we have two movement keys that can be held down, and we want our sprite to move as long as we are holding the keys.  So the "{onKeyDown}" handler sets the flags, and the "{onKeyUp}" handler clears it.  The "{logic()}" function just checks for the flags and moves, or not.  But we want the "{jump}" key to be a one-shot action -- i.e. holding the key has no effect.  So we only set the flag in the {onKeyDown} handler (nothing is done when the jump key is released), and the logic function handles clearing the flag.
+
+For more on keyboard controls, see the [article:docs/Keyboard and Mouse Guide].
+
+=section #.#.#. Mouse Events
+
+Mouse Events include moving the mouse over the game display area, clicking, and moving the mouse wheel (if the user has one).  You can listen for any of these events in your game and execute any actions you like.
+
+To capture all mouse clicks, simply listen for the [api:Effect.Port.onMouseDown] and/or [api:Effect.Port.onMouseUp] events.  Note that these are applied to {Effect.Port}, not {Effect.Game}.
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseDown', function(pt, buttonIdx) {
+		// a mouse button was pressed!
+	} );
+	
+	Effect.Port.addEventListener( 'onMouseUp', function(pt, buttonIdx) {
+		// a mouse button was released!
+	} );
+
+Your callback function is passed the mouse coordinates (translated into global world coordinates), and the button number.  The mouse coordinates are passed as a [api:Point] object, with "{x}" and "{y}" properties.
+
+If you want to determine if the user clicked on a sprite, you can use the [api:SpritePlane.lookupSpriteFromGlobal()] function.  Pass this the mouse coordinates, and it returns a reference to the sprite under the mouse cursor, if any.  If multiple are found, the sprite with the highest {zIndex} is returned.
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseDown', function(pt, buttonIdx) {
+		var splane = Effect.Port.getPlane( 'sprites' );
+		var sprite = splane.lookupSpriteFromGlobal( pt );
+		if (sprite) {
+			// sprite was clicked!
+		}
+	} );
+
+To capture all mouse movement, listen for the [api:Effect.Port.onMouseMove] event:
+
+=syntax js
+	Effect.Port.addEventListener( 'onMouseMove', function(pt) {
+		// the mouse was moved!
+	} );
+
+For more on mouse controls, see the [article:docs/Keyboard and Mouse Guide].
+
+=section #.#. Main Loop
+
+The main loop is the "heartbeat" of your game, which runs constantly at your desired frame rate (you set the frame rate in the web interface).  It automatically calls the "{logic()}" function on all your sprites, and then handles rendering them onscreen.  The loop is always running, unless the game is paused, or loading a level.
+
+The are actually two separate loops running, the [Logic Loop] and the [Draw Loop].  Depending on how you set the "Frame Skip" feature, these loops may be synchronized, or run independently.  For example, if you choose to skip frames, and your desired frame rate cannot be maintained, the engine will "skip" draw frames as needed.  Meaning, the logic loop may be executed multiple times per each iteration through the draw loop.
+
+You can hook each loop to execute code for each iteration.
+
+=section #.#.# Logic Loop
+
+To hook the logic loop, listen for the [api:Effect.Game.onLogic] event:
+
+=syntax js
+	Effect.Game.addEventListener( 'onLogic', function(clock) {
+		// called for each logic frame
+	} );
+
+The "{clock}" is the frame counter, which is always increasing by 1 for every iteration.  You can use this counter to measure how much time has elapsed, or for controlling animation.
+
+=section #.#.# Draw Loop
+
+To hook the draw loop, listen for the [api:Effect.Game.onDraw] event:
+
+=syntax js
+	Effect.Game.addEventListener( 'onDraw', function(clock) {
+		// called for each draw frame
+	} );
+
+This works similarly to the logic handler, except that the "{clock}" is synchronized to the draw counter, not the logic counter.  You will probably never have to explicitly hook the draw loop, but the event is included for completeness.
+
+=section #.#. Scheduling Events
+
+Resist the temptation to use the built-in JavaScript {setTimeout()} or {setInterval()} functions in your game code.  This is because the callback function will not be synchronized to the game loop, and it will fire even if the game is paused (or worse, loading a level).  Instead, use [api:Effect.Game.scheduleEvent()]:
+
+=syntax js
+	Effect.Game.scheduleEvent( 30, function() {
+		// code will execute in 30 logic frames
+	} );
+
+The {scheduleEvent()} function takes the number of frames, and a callback function.  It will fire the callback after the desired number of logic frames elapses.  If the user pauses the game or loads a new level, the event will not fire until the main loop resumes.
+
+To remove all future events from the schedule, call [api:Effect.Game.clearSchedule()].
+
+=section #.#. XML Resources
+
+You can load XML assets as JSON objects, to access the contents of the file in your code.  To do this, first make sure the XML asset is loaded (add it to your game preload, level preload or sprite preload list), then call [api:Effect.Game.getXML()].  Example:
+
+=syntax js
+	var xml = Effect.Game.getXML( '/text/strings.xml' );
+
+The XML structure is simplified into JSON so elements and attributes are just key/value pairs in a "tree" of associative arrays.  To illustrate, consider the following XML file:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<Strings>
+		<Instructions>Use arrow keys to move, and space bar to jump.</Instructions>
+		<LevelIntros>
+			<Level1>This is the intro to level 1.  Good luck!</Level1>
+			<Level2>Level 2 is much harder.  Will you survive?</Level2>
+		</LevelIntros>
+		<GameStory>
+			<Page1>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</Page1>
+			<Page2>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Page2>
+		</GameStory>
+	</Strings>
+
+So once this file is loaded and fetched with {getXML()}, the JSON object tree will look like this:
+
+=syntax js
+	var xml = {
+		Instructions: "Use arrow keys to move, and space bar to jump.",
+		LevelIntros: {
+			Level1: "This is the intro to level 1.  Good luck!",
+			Level2: "Level 2 is much harder.  Will you survive?"
+		},
+		GameStory: {
+			Page1: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+			Page2: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+		}
+	};
+
+Notice that the root {<Strings>} node of the XML is omitted from the JSON object.  That is collapsed because in XML you can only have one root node, so there is no need to create another level of the tree just to hold it.
+
+Attributes are also merged in with their elements, so they share the same hash with sub-elements.  Meaning, this XML:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<Strings>
+		<MyElement MyAttribute="foo">
+			<SubNode>bar</SubNode>
+		</MyElement>
+	</Strings>
+
+Becomes this JSON object tree:
+
+=syntax js
+	var xml = {
+		MyElement: {
+			MyAttribute: "foo",
+			SubNode: "bar"
+		}
+	};
+
+Finally, if you have multiple elements with the same name at the same level in the XML file, they become an array.  For example, this:
+
+=syntax xml
+	<?xml version="1.0"?>
+	<Strings>
+		<String>This is string number 0</String>
+		<String>This is string number 1</String>
+		<String>This is string number 2</String>
+	</Strings>
+
+Becomes this:
+
+=syntax js
+	var xml = {
+		String: [
+			"This is string number 0",
+			"This is string number 1",
+			"This is string number 2"
+		]
+	};
+
+It should be noted that this XML conversion to JSON is only meant for simple files, like a place to store strings and/or configuration settings.  It does not do well with "mixed node types" like an HTML file (with text content and sub-nodes in the same element).
+
+For details on how to render text in your game, see the [article:docs/Font Guide].
+
+=section #.#. Geometry
+
+The Effect Engine comes with two simple classes for managing geometry, the [api:Point] class, and the [api:Rect] class.  The {Point} class holds a single 2D point, and has "{x}" and "{y}" number properties.  A {Point} object is passed to all mouse event handlers, representing the cursor position.  It also has functions for calculating distance between points, calculating the angle between two points, and more.  The {Rect} class represents a 2D rectangle, and has "{left}", "{top}", "{right}" and "{bottom}" number properties.  Each sprite occupies a rectangle of space in the world.
+
+=section #.#.#. Points
+
+Here are a few examples of using points:
+
+=syntax js
+	// create a new point located and the top-left corner of the world
+	var pt = new Point( 0, 0 );
+	
+	// change the point's location to 50.1, 50.1
+	pt.set( 50.1, 50.1 );
+	
+	// floor the point (calls Math.floor() on x and y)
+	// new position will be: 50, 50
+	pt.floor();
+	
+	// offset point by +5, +5 (new pos will be 55, 55)
+	pt.offset( 5, 5 );
+	
+	// clone the point, giving us a copy
+	var pt2 = pt.clone();
+	
+	// project the new point out at a specified angle (45) and distance (100)
+	pt2.project( 45, 100 );
+	
+	// get the angle between pt and pt2
+	// will be roughly 45 degrees
+	var angle = pt.getAngle( pt2 );
+	
+	// get the distance between pt and pt2
+	// will be roughly 100
+	var dist = pt.getDistance( pt2 );
+
+Angles start at 3 o'clock and proceed counter-clockwise.  So 0 degrees is 3 o'clock, 90 degrees is 12 o'clock, 180 degrees is 9 o'clock, etc.
+
+=section #.#.#. Rectangles
+
+Here are a few examples of using rectangles:
+
+=syntax js
+	// create a new rectangle at 50, 50 and make it 100 x 100 in size
+	var rect = new Rect( 50, 50, 150, 150 );
+	
+	// get the rectangle's width and height
+	var width = rect.width();
+	var height = rect.height();
+	
+	// move the rectangle to 25, 25
+	rect.moveTo( 25, 25 );
+	
+	// retrieve a point right at the center
+	var pt = rect.centerPoint();
+	
+	// make sure the point is actually inside the rect
+	assert( rect.pointIn(pt) );
+	
+	// make a copy of our rect, and offset it by 45, 45
+	var rect2 = rect.clone().offset( 45, 45 );
+	
+	// make sure the copy still intersects the original
+	assert( rect.rectIn(rect2) );
+
+Remember that all sprites have a rectangle which represents their position and size in the world.  You can get a copy of any sprite's rectangle by calling the [api:Sprite.getRect()] function.  If you then move the rectangle, you can "apply" the changes back to the sprite (essentially moving the sprite to the rectangle's position).  This is done by calling [api:Sprite.setPosFromRect()], and passing in the modififed rectangle.
+
+The {Sprite} class also comes with several methods borrowed from the {Rect} class, including [api:Sprite.pointIn()], [api:Sprite.rectIn()], and [api:Sprite.centerPoint()].
+
+For more details on geometry, check out the [article:docs/Geometry and Collision Guide].
+
+=section #.#. Collision Detection
+
+The Effect Engine comes with a simple "intersecting rectangle" collision system.  Using this you can detect when sprites hit other sprites, or when sprites hit tiles.  You can also perform simpler operations like moving points and lines.  While you are free to roll your own collision code, or import a 3rd party library, the built-in system should work fine for many games.
+
+See below for some basic techniques, but be sure to read the [article:docs/Geometry and Collision Guide] for complete details.
+
+=section #.#.#. Setup
+
+Collision detection happens mainly on Sprite Planes.  For sprite-to-sprite collisions, there is no setup needed -- just call the functions below to move points, lines and whole sprites.  However, if your sprites can also collide with a Tile Plane, you need to "link" the planes together.  Do this by calling the [api:SpritePlane.linkTilePlane()] on your sprite plane, and pass in a reference to your Tile Plane.  Example:
+
+=syntax js
+	var splane = Effect.Port.getPlane('sprites');
+	var tplane = Effect.Port.getPlane('tiles');
+	splane.linkTilePlane( tplane );
+
+The Sprite Plane is now ready for dual-plane collision detection (checking collisions with both sprites on the same plane, and tiles on the "{tiles}" plane).
+
+=section #.#.#. Moving Sprites
+
+By far the easiest method for moving a sprite is to simply call [api:Sprite.move()].  This handles moving the entire sprite in any direction (even diagonally), updating the position of the sprite automatically, and also returns the {hit} object when a collision is detected (see the [article:docs/Geometry and Collision Guide]).  It also automatically corrects the sprite's position when a {solid} object is hit.
+
+This function works by reading two properties in the sprite object, "{xd}" and "{yd}".  These stand for "x delta" and "y delta" (the amount of pixels to move horiztonally and vertically).  You must set these before calling {move()}.  For example, here is a simple player sprite {logic()} routine:
+
+=syntax js
+	MyPlayerSprite.add({
+		logic: function(clock) {
+			// change xd and yd depending on keyboard keys down
+			if (Effect.Game.isKeyDown('right')) this.xd++;
+			else if (Effect.Game.isKeyDown('left')) this.xd--;
+			if (Effect.Game.isKeyDown('down')) this.yd++;
+			else if (Effect.Game.isKeyDown('up')) this.yd--;
+			
+			// now move the sprite
+			var hit = this.move();
+			if (hit) {
+				// we hit something!
+				if (hit.target.type == 'Enemy') this.die();
+				else if (hit.target.type == 'PowerUp') this.powerup();
+			}
+			
+			// have the camera follow us (make sure we call this -after- we move)
+			Effect.Port.follow(this);
+		}
+	});
+
+So in this example we are incrementing or decrementing the {xd} and {yd} values depending on which keys are being held down (see [Keyboard Events] above).  This would make the player "slide" all over the level.  Then we simply call {move()} which handles moving the sprite based on the current {xd} and {yd}, and gives a {hit} object for the collision (or not, if nothing was hit).  Upon a hit we take action based on the "{hit.target.type}", which will be the name of the Sprite (or Tile) class that we collided with.
+
+Note that moving sprites with {move()} is quite a bit more computationally intensive compared to moving single points.  For performance reasons is recommended you move points using [api:SpritePlane.movePointX()] and/or [api:SpritePlane.movePointY()] whenever possible.  This is especially important for sprites that are duplicated many times, like projectiles or sparkles.
+
+=section #.#. Tweening
+
+[wikipedia:Tweening] is an animation control system which provides the ability to interpolate frames of animation between two points in time.  Specifically, it allows you to move sprites (or scroll the screen, or animate any numerical properties of any object) with various algorithms that can "ease in", "ease out" or otherwise manipulate the progression between the start and end points.  You simply provide the object, the properties you want to animate, their start and end values, which algorithm you want, and the Tweening system calculates all the desired points along the path.
+
+There are two methods of using the Effect Tweening library: automatic and manual.  With automatic mode, you simply start a tween (which can animate multiple properties of an object) and the engine handles updating everything, all the way to the completion of the animation.  With manual mode, you call a low-level funciton which animates a single property each time through the main loop.  There are pros and cons to each method, discussed below.
+
+=section #.#.#. Automatic Tweens
+
+Automatic Tweens are basically "autopilot" tweens, which you setup, but then leave alone to do their thing.  There is no need to update them for every frame.  This is great for transitions, or animations that cannot be interrupted.  To setup an automatic tween, call [api:Effect.Tween.add()], and pass an inline associative array:
+
+=syntax js
+	var mysprite = Effect.Port.getPlane('sprites').getSprite('mysprite');
+	
+	Effect.Tween.add({
+		target: mysprite,
+		duration: 30, // frames
+		mode: 'EaseOut',
+		algorithm: 'Quadtaric',
+		properties: {
+			x: { start:0, end:150 },
+			y: { start:200, end:100 }
+		}
+	});
+
+This example assumes you have a Sprite Plane with ID "{sprites}", and a sprite already placed into the plane with ID "{mysprite}".  We are then registering a new tween, and passing in our sprite as the "{target}" (the object which contains the properties we want to animate).  Here are descriptions of the parameters:
+
+=deflist
+	target | The target object (sprite, etc.) which contains the properties to animate.
+	duration | The duration of the tween animation, expressed as the number of logic frames.
+	mode | The animation mode, one of "{EaseIn}", "{EaseOut}" or "{EaseInOut}".  See the [article:docs/Tweening Guide] for details.
+	algorithm | The algorithm name.  See the [article:docs/Tweening Guide] for the full list.
+	properties | Inner associative array which should contain all the properties you want to animate on the object, and their start and end values.
+
+At this point the tween will be automatically animated for the next 30 frames, and you don't have to do a thing.  The animation will complete with the "{x}" property at "{150}", and the "{y}" property at "{100}".
+
+The function actually returns an object you can use to query the current state of the animation (or cancel it prematurely, or change properties).  Also, the tweening system will fire an [api:Effect.Tween.onTweenUpdate] event on your object for every frame update, and [api:Effect.Tween.onTweenComplete] when the animation completes.  For complete details, see the [article:docs/Tweening Guide].
+
+=section #.#.#. Manual Tweens
+
+Manual Tweens give you complete control over the animation, by exposing a low-level function to animate a single property to a single point in time.  To achieve animation, you'll have to call the function for every iteration through the main loop.  Example:
+
+=syntax js
+	var mysprite = Effect.Port.getPlane('sprites').getSprite('mysprite');
+	
+	// setup our parameters for the animation once
+	mysprite.frame_idx = 0;
+	mysprite.num_frames = 30;
+	
+	// then, tween every frame inside our sprite class logic funciton:
+	MySprite.add({
+		logic: function(clock) {
+			if (this.frame_idx <= this.num_frames) {
+				var amount = this.frame_idx / this.num_frames; // 0.0 to 1.0
+				this.x = tweenFrame( 0, 150, amount, 'EaseOut', 'Quadratic' );
+				this.y = tweenFrame( 200, 100, amount, 'EaseOut', 'Quadratic' );
+				this.frame_idx++;
+			}
+		}
+	});
+
+This example assumes you have a Sprite Plane with ID "{sprites}", a sprite class named "{MySprite}", and a sprite of that type already placed into the plane with ID "{mysprite}".  As you can see, the [api:tweenFrame()] function is a static utility function, must be called on each property you want to animate, and simply returns the transformed value.  It is up to you to control starting and ending the animation.  Here are descriptions for the arguments to the function:
+
+=deflist tweenFrame() Arguments
+	start | The starting value for the property.
+	end | The ending value for the property.
+	amount | This value should be between "{0.0}" and "{1.0}", and sets the position along the animation path.
+	mode | The animation mode, one of "{EaseIn}", "{EaseOut}" or "{EaseInOut}".  See the [article:docs/Tweening Guide] for details.
+	algorithm | The algorithm name.  See the [article:docs/Tweening Guide] for the full list.
+
+So the idea here is that the function returns a number between the "{start}" and "{end}" values.  If the "{amount}" is "{0.0}", the return will be equal to the "{start}" value, and if it is "{1.0}", the return will be equal to the "{end}" value.  If it is somewhere between "{0.0}" and "{1.0}", then the return will vary based on the "{mode}" and "{algorithm}" selections.
+
+For details, see the [article:docs/Tweening Guide].
+
+=section #.#. Audio
+
+The Effect Engine allows you to easily play high quality stereo sound effects and music in your games.  Simply provide [wikipedia:MP3] formatted audio files (or use some of our [#Article/docs/Audio_Guide|Free_Stock_Sound_Effects Free_Stock_Sound_Effects]), and they can be used in your games via a simple API.  You can choose to preload some or all your files at startup, or load them on demand per level or per sprite.
+
+To play a sound, simply call the [api:Effect.Audio.playSound()] function:
+
+=syntax js
+	Effect.Audio.playSound("/audio/effects/explosion.mp3");
+
+Make sure you include a leading slash, and specify the file extension.  Remember that file paths are case sensitive.
+
+As long as all your sounds have unique names, you can use a shortcut and just specify the filename, without the path and extension:
+
+=syntax js
+	Effect.Audio.playSound("explosion");
+
+This is the simplest way of playing sound effects, and uses the default volume and balance.  To quiet all sounds currently playing, call the [api:Effect.Audio.quiet()] function:
+
+=syntax js
+	Effect.Audio.quiet();
+
+=section #.#.#. Audio Tracks
+
+Each audio track has its own object, which you can fetch and control separately.  This is the preferred way for dealing with music tracks, but sound effects can be handled this way as well.  To fetch an audio track, call the [api:Effect.Audio.getTrack()] function:
+
+=syntax js
+	var mymusic = Effect.Audio.getTrack("bkgnd_music.mp3");
+
+You can specify the shortcut here (filename sans extension), or the full asset file path with a leading slash.  Make sure your audio file is loaded (either by checking the "Preload" checkbox, or make sure the attached sprite or level is loaded).  If you try to fetch a track that is not loaded, {getTrack()} will return {undefined}.
+
+Once you have a reference to your audio track object, you can call methods directly on it:
+
+=deflist Audio Track Methods
+	[api:Effect.AudioTrack.play() play()] | This plays the sound.  Has no effect if the sound is already playing.
+	[api:Effect.AudioTrack.playSound() playSound()] | This plays the sound as an effect.  Meaning if the sound is already playing, it will be stopped and played again from the beginning (or multiplexed, depending on how the track is configured -- see the [article:docs/Audio Guide]).
+	[api:Effect.AudioTrack.stop() stop()] | This stops the sound if it is playing.  If multiple copies of the sound are playing via [article:docs/Audio Guide|Multiplex], all of them are stopped.
+	[api:Effect.AudioTrack.rewind() rewind()] | This rewinds the sound to the beginning.
+	[api:Effect.AudioTrack.setVolume() setVolume()] | This sets the volume of the audio track.  Specify a floating point number between 0.0 (silent) to 1.0 (full volume).  Remember that the sound volume is also governed by the category and master volume (see the [article:docs/Audio Guide]).
+	[api:Effect.AudioTrack.setBalance() setBalance()] | This sets the balance (stereo pan) of the audio track.  Specify a floating point number between -1.0 (full left) to 0.0 (center) to 1.0 (full right).  Please note that this feature is not supported on all browsers.
+	[api:Effect.AudioTrack.isPlaying() isPlaying()] | Returns {true} if the track is currently playing, {false} otherwise.  Does not apply to multiplexed tracks.
+	[api:Effect.AudioTrack.getPosition() getPosition()] | Returns the exact playhead position of a track that is currently playing, in seconds.  Does not apply to multiplexed tracks.
+	[api:Effect.AudioTrack.fadeIn() fadeIn()] | Fades the track in with an optional tween algorithm.
+	[api:Effect.AudioTrack.fadeOut() fadeOut()] | Fades the track out with an optional tween algorithm.
+	[api:Effect.AudioTrack.crossfade() crossfade()] | Crossfade between two tracks, with an optional tween algorithm.
+
+Examples:
+
+=syntax js
+	var mymusic = Effect.Audio.getTrack("bkgnd_music.mp3");
+	mymusic.setVolume(0.5); // half volume
+	mymusic.setBalance(1.0); // full right speaker
+	mymusic.play();
+
+All the track methods return the track object, so you can chain commands together:
+
+=syntax js
+	var mymusic = Effect.Audio.getTrack("bkgnd_music.mp3");
+	mymusic.stop().setVolume(0.5).setBalance(1.0).rewind().play();
+
+For full details, see the [article:docs/Audio Guide].
+
+=section #. Further Reading
+
+Now that you have a basic understanding of the Effect Engine, here are some suggested documents to read next:
+
+=list
+	[article:docs/Sprites and Tiles Guide]
+	[article:docs/Geometry and Collision Guide]
+	[article:docs/Keyboard and Mouse Guide]
+	[article:docs/Local Development Guide]
+	[article:docs/Publishing Guide]
+
+Also see our [#ArticleCategory/docs Complete List of Documents].
+

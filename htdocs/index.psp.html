@@ -1,0 +1,526 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	$self->set_ttl( 'ViewTTL' );
+	$self->header_out( 'Vary', 'User-Agent' );
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Effect Games</title>
+	<meta name="author" content="Joseph Huckaby">
+	<meta name="title" content="Effect Games">
+	<meta name="description" content="Effect Games provides free, online tools for building, sharing and playing your own browser based games.  Simply sign up for a developer account and start creating today!">
+	<meta name="keywords" content="games, javascript, dhtml, web games, developer tools, game engine, online games, game development, browser games, adventure games, action games, arcade games, puzzle games, effect engine, javascript engine, javascript game engine, dhtml games, dhtml game engine, level editor, game publisher, sprites">
+	<link rel="alternate" type="application/rss+xml" title="EffectGames.com Recent News" href="/effect/api/feed/category/news.rss" />
+	<link rel="stylesheet" type="text/css" href="<?= $query->{css} ? $query->{css} : 'style.psp.css?mod=2'; ?>" >
+	<!--[if IE 6]> <link rel="stylesheet" type="text/css" href="/effect/ie6.css" > <![endif]-->
+	
+	<script language="JavaScript">
+		var config = <?= xml_to_javascript(
+			copy_hash_remove_keys($self->{config}, 
+				'FileMagic', 'RSSConfig', 'PrivateUserData', 'DefaultPrivileges', 'Emails', 'Session',
+				'StorageConfig', 'DatabaseTables', 'Handlers', 'Paths', 'ImageServiceURL', 
+				'FreeAccounts', 'LogTemplate', 'ContactEmail', 'MailProxy', 'ContactReasons'
+			), 
+		1, compress => 1); ?>;
+	</script>
+	
+</head>
+<body>
+	<script type="text/javascript" src="code.psp.js"></script>
+	
+	<script language="JavaScript">
+		session.article_categories = <?= xml_to_javascript($self->{storage}->permacache_get('/admin/article_categories'), 1, compress => 1); ?>;
+		session.genres = <?= xml_to_javascript($self->{storage}->permacache_get('/admin/game_genres')->{Genres}->{Genre}, 1, compress => 1); ?>;
+		session.engine_versions = always_array( <?= xml_to_javascript($self->{storage}->permacache_get('/admin/engine_versions')->{Version}, 1, compress => 1); ?> );
+		session.engine_plugins = always_array( <?= xml_to_javascript($self->{storage}->permacache_get('/admin/engine_plugins')->{Plugin}, 1, compress => 1); ?> );
+		session.ticket_systems = always_array( <?= xml_to_javascript($self->{storage}->permacache_get('/admin/ticket_systems')->{System}, 1, compress => 1); ?> );
+	</script>
+	
+	<div id="d_growl_wrapper">
+		<div id="d_growl_top"></div>
+	</div>
+	
+	<div class="container">
+		
+		<!-- Spacer -->
+		<div style="height:20px"></div>
+		
+		<!-- Header -->
+		<div id="d_header" class="p100 fl clear rel header">
+			<div id="d_shadow" class="shadow">
+				<div class="logo" onClick="Nav.go('Main')"></div>
+				<div id="d_title" class="title" onClick="Nav.go('Main')"></div>
+				<div id="d_tagline" class="tagline"></div>
+			</div>
+			<div class="logo" style="background:transparent"></div>
+			<div id="d_title" class="title" style="background:transparent"></div>
+			<div class="clear"></div>
+			<div class="slideshow_container">
+				<div class="slide_photo_container">
+					<div id="d_header_slideshow_photo_0" class="slide_photo" style="z-index:1; background-image:url(<?= ($ie6 ? '/effect/api/image/' : '/effect/images/') . $self->{config}->{Strings}->{MainSlideshow}->{Slide}->[0]->{Photo} . ($ie6 ? '?format=gif&noalphadither=1' : ''); ?>);"></div>
+					<div id="d_header_slideshow_photo_1" class="slide_photo" style="z-index:2;"></div>
+				</div>
+				<div class="slide_text_container">
+					<div id="d_header_slideshow_text_0" class="slide_text" style="z-index:1;"><?= $self->{config}->{Strings}->{MainSlideshow}->{Slide}->[0]->{Text}; ?></div>
+					<div id="d_header_slideshow_text_1" class="slide_text" style="z-index:2;"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="slideshow_nav_container">
+				<div class="fl" style="width:49%;">
+					<div class="slideshow_nav prev fr" onClick="$P().prev_slide()"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="p50 fl">
+					<div class="slideshow_nav next fl" onClick="$P().next_slide()"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+		</div>
+		
+		<div class="clear"></div>
+		
+		<!-- Message Box -->
+		<!-- <div id="d_message_wrapper" style="display:none">
+			<div id="d_message" class="message"></div>
+		</div> -->
+		
+		<!-- Nav -->
+		<div class="nav">
+			<div class="left"></div>
+			<div class="nav_bar" id="d_nav_bar"></div>
+			<div class="right"></div>
+			<div class="search">
+				<table cellspacing=0 cellpadding=0>
+					<tr>
+						<td valign="center">Search:&nbsp;</td>
+						<td valign="center"><input type=text size=20 id="fe_search_bar" class="fe_small" onFocus="session.fitf=1;" onBlur="session.fitf=0;" onEnter="do_search_bar()">&nbsp;</td>
+						<td valign="center">
+							<script> document.write( icon('zoom.png', '', "do_search_bar()") ); </script>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="clear"></div>
+	
+		<!-- Left Sidebar -->
+		<table width="100%" cellspacing="0" cellpadding="0"><tr>
+		<td width="200" style="width:200px; min-width:200px; max-width:200px;" valign="top" id="td_sidebar">
+		<!-- <div class="p18 fl rel sidebar_container"> -->
+			
+			<div class="sidebar">
+				<!-- Dev account sidebar -->
+				<div class="title">
+					<div class="user">Developer Account</div>
+				</div>
+				<div class="content">
+					<div id="d_login_status"></div>
+				</div>
+				
+				<!-- Recent games sidebar (contextual) -->
+				<div id="d_sidebar_wrapper_recent_games" style="display:none">
+					<div class="title">
+						<div class="games">Recent Games</div>
+					</div>
+					<div class="content" id="d_sidebar_recent_games">
+						Loading...
+					</div>
+				</div>
+				
+				<!-- Documentation sidebar -->
+				<div class="title">
+					<div class="docs">Documentation</div>
+				</div>
+				<div class="content" id="d_sidebar_documents">
+					Loading...
+				</div>
+				
+				<!-- Tutorials sidebar -->
+				<div class="title">
+					<div class="tuts">Tutorials</div>
+				</div>
+				<div class="content" id="d_sidebar_tutorials">
+					Loading...
+				</div>
+				
+				<!-- Tools sidebar -->
+				<div class="title">
+					<div class="tools">Tools</div>
+				</div>
+				<div class="content" id="d_sidebar_tools">
+					<div class="sidebar_blog_row">
+						<div class="sidebar_blog_title">
+							<a href="#PlaceholderGen">Placeholder Generator</a>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Plugins sidebar -->	
+				<div class="title">
+					<div class="plugs">Plugins</div>
+				</div>
+				<div class="content" id="d_sidebar_plugins">
+					Loading...
+				</div>
+				
+				<!-- Feeds sidebar -->
+				<div class="title">
+					<div class="feeds">Feeds</div>
+				</div>
+				<div class="content" id="d_sidebar_feeds">
+					<div class="sidebar_blog_row">
+						<div class="sidebar_blog_title"><a href="/effect/api/feed/category/news.rss">Dev Blog RSS</a></div>
+					</div>
+					<div class="sidebar_blog_row">
+						<div class="sidebar_blog_title"><a href="/effect/api/feed/category/community.rss">Community Blog RSS</a></div>
+					</div>
+				</div>
+				
+				<!-- Support sidebar -->
+				<div class="title">
+					<div class="support">Support</div>
+				</div>
+				<div class="content" id="d_sidebar_support">
+					<div class="sidebar_blog_row">
+						<div class="sidebar_blog_title"><a href="#Article/docs/Frequently_Asked_Questions">FAQ</a></div>
+					</div>
+					<div class="sidebar_blog_row">
+						<div class="sidebar_blog_title"><a href="#Contact">Contact Us</a></div>
+					</div>
+					<div class="sidebar_blog_row">
+						<div class="sidebar_blog_title"><a href="#SubmitBug">Report a Bug</a></div>
+					</div>
+				</div>
+				
+			</div>
+			
+		<!-- </div> -->
+		</td>
+		
+		<td id="td_sidebar_spacer" width="20" style="width:20px; min-width:20px; max-width:20px;">&nbsp;</td>
+				
+		<!-- Content -->
+		<!-- <div class="p82 fl content_container"> -->
+		<td width="*" valign="top" class="content_container">
+		
+			<div class="content">
+				<div id="page_Main" style="display:none">
+					<!-- Main Content -->
+					<div id="d_blurb_main" class="blurb" style="display:none;"></div>
+					
+					<!-- <div class="h1">
+						<div class="fl">
+							Featured Demos
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="main_blog_section" id="d_blog_featured" style="margin-bottom:15px;">Loading...</div> -->
+					
+					<div class="h1">
+						<div class="fl">
+							<a href="#ArticleCategory/news">Development Blog</a>
+						</div>
+						<div class="fr">
+							<a class="icon feed" href="/effect/api/feed/category/news.rss" title="RSS Feed">RSS Feed</a>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="main_blog_section" id="d_blog_news">Loading...</div>
+				
+					<div class="h1">
+						<div class="fl">
+							<a href="#ArticleCategory/community">Community Blog</a>
+						</div>
+						<div class="fr">
+							<a class="icon post_article" href="#ArticleEdit?Path=/community" title="Post Article">Post Article</a>
+							<a class="icon feed" href="/effect/api/feed/category/community.rss" title="RSS Feed">RSS Feed</a>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="main_blog_section" id="d_blog_community">Loading...</div>
+				</div>
+				
+				<div id="page_PublicGameList" style="display:none">
+				</div>
+			
+				<div id="page_Admin" style="display:none">
+				</div>
+				
+				<div id="page_AdminUser" style="display:none">
+				</div>
+				
+				<div id="page_AdminReport" style="display:none">
+				</div>
+			
+				<div id="page_Home" style="display:none">
+					<!-- User Home -->
+					<div id="d_home_tab_bar"></div>
+					<div id="d_home_content" class="game_main_area">
+					
+						<div class="blurb" id="d_user_home_blurb" style="display:none"></div>
+					
+						<div class="h1">
+							<div class="fl">
+								My Account
+							</div>
+							<div class="fr">
+								<a class="icon edit_account" href="#MyAccount">Edit Account</a>
+							</div>
+							<div class="clear"></div>
+						</div>
+						<div id="d_user_home_summary">Loading...</div>
+					
+						<div class="h1">
+							<div class="fl">
+								My Games
+							</div>
+							<div class="fr">
+								<a class="icon new_game" href="#GameEdit">Create New Game</a>
+							</div>
+							<div class="clear"></div>
+						</div>
+						<div id="d_user_games">Loading...</div>
+						
+						<div id="d_user_article_drafts_wrapper" style="display:none; margin-top:0px; margin-bottom:30px; ">
+							<div class="h1">
+								<div class="fl">
+									My Article Drafts
+								</div>
+								<div class="clear"></div>
+							</div>
+							<div id="d_user_article_drafts">Loading...</div>
+						</div>
+					
+						<div class="h1">
+							<div class="fl">
+								My Published Articles
+							</div>
+							<div class="fr">
+								<a class="icon post_article" href="#ArticleEdit" title="Post Article">Post Article</a>
+							</div>
+							<div class="clear"></div>
+						</div>
+						<div class="main_blog_section" id="d_blog_my_articles">Loading...</div>
+					
+					</div>
+				</div>
+			
+				<div id="page_CreateAccount" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+			
+				<div id="page_MyAccount" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_User" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_UserLog" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_Login" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+			
+				<div id="page_Article" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_ArticleEdit" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_ArticleCategory" style="display:none">
+					<div class="h1" id="h_article_category"></div>
+					<div class="main_blog_section" id="d_article_category"></div>
+				</div>
+				
+				<div id="page_Tag" style="display:none">
+					<div class="h1" id="h_article_tag"></div>
+					<div class="main_blog_section" id="d_article_tag"></div>
+				</div>
+				
+				<div id="page_STag" style="display:none">
+					<div class="h1" id="h_article_stag"></div>
+					<div class="main_blog_section" id="d_article_stag"></div>
+				</div>
+				
+				<div id="page_Search" style="display:none">
+					<h1 id="h_article_search"></h1>
+					<div class="main_blog_section" id="d_article_search"></div>
+				</div>
+				
+				<div id="page_GameEdit" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_Game" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameAssets" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameLog" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameObjects" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEditSprite" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEditTile" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEditTileset" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEditFont" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameAdmin" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameAudio" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameKeys" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEditKey" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_Contact" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_SubmitBug" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameDevelop" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameDisplay" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameLevels" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameLevelEdit" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameLevelMapEdit" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEnvEdit" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_PlaceholderGen" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GamePublisher" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameEditRevision" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_Ticket" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_TicketSearch" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="page_GameClone" style="display:none">
+					<!-- Dynamically populated upon activation -->
+				</div>
+				
+				<div id="glog_widget" style="display:none"></div>
+				
+				<div id="d_page_loading" style="display:none"></div>
+				
+				<div id="d_footer">
+					<p align="center" style="margin-top:40px;">
+						<img src="/effect/images/logo_40.<?= $ie6 ? 'gif' : 'png'; ?>" width="40" height="34" class="png"/><br/>
+						<span class="caption" style="padding-bottom:0px;">
+							Copyright &copy; 2005 - 2011 Effect Games
+						</span>
+						<br/>
+						<span class="caption" style="padding-bottom:20px;">
+							<a href="#Article/About_Effect_Games">About Effect Games</a>
+						</span>
+					</p>
+				</div>
+			</div>
+			
+		<!-- </div> -->
+		</td>
+		</tr></table>
+	
+	</div>
+	
+	<div id="d_dialog_outer" style="position:absolute; left:-2000px; top:0px; z-index:1100; display:block;">
+		<script> begin_section('dialog1', [38, 38, 46, 52], 'png'); </script>
+		<div id="d_dialog_inner" style="background-color:#fff;"></div>
+		<script> end_section(); </script>
+	</div>
+	
+	<script> 
+		// Init when ready
+		if (document.addEventListener) {
+			// Good browsers
+			document.addEventListener( "DOMContentLoaded", function() {
+				document.removeEventListener( "DOMContentLoaded", arguments.callee, false );
+				effect_init();
+			}, false );
+
+			// Just in case
+			window.addEventListener( "load", function() {
+				window.removeEventListener( "load", arguments.callee, false );
+				effect_init();
+			}, false );
+		}
+		else if (window.attachEvent) {
+			// Bad browsers have to wait
+			window.attachEvent("onload", function() {
+				effect_init();
+			});
+		} 
+	</script>
+	
+	<?= $self->{config}->{GoogAnalID} ? ("<script type=\"text/javascript\"> var _gaq = _gaq || []; _gaq.push(function() { var tracker = _gat._getTracker('".$self->{config}->{GoogAnalID}."'); tracker._trackPageview(); window.pageTracker = tracker; }); (function() {var ga = document.createElement('script');ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';ga.setAttribute('async', 'true');document.documentElement.firstChild.appendChild(ga);})(); </script>\n") : ''; ?>
+	
+</body>
+</html>

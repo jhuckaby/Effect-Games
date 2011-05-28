@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<?
+	$self->header_out('Cache-Control', 'no-cache');
+	
+	if (!$self->validate_session('login', 'readonly')) {
+		$buffer .= "ERROR: Not logged in.";
+		return;
+	}
+	
+	my $query = $self->{session}->{query};
+	my $content = '';
+	my $title = '';
+	my $storage_key = '';
+	
+	if ($query->{mode} eq 'asset') {
+		# pull asset from game
+		if (!$self->require_game_read_access($query->{game_id}, 'readonly')) {
+			$buffer .= "ERROR: Not a member of game: " . $query->{game_id};
+			return;
+		}
+		
+		if ($query->{filename} !~ /\.(xml|xls|dtd|js|txt|html|pl|pm|php|c|h|cpp|hpp)$/i) {
+			$buffer .= "ERROR: Unsupported file format for editing: " . $query->{filename};
+			return;
+		}
+		
+		$storage_key = '/games/' . $query->{game_id} . '/assets' . $query->{path};
+		$content = $self->{storage}->get_file_contents( $storage_key, $query->{filename} );
+		if (!$content) {
+			$buffer .= "ERROR: File not found: $storage_key/" . $query->{filename};
+			return;
+		}
+		
+		# $title = "Editing asset: \"".$query->{filename}."\"";
+		$title = "Editing: " . $query->{path} . "/" . $query->{filename};
+	}
+	elsif ($query->{mode} eq 'admin') {
+		# pull file from ANY storage key (admin only)
+		if (!$self->is_admin()) {
+			$buffer .= "ERROR: Access denied";
+			return;
+		}
+		
+		if (!$query->{filename}) { $query->{filename} = ''; }
+		
+		$storage_key = $query->{path};
+		$content = $self->{storage}->get_file_contents( $storage_key, $query->{filename} );
+		if (!$content) {
+			$buffer .= "ERROR: Content not found: $storage_key/" . $query->{filename};
+			return;
+		}
+		
+		$title = "Editing: \"$storage_key/".$query->{filename}."\"";
+	}
+	
+	$self->{session}->{_title} = $title;
+	$self->{session}->{_content} = $content;
+	$self->{session}->{_storage_key} = $storage_key;
+?>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><?= $self->{session}->{_title}; ?> | EffectGames.com</title>
+	<link rel="stylesheet" type="text/css" href="style.psp.css" >
+	<style type="text/css">
+		html {
+			width: 100%;
+			height: 100%;
+			overflow: hidden; 
+			margin:0; 
+			padding:0; 
+		}
+		
+		body {
+			width: 100%;
+			height: 100%;
+			overflow: hidden; 
+			margin:0; 
+			padding:0; 
+		}
+				
+		#d_title {
+			font-family: arial, sans-serif;
+			font-size: 20px;
+			font-weight: bold;
+			color: #F07114;
+		}
+		
+		#fe_edit {
+			font-family: courier, monospace;
+			font-size: 9pt;
+			cursor: text;
+		}
+	</style>
+		
+</head>
+<body onLoad="notify_onload()">
+	
+	<script type="text/javascript" src="js/lib/oop.js"></script>
+	<script type="text/javascript" src="js/lib/tools.js"></script>
+	<script type="text/javascript" src="js/lib/xml.js"></script>
+	<script type="text/javascript" src="js/render.js"></script>
+	<script type="text/javascript" src="js/growl.js"></script>
+	<script type="text/javascript" src="js/Debug.class.js"></script>
+		
+	<script language="JavaScript">
+		// make sure we were opened from effect
+		function check_comm() {
+			if (!window.opener || !window.opener.textedit_window_save) {
+				alert("Lost communication with opener window.  Please copy the file contents to your clipboard, and re-edit your file from EffectGames.com.");
+			}
+		}
+		
+		var edit_filename = '<?= $self->{session}->{query}->{filename}; ?>';
+		var storage_key = '<?= $self->{session}->{_storage_key}; ?>';
+		
+		function do_save_file(yes_close) {
+			// save file back to asset manager
+			check_comm();
+			var contents = window.editAreaLoader ? editAreaLoader.getValue("fe_edit") : $('fe_edit').value;
+			if (!contents) {
+				alert("Sorry, cannot save zero length files.");
+				return;
+			}
+			
+			// if file is XML format, validate syntax first
+			if (edit_filename.match(/\.(xml|xsl|xslt)$/i) || contents.match(/^\s*\<\?xml/i)) {
+				var parser = new XML( contents );
+				if (parser.error()) {
+					var errorObj = parser.errors[parser.errors.length - 1];
+					if (errorObj.line) selectLine( $('fe_edit'), errorObj.line );
+					return alert("Sorry, your XML file failed to parse:\n\n" + parser.getLastError());
+				}
+			}
+			
+			if (yes_close) {
+				window.opener.textedit_window_save( storage_key, edit_filename, contents );
+				window.close();
+			}
+			else {
+				window.opener.textedit_window_save( storage_key, edit_filename, contents, do_save_complete );
+			}
+		}
+		
+		function do_save_complete() {
+			$GR.growl('success', "File saved successfully.");
+		}
+		
+		function notify_onload() {
+			setTimeout( 'monitor_window_size()', 250 );
+			
+			if (window.editAreaLoader) {
+				editAreaLoader.init({
+					id: "fe_edit"	// id of the textarea to transform		
+					,start_highlight: true	// if start with highlight
+					,allow_toggle: false
+					,word_wrap: true
+					,language: "en"
+					,syntax: (edit_filename.match(/\.(\w+)$/))[1].toLowerCase()
+				});
+			}
+		}
+		
+		function monitor_window_size() {
+			var size = getInnerWindowSize( window );
+			
+			var textarea = $('fe_edit');
+			textarea.style.width = '' + Math.floor(size.width - 30) + 'px';
+			textarea.style.height = '' + Math.floor(size.height - 80) + 'px';
+			
+			var table = $('t_header');
+			table.style.width = '' + Math.floor(size.width - 50) + 'px';
+			
+			var iframe = $('frame_fe_edit');
+			if (iframe) {
+				iframe.style.width = '' + Math.floor(size.width - 30) + 'px';
+				iframe.style.height = '' + Math.floor(size.height - 80) + 'px';
+			}
+			
+			setTimeout( 'monitor_window_size()', 250 );
+		}
+		
+		$GR.marginRight = 20;
+		$GR.marginTop = 70;
+
+	</script>
+	
+	<div id="d_growl_wrapper">
+		<div id="d_growl_top"></div>
+	</div>
+	
+	<table width="100%" height="100%">
+		<tr>
+			<td width="100%" height="30">
+				<div style="margin-left:5px; margin-right:5px; margin-top:5px; margin-bottom:0px;">
+					<script> begin_section('shadow_border', 12, 'gif'); </script>
+					<table id="t_header" cellspacing="0" cellpadding="0">
+						<tr>
+							<td width="*">
+								<span id="d_title"><?= $self->{session}->{_title}; ?></span>
+							</td>
+							<td width="325">
+								<script>
+									document.write(
+										large_icon_button('x', "Cancel", "window.close()") + 
+										'<div style="float:left; width:15px; height:1px"></div>' + 
+										large_icon_button('disk.png', "Save", "do_save_file(false)") + 
+										'<div style="float:left; width:15px; height:1px"></div>' + 
+										large_icon_button('disk.png', "Save &amp; Close", "do_save_file(true)")
+									); 
+								</script>
+								<div class="clear"></div>
+							</td>
+						</tr>
+					</table>
+					<script> end_section(); </script>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td width="100%" height="*">
+				<div style="margin:10px;">
+					<textarea id="fe_edit" style="width:100%; height:100%;" wrap="virtual" onkeydown="return catchTab(this,event)"><?= XML::Lite::encodeEntities(undef, $self->{session}->{_content}); ?>
+</textarea>
+				</div>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

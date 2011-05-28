@@ -1,0 +1,7 @@
+<?
+	$self->set_ttl( 'ViewTTL' );
+	$self->{session}->{request}->content_type( 'text/css' );
+?>
+<?= load_file( 'main.css' ); ?>
+<?= load_file( 'doxter.css' ); ?>
+<?= load_file( 'color_picker.css' ); ?>
