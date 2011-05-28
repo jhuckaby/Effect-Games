@@ -1,0 +1,53 @@
+Effect Games Engine and IDE v1.0
+Copyright (c) 2005 - 2011 Joseph Huckaby
+Source Code released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+
+Please observe the folllowing additional licenses from software or media that the Effect Games IDE relies on, and ships with.  Please note that none of these are used in the actual game engine, only the web IDE.
+
+htdocs/js/lib/md5.js
+	A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
+	Digest Algorithm, as defined in RFC 1321.
+	Version 2.0 Copyright (C) Paul Johnston 1999 - 2002.
+	Other contributors: Greg Holt, Ydnar
+	Distributed under the BSD License
+	See http://pajhome.org.uk/crypt/md5 for more info.
+	Note: This is only used in the IDE, not the engine or your games.
+
+htdocs/color_picker.css
+htdocs/js/tools/color_picker.js
+	DHTML Color Picker v1.0.3, Programming by Ulyses, ColorJack.com
+	The following license is on the latest version from:
+	http://www.colorjack.com/opensource/dhtml+color+picker.html
+	This color picker is dual licenced under Creative Commons & GPL.
+	Note: This is only used in the IDE, not the engine or your games.
+
+htdocs/ZeroClipboard.swf
+htdocs/js/ZeroClipboard.js
+	This is my own clipboard library which is released under the MIT License:
+	http://code.google.com/p/zeroclipboard/
+	Note: This is only used in the IDE, not the engine or your games.
+
+htdocs/ZeroUpload.swf
+htdocs/js/ZeroUpload.js
+	This is a Flash based file upload engine I wrote, and will soon release to Google Code.
+	It will be released under the MIT license.
+	Note: This is only used in the IDE, not the engine or your games.
+
+htdocs/webcam.swf
+htdocs/js/webcam.js
+	This is actually an early, unreleased version of my JPEGCam Library, 
+	now available on Google Code and released under the MIT License:
+	http://code.google.com/p/jpegcam/
+	Note: This is only used in the IDE, not the engine or your games.
+
+Silk Icon Set
+	This is a wonderful set of 16x16 icons avaialble free from FamFamFam.
+	http://www.famfamfam.com/lab/icons/silk/
+	This work is licensed under a Creative Commons Attribution 2.5 License. 
+	Note: This is only used in the IDE, not the engine or your games.
+
+Default User Icon
+	From the KDE Crystal Icon Set
+	http://kde-look.org/content/show.php/Crystal+Clear?content=25668
+	License: LGPL
+	Note: This is only used in the IDE, not the engine or your games.
