@@ -99,7 +99,7 @@ foreach my $doc_file (glob('/effect/docs/*.txt')) {
 	if ($doc_filename !~ /^_/) {
 		print "\nCreating article from disk: $doc_file\n";
 		# insert_article( '', '', '', '', load_file($doc_file) );
-		print `/effect/bin/insert_article.pl $doc_file`;
+		`/effect/bin/insert_article.pl $doc_file`;
 	}
 }
 
