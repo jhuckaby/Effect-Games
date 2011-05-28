@@ -29,7 +29,7 @@ Please observe the folllowing additional licenses from software or media that th
 >	See http://pajhome.org.uk/crypt/md5 for more info. <br/>
 >	Note: This is only used in the IDE, not the engine or your games.
 
-#### color_picker.css and hcolor_picker.js
+#### color_picker.css and color_picker.js
 >	DHTML Color Picker v1.0.3, Programming by Ulyses, ColorJack.com <br/>
 >	The following license is on the latest version from: <br/>
 >	http://www.colorjack.com/opensource/dhtml+color+picker.html <br/>
