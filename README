@@ -2,6 +2,12 @@ Effect Games Engine and IDE v1.0
 Copyright (c) 2005 - 2011 Joseph Huckaby
 Source Code released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+Effect Games provides a suite of developer tools for creating and publishing web-based video games. The software is free, and includes an asset manager, level editor, sprite manager, environment editor, and publishing tools. The source code is released under the MIT License.
+
+At the core of Effect Games is the Effect Engine, a JavaScript game engine which uses built-in browser technologies to render graphics. Currently the engine uses classic DHTML, not the Canvas element nor WebGL. For audio we use HTML5 whenever we can, but fall back to Flash where necessary (which is unfortunately a lot of the time). The Effect Engine supports most browsers including Internet Explorer 6+, Firefox 3+, Safari 3+, Chrome 2+, Opera 9+, and all major platforms including Windows, Mac and Linux.
+
+The Effect Engine was developed by Joseph Huckaby in 2005. He was dissatisfied with existing web game technologies that relied on 3rd party plugins, and set out to create a pure JavaScript game engine that would run in any browser. A designer by training, Min Chang provided a necessary creative perspective to the development and use of Effect Game's tools. They are currently working on their next venture over at GoldCartridge.com.
+
 Please observe the folllowing additional licenses from software or media that the Effect Games IDE relies on, and ships with.  Please note that none of these are used in the actual game engine, only the web IDE.
 
 htdocs/js/lib/md5.js
